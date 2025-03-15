@@ -1,0 +1,166 @@
+
+@import "tailwindcss";
+@theme {
+    --breakpoint-sm: 550px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 1000px;
+    --breakpoint-xl: 1366px;
+
+    --font-sans: 'Source Sans Pro', 'sans-serif';
+}
+
+body {
+    line-height: normal;
+    @apply text-[#1f2937]
+}
+
+a:hover{
+    @apply text-[#959595]
+}
+
+p a{
+    @apply text-[#4066a5]
+}
+
+p{
+    @apply my-[16px]
+}
+
+
+/*
+modal dialog is used as external library, it's code is not changed, using traditional CSS, not Tailwind CSS
+*/
+.overlay_for_modal_dialog {
+    position: fixed;
+    inset: 0px;
+    z-index: 3000;
+    background-color: rgba(0, 0, 0, 0.65);
+}
+
+.modal_dialog {
+    position: fixed;
+    inset: 0px;
+    z-index: 3000;
+    overflow: auto;
+}
+
+.modal_dialog .container {
+    display: flex;
+    width: 100%;
+    min-height: 100%;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.modal_dialog .body {
+    display: flex;
+    flex-direction: column;
+    border-width: 0px;
+    border-radius: 8px;
+    margin-top: 30px;
+    width: 460px;
+    background-color: white;
+}
+
+.modal_dialog .content {
+    text-align: center;
+    padding: 30px;
+}
+
+.modal_dialog .options {
+    padding: 40px 80px;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal_dialog button {
+    border-width: 0px;
+    border-radius: 8px;
+    color: white;
+    background-color: #46aae9;
+    background-clip: border-box;
+    cursor: pointer;
+    padding: 10px;
+}
+
+.modal_dialog button:hover {
+    background-color: #0076c0;
+}
+
+.modal_dialog button.button_cancel {
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
+    padding: 10px;
+    margin-top: 15px;
+    background-color: white;
+    color: #46aae9;
+}
+
+.modal_dialog button.button_cancel:hover {
+    color: #0076c0;
+}
+
+
+
+
+/*forms and text input fields in content section*/
+/*form builder is used as external library, it's code is not changed, using traditional CSS, not Tailwind CSS*/
+
+form.form_builder .field {
+    margin-bottom: 25px;
+}
+
+form.form_builder label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+form.form_builder label::after {
+    content: ":";
+}
+
+form.form_builder textarea,
+form.form_builder [type="text"] {
+    width: 100%;
+}
+
+form.form_builder textarea {
+    resize: none;
+}
+
+form.form_builder .input_error {
+    padding: 2px 0 0 5px;
+    color: red;
+}
+
+@media screen and (min-width: 550px) { 
+    form.form_builder .input_error {
+        /*don't shift elements below when displayed*/
+        position: absolute;
+    }
+}
+
+form.form_builder input,
+form.form_builder textarea {
+    display: block;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+form.form_builder textarea:focus,
+form.form_builder [type="text"]:focus {
+    border-color: #6b7280;
+    outline: none;
+}
+
+form.form_builder input[disabled],
+form.form_builder textarea[disabled] {
+    color: gray;
+}
+
+form.form_builder input[type="submit"]{
+    background-color: #e9e9ed;
+}

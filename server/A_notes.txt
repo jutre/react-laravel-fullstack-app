@@ -1,0 +1,101 @@
+ln -s /var/www/html/laravel_quickstart_real_folder laravel_quickstart
+diff -Naur  --exclude=web.php --exclude=storage --exclude=resources --exclude=vendor /var/www/html/laravel_quickstart_orig /var/www/html/laravel_quickstart
+
+diff -r --brief --exclude=composer.lock  --exclude=web.php --exclude=storage --exclude=resources --exclude=vendor /var/www/html/laravel_quickstart_orig /var/www/html/laravel_quickstart | sed 's/^Only in \([^:]*\): /\1\//' | sed 's/^Files .* and \(.*\) differ/\1/'
+
+
+//////////artisan commands//////////
+
+===create model, migration
+php artisan make:model Book --migration
+
+===create controller
+php artisan make:controller BooksController --api
+
+===create  migration
+php artisan make:migration create_flights_table
+
+===delete all tables, run  migrations and seed
+php artisan migrate:refresh --seed
+
+
+
+//////////api requests//////////
+---get all products
+curl -v  -H 'Accept: application/json' http://localhost/laravel_quickstart/public/api/products
+
+--craate a product
+curl -v -X POST -H 'Content-Type: application/json' -H 'Accept: application/json' -i http://localhost/laravel_quickstart/public/api/products --data '{"name":"Product 2","price":"19.00","description":"This is product 2 description"}'
+
+--try to create product, but input data is wrong, "price" field is missing
+curl -v -X POST -H 'Content-Type: application/json' -H 'Accept: application/json' -i http://localhost/laravel_quickstart/public/api/products --data '{"id"name":"Product 2"}'
+
+
+--update product
+curl -v -X PUT -H 'Content-Type: application/json' -i http://localhost/laravel_quickstart/public/api/products/1 --data '{"description":"updated prod 1 descr"}'
+
+
+--delete product
+curl -X DELETE -H 'Accept: application/json' -i http://localhost/laravel_quickstart/public/api/products/111
+
+--search
+
+curl -v http://localhost/laravel_quickstart/public/api/products/search/iph
+
+-----------------------------------------
+curl -v -H 'Accept: application/json' http://localhost/laravel_quickstart/public/api/user1
+
+---register
+curl -v -X POST -H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-i http://localhost/laravel_quickstart/public/api/register --data '{"name":"john.doe", "email":"john.doe@example.com", "password":"password"}'
+
+
+--before login generate CSRF token
+curl -v -H 'Referer: localhost' -H 'Accept: application/json' http://localhost/laravel_quickstart/public/api/sanctum/csrf-cookie
+
+
+---login
+curl -v -X POST -H 'Content-Type: application/json' \
+-H 'Accept: application/json' \
+-H 'Referer: localhost' \
+-H 'X-XSRF-TOKEN: eyJp...In0=' \
+--cookie "laravel_session=eyJ...iIn0%3D" \
+-i http://localhost/laravel_quickstart/public/api/login --data '{"email":"john.doe@example.com", "password":"password"}'
+
+
+curl -v -H 'Accept: application/json' \
+-H 'Referer: localhost' \
+-H 'X-XSRF-TOKEN: eyJ...In0=' \
+--cookie "laravel_session=eyJ...In0%3D" \
+-i http://localhost/laravel_quickstart/public/api/user1
+
+
+
+--------------Books creating
+
+curl -v -X POST -H 'Content-Type: application/json' -H 'Accept: application/json' -i http://localhost/laravel_quickstart/public/api/books --data '{"title":"Book 1","author":"author 1","preface":"preface for book 1"}'
+curl -v -X POST -H 'Content-Type: application/json' -H 'Accept: application/json' -i http://localhost/laravel_quickstart/public/api/books --data '{"title":"Book 2","author":"author 2","preface":"preface for book 2"}'
+curl -v -X POST -H 'Content-Type: application/json' -H 'Accept: application/json' -i http://localhost/laravel_quickstart/public/api/books --data '{"title":"Book 3","author":"author 3","preface":"preface for book 3"}'
+curl -v -X POST -H 'Content-Type: application/json' -H 'Accept: application/json' -i http://localhost/laravel_quickstart/public/api/books --data '{"title":"Book 4","author":"author 4"}'
+
+--------------single book selecting
+curl -v  -H 'Accept: application/json' http://localhost/laravel_quickstart/public/api/books/1
+
+
+---modificijas--------------------------------
+
+app/Http/Kernel.php uncomment line 
+\Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class 
+
+add to .env
+SANCTUM_STATEFUL_DOMAINS=localhost:5173
+
+
+config/sanctum.php add line
+'prefix' => 'api/sanctum',
+
+
+config/cors.php in CORS situation to make CORS request and to be able to send cookies, set
+'allowed_origins' => ['http://localhost:5173'],
+'supports_credentials' => true

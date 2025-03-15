@@ -1,0 +1,259 @@
+
+
+
+=======Errors cauth with try catch block = 
+try { 
+  endpointName.initiate() 
+} catch { }
+==================
+------------invalid passwd
+{
+  "status": 401,
+  "data": {
+    "message": "invalid email and/or password"
+  }
+}
+
+--json in rest api response
+{"message":"invalid email and\/or password"}
+
+
+----------error when resource not exists-------------------------------
+
+{
+  "status": 404,
+  "data": {
+    "message": "The route api/login2 could not be found.",
+    "exception": "Symfony\\Component\\HttpKernel\\Exception\\NotFoundHttpException",
+    "file": "/var/www/html/laravel_quickstart/vendor/laravel/framework/src/Illuminate/Routing/AbstractRouteCollection.php",
+    "line": 44,
+    "trace": [
+      {
+        "file": "/var/www/html/laravel_quickstart/vendor/laravel/framework/src/Illuminate/Routing/RouteCollection.php",
+        "line": 162,
+        "function": "handleMatchedRoute",
+        "class": "Illuminate\\Routing\\AbstractRouteCollection",
+        "type": "->"
+      },
+      
+      ...
+    ]
+  }
+}
+
+
+----------------------error obj when no network
+
+{
+  "status": "FETCH_ERROR",
+  "error": "TypeError: NetworkError when attempting to fetch resource."
+}
+
+
+======================Errors with apislice.endpoint.endpointName.initiate().then()catch()
+error obj when no network
+{
+  "status": "FETCH_ERROR",
+  "error": "TypeError: NetworkError when attempting to fetch resource."
+}
+----------error when resource not exists-------------------------------
+{
+  "status": "FETCH_ERROR",
+  "error": "TypeError: NetworkError when attempting to fetch resource."
+}
+
+
+
+
+{
+  "status": 503,
+  "data": {
+    "message": "Unauthenticated."
+  }
+}
+
+--------------------------------------
+{
+  "status": 404,
+  "data": {
+    "message": "The route api/sanctum/csrf-cookie1 could not be found.",
+    "exception": "Symfony\\Component\\HttpKernel\\Exception\\NotFoundHttpException",
+    "file": "/var/www/html/laravel_quickstart/vendor/laravel/framework/src/Illuminate/Routing/AbstractRouteCollection.php",
+    "line": 44,
+    "trace": [
+      {
+        "file": "/var/www/html/laravel_quickstart/vendor/laravel/framework/src/Illuminate/Routing/RouteCollection.php",
+        "line": 162,
+        "function": "handleMatchedRoute",
+        ...
+      },
+      ...
+    ]
+  }
+}
+
+--json for this response
+{
+    "message": "The route api/sanctum/csrf-cookie1 could not be found.",
+    "exception": "Symfony\\Component\\HttpKernel\\Exception\\NotFoundHttpException",
+    "file": "/var/www/html/laravel_quickstart/vendor/laravel/framework/src/Illuminate/Routing/AbstractRouteCollection.php",
+    ...
+}
+
+
+
+--json when invalid password and email
+{
+  "status": 422,
+  "data": {
+    "message": "The email field must be a valid email address. (and 1 more error)",
+    "errors": {
+      "email": [
+        "The email field must be a valid email address."
+      ],
+      "password": [
+        "The password field is required."
+      ]
+    }
+  }
+}
+--json when invalid only email
+{
+  "status": 422,
+  "data": {
+    "message": "The email field must be a valid email address.",
+    "errors": {
+      "email": [
+        "The email field must be a valid email address."
+      ]
+    }
+  }
+}
+
+
+
+
+================json parsing error rejection
+{
+  type: 'apiSlice/executeQuery/rejected',
+  payload: {
+    status: 'PARSING_ERROR',
+    originalStatus: 200,
+    data: '<br />\n<b>Warning</b>:  Undefined array key "name" in <b>/var/www/html/postsapi.php</b> on line <b>41</b><br />\n{\n\t        "user": {\n\t\t        "id": 1,\n\t\t        "name": "Name from postsapi - test name- ",\n\t\t        "email": "john.doe@example.com", "email1": "john.doe@example.com"\t\n            }\n        }',
+    error: 'SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data'
+  },
+  meta: {
+    baseQueryMeta: {
+      request: {},
+      response: {}
+    },
+    RTK_autoBatch: true,
+    arg: {
+      type: 'query',
+      subscribe: true,
+      endpointName: 'getUser',
+      queryCacheKey: 'getUser(undefined)'
+    },
+    requestId: 'k9IO9b7elJ8awSLX0K0QT',
+    rejectedWithValue: true,
+    requestStatus: 'rejected',
+    aborted: false,
+    condition: false
+  },
+  error: {
+    message: 'Rejected'
+  }
+}
+
+========401 status error========================
+
+  type: 'apiSlice/executeQuery/rejected',
+  payload: {
+    status: 401,
+    data: {
+      message: 'Unauthenticated.'
+    }
+  },
+  meta: {
+    baseQueryMeta: {
+      request: {},
+      response: {}
+    },
+    RTK_autoBatch: true,
+    arg: {
+      type: 'query',
+      subscribe: true,
+      endpointName: 'getUser',
+      queryCacheKey: 'getUser(undefined)'
+    },
+    requestId: 'zBiPEmmAf3ACAi5WCNbv6',
+    rejectedWithValue: true,
+    requestStatus: 'rejected',
+    aborted: false,
+    condition: false
+  },
+  error: {
+    message: 'Rejected'
+  }
+}
+-----------------
+
+
+rest api response codes
+
+https://stackoverflow.com/questions/797834/should-a-restful-put-operation-return-something
+http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html
+
+
+Create
+---------------------------------------------------------------------
+Success - 201 Created - Return created object
+Failure - 400 Invalid request - Return details about the failure
+Async fire and forget operation - 202 Accepted - Optionally return url for polling status
+
+Update
+---------------------------------------------------------------------
+Success - 200 Ok - Return the updated object
+Success - 204 NoContent
+Failure - 404 NotFound - The targeted entity identifier does not exist
+Failure - 400 Invalid request - Return details about the failure
+Async fire and forget operation - 202 Accepted - Optionally return url for polling status
+
+Patch
+---------------------------------------------------------------------
+Success - 200 Ok - Return the patched object
+Success - 204 NoContent
+Failure - 404 NotFound - The targeted entity identifier does not exist
+Failure - 400 Invalid request - Return details about the failure
+Async fire and forget operation - 202 Accepted - Optionally return url for polling status
+
+Delete
+---------------------------------------------------------------------
+Success - 200 Ok - No content
+Success - 200 Ok - When element attempting to be deleted does not exist
+Async fire and forget operation - 202 Accepted - Optionally return url for polling status
+
+Get
+---------------------------------------------------------------------
+Success - 200 Ok - With the list of resulting entities matching the search criteria
+Success - 200 Ok - With an empty array
+
+Get specific
+---------------------------------------------------------------------
+Success - 200 Ok - The entity matching the identifier specified is returned as content
+Failure - 404 NotFound - No content
+
+Action
+---------------------------------------------------------------------
+Success - 200 Ok - Return content where appropriate
+Success - 204 NoContent
+Failure - 400 - Return details about the failure
+Async fire and forget operation - 202 Accepted - Optionally return url for polling status
+
+Generic results
+---------------------------------------------------------------------
+Authorization error 401 Unauthorized
+Authentication error 403 Forbidden
+For methods not supported 405
+Generic server error 500
+
