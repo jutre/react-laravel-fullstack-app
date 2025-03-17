@@ -55,15 +55,13 @@ const Layout = () => {
           {/*BooksListTypeMenu/*/}
         </div>
         <div className="grow lg:grow-0 lg:shrink-0 lg:basis-[840px] xl:basis-[950px] flex flex-col relative">
-          <PageHeader />
+          <PageHeader isUserLoggenIn={isUserLoggenIn}/>
           {/*SettingsMenu/*/}
 
           <div className="bg-white relative pt-[30px] px-[15px] pb-[65px] sm:px-[30px] grow">
-
-            
             {content}
           </div>
-          <TestAuthSliceSelector />
+
           <div onClick={sendGetUserFromLaravelRequest}>On click request to api (for testing auth response)</div>
         </div>
         <div className="lg:grow lg:shrink xl:shrink-0 xl:basis-0"></div>
