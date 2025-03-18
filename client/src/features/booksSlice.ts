@@ -35,7 +35,6 @@ const booksSlice = createSlice({
       state.searchString = action.payload;
     },
 
-    //TODO correct also in other instances of code
     //used to add a single or multiple books to selection. Single book adding use case is when user adds a single book 
     //in book list using checkbox or user clicks "select all" button then multiple books (all listed) are added to selected books state.
     //In case of single book adding to selection, action.payload array must contain one element - the book to be added to selection; 
@@ -49,7 +48,6 @@ const booksSlice = createSlice({
     },
     //TODO maybe add reducer for adding single book
 
-    //TODO update comment in other instances
     //removes a single book from current selection. action.payload value must be book object which should be removed from currently
     //selected books. Single book removing use case is when user chooses to remove checkmark in checkbox for a book in book list
     singleBookRemovedFromSelection(state, action: PayloadAction<Book>) {
@@ -59,28 +57,31 @@ const booksSlice = createSlice({
 
     //removes all books currently added to selection. All books removing use case is when user has selected at least one book 
     //is selected in books list and clicks on "unselect all" button.
-    //Reducer actually sets selection state to empty array as currently there is no pagination in books list, there is no
+    //Reducer actually sets selection state to empty object as currently there is no pagination in books list, there is no
     //need to pass a list of selected books that should be removed from selection, that is there does not exist second page
     //with selected books
     allBooksRemovedFromSelection(state) {
       state.booksSelectedInList = {};
     },
 
+
+    //when book(s) are deleted from books state, remove those deleted from selectem items (action dispatched from RTK Query api slice)
+    //action payload is array of books 'id' attribute, if such key exists in state.booksSelectedInList object, remove that entry
+    booksCollectionRemovedFromSelection(state, action: PayloadAction<number[]>) {
+      let bookIdsArr = action.payload;
+      bookIdsArr.forEach((bookId) => {
+        if (state.booksSelectedInList[bookId] === true) {
+          delete state.booksSelectedInList[bookId];
+        }
+      })
+    },
+
+
+
   },
 
   extraReducers: (builder) => {
     builder
-
-      //when book(s) are deleted from books state, remove those deleted from selectem items. 
-      //TODO add analog matcher from apiSlice
-      // .addCase(multipleBooksDeleted, (state, action: PayloadAction<number[]>) => {
-      //   let bookIdsArr = action.payload;
-      //   bookIdsArr.forEach((bookId) => {
-      //     if (state.booksSelectedInList[bookId] === true) {
-      //       delete state.booksSelectedInList[bookId];
-      //     }
-      //   })
-      // })
       //when user submits different search string, clear current selection. Possibly user selected some books in previous search
       //result list but with new search string that book might be not visible in list but would be deleted together with
       //selection from current result list if user clicks  "delete all selected" button.
@@ -139,5 +140,9 @@ export const selectBooksInSelection = createSelector(
 )
 
 
-export const { searchStringUpdated, bookCollectionAddedToSelection, singleBookRemovedFromSelection, allBooksRemovedFromSelection } = booksSlice.actions
+export const { searchStringUpdated,
+  bookCollectionAddedToSelection,
+  singleBookRemovedFromSelection,
+  allBooksRemovedFromSelection,
+  booksCollectionRemovedFromSelection } = booksSlice.actions
 export default booksSlice.reducer

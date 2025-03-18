@@ -3,6 +3,7 @@ import { restApiBaseUrl } from '../../config';
 import { User, UserCredentials } from '../../types/User';
 import { Book } from '../../types/Book';
 import { getCookie } from '../../utils/utils'
+import { booksCollectionRemovedFromSelection } from '../booksSlice';
 
 
 // Define a service using a base URL and expected endpoints
@@ -108,20 +109,29 @@ export const apiSlice = createApi({
       invalidatesTags: (result, error, arg) => [{ type: 'Book', id: arg.id }]
     }),
 
-    //one endpoint for deleting one or multiple books
-    deleteBook: builder.mutation<void, Book[]>({
-      query(deletableBooksArray) {
-        let idsArray = deletableBooksArray.map(book => book.id)
-        let idsList = idsArray.join(",")
-        let requestBody = JSON.stringify({ids: idsList})
+    //one endpoint for deleting books. Endpoint argument is array of book identifiers. Can be used to delete one or multiple books,
+    //in case of one book argument must be array with one element, the identifier of deletable book
+    deleteBook: builder.mutation<void, number[]>({
+      query(deletableBooksIdsArray) {
+        let requestBody = JSON.stringify({ids: deletableBooksIdsArray})
         return {
           url: 'books',
           method: 'DELETE',
           body: requestBody
         }
       },
+
+      //dispatch action to remove deleted books from selected items state after books deletion completed
+      async onQueryStarted(deletableBooksIdsArray, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled
+          dispatch(booksCollectionRemovedFromSelection(deletableBooksIdsArray))
+        } catch (err) {
+
+        }
+      },
       // Invalidates all queries that provides tags which includes "id" property of each delatable Book 
-      invalidatesTags: (result, error, arg) => [...arg.map(({ id }) => ({ type: 'Book', id }) as const)],
+      invalidatesTags: (result, error, arg) => [...arg.map(( bookId ) => ({ type: 'Book', bookId }) as const)],
     })
 
   }),

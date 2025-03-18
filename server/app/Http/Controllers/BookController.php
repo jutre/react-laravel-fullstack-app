@@ -88,18 +88,19 @@ class BookController extends Controller
     }
 
     /**
-     * Remove records from books table. A record is deleted if it's 'id' column value is included in request body's JSON array where each 
+     * Delete records from books table. A record is deleted if it's 'id' column value is included in request body's JSON array where each 
      * array element is book id. Deleting is restricted to books belonging to current user logged in.
-     * This method corresponds to HTTP DELETE method which receives
-     * request body instead of having path segment in REST API endpoint URL corresponding to single deletable book id.
-     * The body is JSON which is array of deletable books ids
+     * 
+     * This method corresponds to HTTP DELETE method which receives request body instead of having path segment in REST API endpoint URL 
+     * corresponding to single deletable book id. Request body is JSON which is array of deletable books ids in 
+     * form of {'ids': [1, 2, 3, ...other array elements]}
      */
     public function destroy(Request $request)
     {
         usleep(500000);
 
         $this->getBookQueryWithUserIdConstraint($request)
-            ->whereIn('id', $request->all())
+            ->whereIn('id', $request->input('ids'))
             ->delete();
 
         return response()->noContent();

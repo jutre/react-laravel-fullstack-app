@@ -13,7 +13,7 @@ import { useAppDispatch } from '../../store/reduxHooks';
 import { searchStringUpdated } from "../../features/booksSlice"
 import { useLocation } from "react-router-dom";
 import { getQueryParamValue, getBookListBaseUrl } from "../../utils/utils";
-import { BookDeletionProcessor } from "../BookDeletionProcessorForBookEditPage";
+import { BookDeletionProcessorForBooksListPage } from "./BookDeletionProcessorForBooksListPage";
 import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
 
 type BooksListParamProcessorParams = { listMode?: string }
@@ -50,17 +50,16 @@ function BooksListParamProcessor({ listMode }: BooksListParamProcessorParams) {
   //
   //process book deletion get parameter in url 
   //
-  let deletableBooksIdsArr = [];
+  let deletableBooksIdsArr: number[] = [];
   let deleteBookIdParamVal = getQueryParamValue("deleteId");
   //used for showing error messages
   let errorMessage;
   let displayDeletionConfirmationDialog = false;
 
-  //the url of book list user will be redirected after he confirms or cancels book deleting 
+  //the url of book list (general or favorites list) user will be redirected after he confirms or cancels book deleting 
   //List url is created here, search params might be added later 
   let baseUrl = getBookListBaseUrl(listMode);
-  let afterDeletingRedirectUrl = baseUrl;
-  let cancelDeletingRedirectUrl = baseUrl;
+  let currentBookListUrl = baseUrl;
 
   if (deleteBookIdParamVal) {
     //delete id must be string consisting of comma separated positive integers. List of integers is used in case of deleting multiple
@@ -83,8 +82,7 @@ function BooksListParamProcessor({ listMode }: BooksListParamProcessorParams) {
       //choosing deleting option to display books that are still found by search string
       if (searchStringParamVal) {
         let searchGetParam = "?search=" + searchStringParamVal;
-        afterDeletingRedirectUrl += searchGetParam
-        cancelDeletingRedirectUrl += searchGetParam;
+        currentBookListUrl += searchGetParam
       }
     }
   }
@@ -101,11 +99,11 @@ function BooksListParamProcessor({ listMode }: BooksListParamProcessorParams) {
         <GeneralErrorMessage msgText={errorMessage} />
       }
 
-      {/*displayDeletionConfirmationDialog &&
-        <BookDeletionProcessor booksIds={deletableBooksIdsArr} 
-                                        afterDeletingRedirectUrl={afterDeletingRedirectUrl} 
-                                        cancelActionUrl={cancelDeletingRedirectUrl}/>
-     */}
+      {displayDeletionConfirmationDialog &&
+        <BookDeletionProcessorForBooksListPage 
+        deletableBooksIds={deletableBooksIdsArr} 
+        booksListPageUrl={currentBookListUrl} />
+     }
     </>
   )
 }

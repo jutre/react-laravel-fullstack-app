@@ -2,43 +2,44 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { extractMessageFromQueryErrorObj, getQueryParamValue } from "../../utils/utils";
 import { useTrackEndpointSuccessfulFinishing } from "../../hooks/useTrackEndpointSuccessfulFinishing";
-import { useDeleteBookMutation } from "../../features/api/apiSlice";
+import { useDeleteBookMutation, apiSlice } from "../../features/api/apiSlice";
 import { ModalDialog } from "../ModalDialog";
 import { DataFetchingStatusLabel } from "../ui_elements/DataFetchingStatusLabel";
 import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
 import { Book } from "../../types/Book";
-/**
- * displays deletion confirmation modal dialog before deleting and performs deleting if user confirmed deletion. After deleting page is
- * redirected to url speficied in properties. If user cancels deleting, deleting is not performed and page is redirected to url
- * specified in properties.
- * 
- * @param deletableBooksList - object containing information about book. "title" property is used to display deletable book title in confirmation
- * dialog, "id" property used to specify argument for API endpoint hook
- * @param {string} afterDeletingRedirectUrl - a book list url where page should be redirected after book is deleted. An URL value will be
- * used with react-router useNavigate hook. URL may be books list or favorite books list url depending on parent list where and editable
- * book page was navitated from
- * @param {string} cancelActionUrl - an url to which page should be redirected if user chooses "cancel" option in confirmation dialog. 
- * It may be books list or favorite books list url
- */
 
 type BookDeletionProcessorProps = {
-  deletableBooksList: Book,
-  afterDeletingRedirectUrl: string,
-  cancelActionUrl: string
+  deletableBooksIds: number[],
+  booksListPageUrl: string
 }
 
+/**
+ * displays deletion confirmation modal dialog before deleting single or multiple books and performs deleting if user confirmed deletion. 
+ * For use with book list component. After deleting page is redirected to book list page url (books list of favorites list) speficied in
+ * properties. If user cancels deleting, deletion is not performed and page is redirected to book list page url specified in properties.
+ * In case one book is selected for deleting, confirmation dialog displays also deletable book title in it's message. When deleting single
+ * book, a check for book existing among all list's books is performed and if book is not found, an error message is displayed
+ * which prevents passing non existing book id in case book deletion URL is entered in browser's address bar, not chosen from page 
+ * using UI controls. In case if multiple books are selected confirmation dialog displays message about deleting of passed amount of books
+ * not checking their presence in all books list
+ * 
+ * @param deletableBooksIds - list of deletable books. In case of deleting single book, array contains only one element
+ * @param booksListPageUrl - a book list page url where page should be redirected after book(s) are deleted or deletion is cancelled by
+ * user. An URL value will be used with react-router useNavigate hook. URL may be books list or favorite books list url depending on parent
+ * list where a book editing page was navitated from
+ */
+
 export function BookDeletionProcessorForBooksListPage({
-  deletableBooksList,
-  afterDeletingRedirectUrl,
-  cancelActionUrl }: BookDeletionProcessorProps) {
+  deletableBooksIds,
+  booksListPageUrl }: BookDeletionProcessorProps) {
 
   /**
    * deletes book in redux store and redirects to book list url.
    * Intended to invoke when in modal confirmation dialog user clicks button "Confirm"
    */
-  function deleteBooks(deletableBooksList: Book) {
+  function deleteBooks(deletableBooksIds: number []) {
     setIsDeletionConfirmed(true);
-    triggerDeleteBookMutation([deletableBooksList]);
+    triggerDeleteBookMutation(deletableBooksIds);
   }
 
   /**
@@ -46,7 +47,7 @@ export function BookDeletionProcessorForBooksListPage({
    * for deletion
    */
   function cancelSelectionForDeleting() {
-    navigate(cancelActionUrl);
+    navigate(booksListPageUrl);
   }
 
   //safest way to distinguish that user has clicked "Confirm" option is to maintain a state variable which is explicitly assigned true
@@ -66,7 +67,7 @@ export function BookDeletionProcessorForBooksListPage({
   //when deletion endpoint execution finishes successfully value returned by hook becomes true
   useEffect(() => {
     if (deletionEndpointExecFinishedSuccessfully) {
-      navigate(afterDeletingRedirectUrl)
+      navigate(booksListPageUrl)
     }
   }, [deletionEndpointExecFinishedSuccessfully]);
 
@@ -93,13 +94,47 @@ export function BookDeletionProcessorForBooksListPage({
     }
   }, [errorQueryParameter]);
 
+  //current component depends on data (fetching status, returned data or error) fetched by getBooksList endpoint which is launched in books
+  //list component. That data is accessed in this component using getBooksList.useQueryState. Not being descendant of books list component,
+  //using useQueryState hook is the most convenient way to get getBooksList endpoint returned data and state
+  const { data: allBooksDisplayedInList = [], 
+    error: booksListQueryError, 
+    isFetching: isFetchingBooksList } = apiSlice.endpoints.getBooksList.useQueryState();
 
-  //display confirmation modal dialog when user has not clicked "Confirm" or "Cancel" option
+  //while books query is fetching data or error has occured, don't display deletion confirmation dialog, also don't perform any
+  //actions with deleting. Wait until data in book list component is fetched and then display confirmation dialog and perform deletion
+  if(isFetchingBooksList || booksListQueryError){
+    return null;
+  }
+
+
+  //if user has not clicked "Confirm" or "Cancel" option yet display confirmation modal dialog
   if (isDeletionConfirmed === false) {
-    let modalDialogMessage = `Are you sure you want to delete "${deletableBook.title}"?`
+    let messageAboutBooks;
+
+    //if deleting single book, find it's title to display it in confirmation dialog
+    if(deletableBooksIds.length === 1){
+      
+      //get first array element save way by destructing (instead of gettin by zero index)
+      const [bookId] = deletableBooksIds
+      const deletableBookInfo: Book | undefined = allBooksDisplayedInList.find((book) => (book.id === bookId))
+      //prepare title for dialog message or display error message if book not found (possible page opened by entering URL with non existing
+      //book id)
+      if(deletableBookInfo){
+        messageAboutBooks = '"' + deletableBookInfo.title + '"';
+      }else{
+        let errorMessage = `Book with id="${bookId}" not found`
+        return <GeneralErrorMessage msgText={errorMessage} />
+      }
+
+    //if deleting more than one book, prepare deletable book amount to display in confirmation dialog
+    }else{
+      messageAboutBooks = deletableBooksIds.length + ' books';
+    }
+    let modalDialogMessage = `Are you sure you want to delete ${messageAboutBooks}?`
 
     return <ModalDialog content={modalDialogMessage}
-      confirmFunction={() => deleteBooks(deletableBook)}
+      confirmFunction={() => deleteBooks(deletableBooksIds)}
       cancelFunction={cancelSelectionForDeleting} />
 
 

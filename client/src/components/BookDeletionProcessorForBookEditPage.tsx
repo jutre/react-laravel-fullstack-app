@@ -7,25 +7,27 @@ import { ModalDialog } from "./ModalDialog";
 import { DataFetchingStatusLabel } from "./ui_elements/DataFetchingStatusLabel";
 import { GeneralErrorMessage } from "./ui_elements/GeneralErrorMessage";
 import { Book } from "../types/Book";
-/**
- * displays deletion confirmation modal dialog before deleting and performs deleting if user confirmed deletion. After deleting page is
- * redirected to url speficied in properties. If user cancels deleting, deleting is not performed and page is redirected to url
- * specified in properties.
- * 
- * @param deletableBook - object containing information about book. "title" property is used to display deletable book title in confirmation
- * dialog, "id" property used to specify argument for API endpoint hook
- * @param {string} afterDeletingRedirectUrl - a book list url where page should be redirected after book is deleted. An URL value will be
- * used with react-router useNavigate hook. URL may be books list or favorite books list url depending on parent list where and editable
- * book page was navitated from
- * @param {string} cancelActionUrl - an url to which page should be redirected if user chooses "cancel" option in confirmation dialog. 
- * It may be books list or favorite books list url
- */
 
 type BookDeletionProcessorProps = {
   deletableBook: Book,
   afterDeletingRedirectUrl: string,
   cancelActionUrl: string
 }
+
+/**
+ * displays deletion confirmation modal dialog before deleting book and performs deleting if user confirmed deletion. For use with book edit
+ * component. After deleting page is redirected to url speficied in properties. If user cancels deleting, deleting is not performed and page
+ * is redirected to url specified in properties.
+ * 
+ * @param deletableBook - object representing deletable book. 'title' property is used to display deletable book title in deleting
+ * confirmation dialog, argument itself is passed to API endpoint that performs book deletion as argument
+ * @param afterDeletingRedirectUrl - a book list page url where page should be redirected after book is deleted. An URL value will be
+ * used with react-router useNavigate hook. URL may be books list or favorite books list url depending on parent list where a book editing
+ * page was navitated from
+ * @param cancelActionUrl - an url to which page should be redirected if user chooses "cancel" option in confirmation dialog. 
+ * It may be books list or favorite books list url
+ */
+
 
 export function BookDeletionProcessorForBookEditPage({
   deletableBook,
@@ -38,7 +40,7 @@ export function BookDeletionProcessorForBookEditPage({
    */
   function deleteBook(deletableBook: Book) {
     setIsDeletionConfirmed(true);
-    triggerDeleteBookMutation([deletableBook]);
+    triggerDeleteBookMutation([deletableBook.id]);
   }
 
   /**
@@ -94,7 +96,7 @@ export function BookDeletionProcessorForBookEditPage({
   }, [errorQueryParameter]);
 
 
-  //display confirmation modal dialog when user has not clicked "Confirm" or "Cancel" option
+  //if user has not clicked "Confirm" or "Cancel" option yet display confirmation modal dialog
   if (isDeletionConfirmed === false) {
     let modalDialogMessage = `Are you sure you want to delete "${deletableBook.title}"?`
 
