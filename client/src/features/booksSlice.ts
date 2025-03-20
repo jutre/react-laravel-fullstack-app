@@ -65,8 +65,9 @@ const booksSlice = createSlice({
     },
 
 
-    //when book(s) are deleted from books state, remove those deleted from selectem items (action dispatched from RTK Query api slice)
-    //action payload is array of books 'id' attribute, if such key exists in state.booksSelectedInList object, remove that entry
+    //when book(s) are deleted from books state, remove deleted books from selectem items if books are added to selection. Action for this
+    //reducer is dispatched from RTK Query endpoint, payload is array of books 'id' attribute. Each key in state.booksSelectedInList object
+    //conforms to book id
     booksCollectionRemovedFromSelection(state, action: PayloadAction<number[]>) {
       let bookIdsArr = action.payload;
       bookIdsArr.forEach((bookId) => {
