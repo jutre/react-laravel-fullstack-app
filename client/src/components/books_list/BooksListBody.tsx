@@ -113,11 +113,15 @@ export function BooksListBody({ listMode }: BooksListBodyParams) {
   }
 
   //console.log("currentSearchString", currentSearchString, 'wasRenderedForFirstTime', wasRenderedForFirstTime, 'queryConfig', booksListQueryExecSkippingConfig);
-  
-  const { data: booksListQueryResult = [], error: booksListQueryError, isFetching: isFetchingBooksList } =
+
+  const { data: booksListQueryData = [],
+    error: booksListQueryError,
+    isFetching: isFetchingBooksList } =
     useGetBooksListQuery(undefined, booksListQueryExecSkippingConfig);
 
-  const { data: booksFilteringQueryResult = [], error: booksFilteringQueryError, isFetching: isFetchingBooksFiltering } =
+  const { data: booksFilteringQueryData = [],
+    error: booksFilteringQueryError,
+    isFetching: isFetchingBooksFiltering } =
     useGetFilteredBooksListQuery(skipBooksFilteringQueryExecuting ? skipToken : currentSearchString);
 
   //one of two fethcing processes
@@ -131,10 +135,10 @@ export function BooksListBody({ listMode }: BooksListBodyParams) {
 
   //'search' query param was set, use filtering query result
   if (currentSearchString) {
-    booksToDisplay = booksFilteringQueryResult
+    booksToDisplay = booksFilteringQueryData
 
     //if non empty search string is too short, assign empty array to currently displayable books as there may be returned non empty result
-    //from previous filtering endpoint invocation, it is still assigned to booksFilteringQueryResult result variable as endpoint result is
+    //from previous filtering endpoint invocation, it is still assigned to booksFilteringQueryData result variable as endpoint result is
     //not reset any way
     if (currentSearchString.length < 3) {
       booksToDisplay = []
@@ -142,7 +146,7 @@ export function BooksListBody({ listMode }: BooksListBodyParams) {
 
     //'search' query param was not set, all books list was queried
   } else {
-    booksToDisplay = booksListQueryResult
+    booksToDisplay = booksListQueryData
   }
 
 
