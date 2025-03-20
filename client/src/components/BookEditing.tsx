@@ -51,7 +51,7 @@ export function BookEditing() {
       let bookDataFromUpdateResponse = await triggerBookUpdateMutation(submittedBookData).unwrap();
       setFormInitialData(bookDataFromUpdateResponse)
     } catch (error) {
-      //error will be assigned to variable in book update query hook return object desctucting assignment, not processing it here
+      //not processing error here, it is assigned to variable in book update mutation hook returned object
     }
   }
 
