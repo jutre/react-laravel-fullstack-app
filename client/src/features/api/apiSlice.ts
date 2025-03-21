@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { restApiBaseUrl } from '../../config';
 import { User, UserCredentials } from '../../types/User';
-import { Book } from '../../types/Book';
+import { Book, NewBook } from '../../types/Book';
 import { getCookie } from '../../utils/utils'
 import { booksCollectionRemovedFromSelection } from '../booksSlice';
 
@@ -86,18 +86,17 @@ export const apiSlice = createApi({
     }),
 
 
-    // addBook: build.mutation<Book, Partial<Book>>({
-    //   query(body) {
-    //     return {
-    //       url: `books`,
-    //       method: 'POST',
-    //       body,
-    //     }
-    //   },
-    //   // Invalidates all Book-type queries providing the `LIST` id - after all, depending of the sort order,
-    //   // that newly created book could show up in any lists.
-    //   invalidatesTags: [{ type: 'Book', id: 'LIST' }],
-    // }),
+    addBook: builder.mutation<Book, NewBook>({
+      query(newBook) {
+        return {
+          url: 'books',
+          method: 'POST',
+          body: newBook,
+        }
+      },
+      // Invalidates all Book-type queries providing the 'LIST' id - refetch list to include also newly created book
+      invalidatesTags: [{ type: 'Book', id: 'LIST' }],
+    }),
 
 
     updateBook: builder.mutation<Book, Book>({
@@ -142,5 +141,6 @@ export const {
   useGetFilteredBooksListQuery,
   useLazyGetFilteredBooksListQuery,
   useGetBookQuery,
+  useAddBookMutation,
   useUpdateBookMutation,
   useDeleteBookMutation } = apiSlice

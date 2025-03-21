@@ -130,6 +130,28 @@ error obj when no network
   }
 }
 
+--json when field specific error returned
+{
+	"message": "The title field is required. (and 1 more error)",
+	"errors": {
+		"title": [
+			"The title field is required."
+		],
+		"author": [
+			"The author field is required."
+		]
+	}
+}
+
+{
+	"message": "Book with title \"titlenew\" adready exists",
+	"errors": {
+		"title": [
+			"Book with title \"titlenew\" adready exists"
+		]
+	}
+}
+
 
 
 

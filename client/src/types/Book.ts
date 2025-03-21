@@ -5,3 +5,5 @@ export type Book = {
   preface: string | null,
   isAddedToFavorites?: boolean
 }
+
+export type NewBook = Pick<Book, 'title' | 'author' | 'preface'>

@@ -2,7 +2,6 @@ import { routes } from "../config";
 import { PageHeader } from "./page_header/PageHeader";
 import { BooksList } from "./books_list/BooksList";
 import { BookEditing } from "./BookEditing.tsx";
-import { TestAuthSliceSelector } from "./TestAuthSliceSelector";
 import {
   BrowserRouter as Router,
   Routes,
@@ -13,6 +12,7 @@ import { selectUserLoadingStatus, selectIsUserLoggenIn } from '../features/authS
 import { useAppSelector, useAppDispatch } from '../store/reduxHooks';
 import { LoginForm } from "./LoginForm.tsx";
 import { apiSlice } from "../features/api/apiSlice";
+import { BookCreating } from "./BookCreating.tsx";
 
 
 const Layout = () => {
@@ -40,6 +40,7 @@ const Layout = () => {
       <Routes>
         <Route path={routes.bookListPath} element={<BooksList />} />
         <Route path={routes.bookEditPath} element={<BookEditing />} />
+        <Route path={routes.createBookPath} element={<BookCreating />} />
       </Routes>
 
     } else {
