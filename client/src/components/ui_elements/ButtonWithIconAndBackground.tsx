@@ -7,22 +7,28 @@ import { ButtonWithIcon } from '../ui_elements/ButtonWithIcon';
  * @param {string} iconName - one of string values "is-added-to-favorites", "add-to-favorites", "delete", "edit", appropriate icon
  * file will be displayed 
  * @param {function} clickHandler - pointer to button click handler function
- * @param {boolean} buttonDisabled - if value is true then
+ * @param {boolean} buttonDisabled - if value is true then button visual appearance is disable elements appearance - color set similar to
+ * gray color which is achieved by adding appropriate css class for background and default cursor (no pointer above button); no html
+ * element's 'disabled' attritute is added, the click handler if passed is still invoked when button is clicked - in case when button
+ * semantically is disabled, the absence of any action to click must be defined in attached click handler
  * @param {string} buttonTypeAttrValue -
  */
 
 type ButtonWithIconAndBackgroundProps = {
-  iconName: string,
-  clickHandler: () => void,
+  iconName: 'is-added-to-favorites' | 'add-to-favorites' | 'delete' | 'edit',
+  clickHandler?: () => void,
   buttonDisabled?: boolean,
-  buttonTypeAttrValue?: string
+  buttonTypeAttrValue?: 'button' | 'submit' | 'reset'
 }
-export function ButtonWithIconAndBackground({iconName, clickHandler, buttonDisabled, buttonTypeAttrValue}: ButtonWithIconAndBackgroundProps) {
+export function ButtonWithIconAndBackground({iconName,
+  clickHandler,
+  buttonDisabled,
+  buttonTypeAttrValue}: ButtonWithIconAndBackgroundProps) {
 
   //white background class is used for most of icons, set as default value
   let beforeElemBackgndColorTwCssClass = "before:bg-white";
 
-  let beforeElemMaskImgUrlTwCssClass;
+  let beforeElemMaskImgUrlTwCssClass:string;
   switch (iconName) {
     case 'is-added-to-favorites':
       beforeElemMaskImgUrlTwCssClass = "before:[mask-image:url(assets/is-added-to-favorites-flag.svg)]";

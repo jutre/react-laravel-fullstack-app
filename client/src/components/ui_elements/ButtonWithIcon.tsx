@@ -4,7 +4,7 @@ type ButtonWithIconProps = {
   beforeElemMaskSizeTwCssClass: string,
   beforeElemBackgndColorTwCssClass?: string,
   otherClasses: string,
-  buttonTypeAttrValue?: string
+  buttonTypeAttrValue?: 'button' | 'submit' | 'reset'
 }
 
 /**
