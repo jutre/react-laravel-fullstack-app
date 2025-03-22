@@ -14,7 +14,7 @@ import { Book, NewBook } from "../types/Book";
 import { useAddBookMutation } from "../features/api/apiSlice";
 import DisappearingMessage from './DisappearingMessage';
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
-import { extractMessageFromQueryErrorObj } from "../utils/utils";
+import { extractMessageOrMessagesObjFromQueryError } from "../utils/utils";
 
 
 export function BookCreating() {
@@ -33,9 +33,20 @@ export function BookCreating() {
 
   let formDisabled = isLoading === true;
 
+  //two types of error can be returned from endpoint. One type results in error where a string error message can be obtained like 
+  //"500 Internal Server Error". Other type is validation type error which is related to field, the error extractor function returns it in
+  //form of object. F.e., if trying to create book with title that already exists an error object contains object with 'title' field and
+  //approprite error message
   let errorMsg: string | null = null;
+  let validationErrors: { [index:string]: string } | null = null;
+
   if(error){
-    errorMsg = extractMessageFromQueryErrorObj(error)
+    const errMsgOrObject = extractMessageOrMessagesObjFromQueryError(error)
+    if(typeof errMsgOrObject === 'string'){
+      errorMsg = errMsgOrObject
+    }else{
+      validationErrors = errMsgOrObject
+    }
   }
 
   async function saveSubmittedData(submittedFormData: SubmittedFormData) {
@@ -127,7 +138,8 @@ export function BookCreating() {
     mainContent =
       <FormBuilder formFieldsDefinition={bookCreatingFormFieldsDef}
         successfulSubmitCallback={saveSubmittedData}
-        disableAllFields={formDisabled} />;
+        disableAllFields={formDisabled} 
+        initiallyDisplayedErrors={validationErrors}/>;
   }
 
   return (

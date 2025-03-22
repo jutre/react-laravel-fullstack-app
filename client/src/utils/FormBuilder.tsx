@@ -67,8 +67,8 @@ export type SubmittedFormData = {
 interface FormBuilderProps {
   formFieldsDefinition: FormFieldsDefinition,
   submitButtonText?: string,
-  initialFormData?: InitialFormData,
-  initiallyDisplayedErrors?: ErrorMessages,
+  initialFormData?: InitialFormData | null,
+  initiallyDisplayedErrors?: ErrorMessages | null,
   successfulSubmitCallback: (submittedFormData: SubmittedFormData) => void,
   disableAllFields?: boolean
 }
