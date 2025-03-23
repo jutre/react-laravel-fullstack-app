@@ -34,9 +34,9 @@ export function BookCreating() {
   let formDisabled = isLoading === true;
 
   //two types of error can be returned from endpoint. One type results in error where a string error message can be obtained like 
-  //"500 Internal Server Error". Other type is validation type error which is related to field, the error extractor function returns it in
-  //form of object. F.e., if trying to create book with title that already exists an error object contains object with 'title' field and
-  //approprite error message
+  //"500 Internal Server Error". Other type is validation error which contains error related to field, error extractor function returns it
+  //in form of object where key is name of submitted object field name and value is error description. F.e., if trying to create book with 
+  //title that already exists an error object contains object with 'title' field and approprite error message
   let errorMsg: string | null = null;
   let validationErrors: { [index:string]: string } | null = null;
 
