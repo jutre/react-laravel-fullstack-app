@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getQueryParamValue, extractMessageFromQueryErrorObj } from "../utils/utils";
+import { getQueryParamValue, extractMessageOrMessagesObjFromQueryError } from "../utils/utils";
 import { Book } from "../types/Book";
 import { useGetBookQuery, useUpdateBookMutation } from "../features/api/apiSlice";
 import { skipToken } from '@reduxjs/toolkit/query/react'
 import {
   routes,
-  bookEditFormFieldsDef
-} from "../config";
+  bookEditFormFieldsDef } from "../config";
 import { H1Heading } from "./ui_elements/H1Heading";
 import { ButtonWithIconAndBackground } from "./ui_elements/ButtonWithIconAndBackground";
 import { DataFetchingStatusLabel } from "./ui_elements/DataFetchingStatusLabel";
@@ -18,6 +17,8 @@ import DisappearingMessage from './DisappearingMessage';
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
 import { BookDeletionProcessorForBookEditPage } from "./BookDeletionProcessorForBookEditPage";
 import { useTrackEndpointSuccessfulFinishing } from "../hooks/useTrackEndpointSuccessfulFinishing";
+import { SerializedError } from '@reduxjs/toolkit';
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
 
 /**
@@ -154,11 +155,27 @@ export function BookEditing() {
     showDeletionConfirmationDialog = true;
   }
 
-  let errorMsg: string | undefined = undefined
+  //from updating endpoint two types of error can be returned. One type results in error where a string error message can be obtained like 
+  //"Book with id=<bookId> not found". Other type is validation error which is related to field, the error extractor function returns it in
+  //form of object. F.e., if trying to update title and set it to title that already has other book an error object contains object with 
+  //'title' field and approprite error message. Error by field is needed to display it next to input field with same name as error object
+  //key. It is used in case of book updating endpoint
+  let errorMsg: string | null = null
+  let validationErrors: { [index:string]: string } | null = null
+
+  let currentErrorFromEndpoint: FetchBaseQueryError | SerializedError | undefined = undefined
   if (getBookQueryError) {
-    errorMsg = extractMessageFromQueryErrorObj(getBookQueryError)
+    currentErrorFromEndpoint = getBookQueryError    
   } else if (bookUpdatingError) {
-    errorMsg = extractMessageFromQueryErrorObj(bookUpdatingError)
+    currentErrorFromEndpoint = bookUpdatingError
+  }
+  if (currentErrorFromEndpoint) {
+    const errMsgOrObject = extractMessageOrMessagesObjFromQueryError(currentErrorFromEndpoint)
+    if(typeof errMsgOrObject === 'string'){
+      errorMsg = errMsgOrObject
+    }else{
+      validationErrors = errMsgOrObject
+    }
   }
   return (
     <div>
@@ -216,6 +233,7 @@ export function BookEditing() {
               submitButtonText="Update"
               initialFormData={formInitialData}
               successfulSubmitCallback={saveSubmittedData}
+              initiallyDisplayedErrors={validationErrors}
               disableAllFields={formDisabled} />
           </>
         }

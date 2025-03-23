@@ -8,6 +8,11 @@ use App\Models\User;
 
 class BookController extends Controller
 {
+    private $bookDataValidationRules = [
+        'title' => 'between:3,255',
+        'author' => 'between:3,255'
+    ];
+
     /**
      * return all books belonging to current user
      */
@@ -25,24 +30,14 @@ class BookController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required',
-            'author' => 'required'
-        ]);
+        $request->validate($this->bookDataValidationRules);
         usleep(500000);
 
-        //a book with same title among books belonging to user must not exist. If exists, return error message, not creating book
+        //a book with same title among books belonging to user must not exist. If exists, return error message, don't create book
         $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
-        $bookWithSameTitle = $this->getBookQueryWithUserIdConstraint($currentlyLoggedInUserId)
-            ->where('title', $request->input('title'))
-            ->select(['id'])
-            ->first();
-        if (!empty($bookWithSameTitle)) {
-            $generalMessage = "Book with title \"{$request->input('title')}\" already exists";
-            $error = [
-                'message' => $generalMessage,
-                'errors' => ['title' => ["Book with title \"{$request->input('title')}\" adready exists"]]
-            ];
+        $bookTitle = $request->input('title');
+        if ($this->doesBookTitleExistAmongUsersBooks($currentlyLoggedInUserId, $bookTitle)) {
+            $error = $this->createDataForJsonErrorDescription($bookTitle);
             return response()->json($error, 409);
         }
 
@@ -86,6 +81,7 @@ class BookController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $request->validate($this->bookDataValidationRules);
         usleep(500000);
 
         //get book result object instance to use if for updating record later. 
@@ -94,12 +90,23 @@ class BookController extends Controller
         $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
         $book = $this->getBookQueryWithUserIdConstraint($currentlyLoggedInUserId)
             ->where('id', $id)
-            ->select(['id'])
+            ->select(['id', 'title'])
             ->first();
 
         //if book is not found, return error
         if (empty($book)) {
             return response()->json(['message' => "Book with id $id not found"], 404);
+        }
+
+        //if user is setting new title for book, check if such title is set for other book
+        //can not update to a title if a book with title user is attempting to update to exists among books belonging to user, book titles
+        //are unique among user's book. If exists , return error message, don't create book
+        $newBookTitle = $request->input('title');
+        if($newBookTitle != $book->title){
+            if ($this->doesBookTitleExistAmongUsersBooks($currentlyLoggedInUserId, $newBookTitle)) {
+                $error = $this->createDataForJsonErrorDescription($newBookTitle);
+                return response()->json($error, 409);
+            }
         }
 
         $book->update($request->all());
@@ -173,5 +180,37 @@ class BookController extends Controller
      */
     private function getCurrentlyLoggedInUserId(Request $request) {
         return $request->user()->id;
+    }
+
+    /**
+     * returns true if book with given title exists among user's created books
+     *
+     * @param [type] $userId
+     * @param [type] $title
+     * @return void
+     */
+    private function doesBookTitleExistAmongUsersBooks(int $userId, string $title){
+        $bookByTitle = $this->getBookQueryWithUserIdConstraint($userId)
+            ->where('title', $title)
+            ->select(['id'])
+            ->first();
+        return !empty($bookByTitle);
+    }
+
+
+    /**
+     * creates data structure using nested arrays which conforms to needed json structure which will be used to return json in error 
+     * response containing message that book with given title already exists.
+     *
+     * @param string $title - title that is trying to be saved for book that already is used for existing book
+     * @return array
+     */
+    private function createDataForJsonErrorDescription(string $title){
+        $generalMessage = "Book with title \"$title\" already exists";
+        $error = [
+            'message' => $generalMessage,
+            'errors' => ['title' => [$generalMessage]]
+        ];
+        return $error;
     }
 }
