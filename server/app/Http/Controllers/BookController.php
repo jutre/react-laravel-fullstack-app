@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 
 class BookController extends Controller
@@ -19,8 +20,7 @@ class BookController extends Controller
     public function index(Request $request)
     {
         usleep(400000);
-        $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
-        return $this->getBookQueryWithUserIdConstraint($currentlyLoggedInUserId)
+        return $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->select(['id', 'author', 'title'])
             ->get();
     }
@@ -34,15 +34,16 @@ class BookController extends Controller
         usleep(500000);
 
         //a book with same title among books belonging to user must not exist. If exists, return error message, don't create book
-        $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
+
         $bookTitle = $request->input('title');
-        if ($this->doesBookTitleExistAmongUsersBooks($currentlyLoggedInUserId, $bookTitle)) {
-            $error = $this->createDataForJsonErrorDescription($bookTitle);
+        if ($this->doesBookTitleExistAmongUsersBooks($request, $bookTitle)) {
+            $error = $this->createDataForExistingTitleErrorResponse($bookTitle);
             return response()->json($error, 409);
         }
 
         //book is stored to database using model's object relation methods. This is done because books.user_id field can not be added to
         //mass assignment fields to prevent storing arbitrary user_id by submitting it from API
+        $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
         $user = User::find($currentlyLoggedInUserId);
         $book = new Book($request->all());
         $savedBookRecord = $user->books()->save($book);
@@ -59,18 +60,17 @@ class BookController extends Controller
      * arbitrary book id can be passed in REST API URL book id path segment, also of book belonging to other user)
      * 
      */
-    public function show(Request $request, string $id)
+    public function show(Request $request, int $id)
     {
         usleep(100000);
-        $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
-        $book = $this->getBookQueryWithUserIdConstraint($currentlyLoggedInUserId)
+        $book = $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->where('id', $id)
             ->select(['id', 'title', 'author', 'preface'])
             ->first();
 
         //if book is not found, return error
         if (empty($book)) {
-            return response()->json(['message' => "Book with id $id not found"], 404);
+            return $this->createBookWithIdNotFoundResponseBodyAndCode($id);
         }
 
         return $book;
@@ -87,24 +87,24 @@ class BookController extends Controller
         //get book result object instance to use if for updating record later. 
         //select book by id adding book's user_id column value constraint to prevent accessing books belonging to other users (an ID of 
         //arbitrary book can be passed in REST API URL book id path segment, also of book belonging to other user)
-        $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
-        $book = $this->getBookQueryWithUserIdConstraint($currentlyLoggedInUserId)
+
+        $book = $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->where('id', $id)
             ->select(['id', 'title'])
             ->first();
 
         //if book is not found, return error
         if (empty($book)) {
-            return response()->json(['message' => "Book with id $id not found"], 404);
+            return $this->createBookWithIdNotFoundResponseBodyAndCode($id);
         }
 
         //if user is setting new title for book, check if such title is set for other book
         //can not update to a title if a book with title user is attempting to update to exists among books belonging to user, book titles
-        //are unique among user's book. If exists , return error message, don't create book
+        //are unique among user's book. If exists, return error message, don't create book
         $newBookTitle = $request->input('title');
         if($newBookTitle != $book->title){
-            if ($this->doesBookTitleExistAmongUsersBooks($currentlyLoggedInUserId, $newBookTitle)) {
-                $error = $this->createDataForJsonErrorDescription($newBookTitle);
+            if ($this->doesBookTitleExistAmongUsersBooks($request, $newBookTitle)) {
+                $error = $this->createDataForExistingTitleErrorResponse($newBookTitle);
                 return response()->json($error, 409);
             }
         }
@@ -125,15 +125,17 @@ class BookController extends Controller
      * Delete records from books table. A record is deleted if it's 'id' column value is included in request body's JSON array where each 
      * array element is book id. Deleting is restricted to books belonging to current user logged in.
      * 
-     * This method corresponds to HTTP DELETE method which receives request body instead of having path segment in REST API endpoint URL 
-     * corresponding to single deletable book id. Request body is JSON which is array of deletable books ids in 
-     * form of {'ids': [1, 2, 3, ...other array elements]}
+     * This method corresponds to HTTP DELETE method but instead of having path segment in API endpoint URL containing single deletable
+     * resource identifier, this method is constructed to receive request body which is a JSON containig array of deletable books ids. The
+     * format of JSON should be in following format -
+     * {
+     *  "ids": [1, 2, 3, ...other array elements]
+     * }
      */
     public function destroy(Request $request)
     {
         usleep(500000);
-        $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
-        $this->getBookQueryWithUserIdConstraint($currentlyLoggedInUserId)
+        $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->whereIn('id', $request->input('ids'))
             ->delete();
 
@@ -146,30 +148,155 @@ class BookController extends Controller
     public function search(Request $request, string $title)
     {
         usleep(100000);
-        $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
-        return $this->getBookQueryWithUserIdConstraint($currentlyLoggedInUserId)
+        return $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->where('title', 'like', '%' . $title . '%')
             ->select(['id', 'title'])
             ->get();
     }
 
+    /**
+     * return list which contain book identifiers of books that user currently logged in has added to favorites list.
+     *
+     * Json format returned is following -
+     * [
+     *   {"id":"<bookId1>"},
+     *   {"id":"<bookId2>",
+     *   ...
+     * ]
+     */
+    public function getFavoriteBooks(Request $request)
+    {
+        usleep(100000);
+        return $this->getBooksTableQueryWithCurrentUserConstraint($request)
+            ->join('favorite_books', 'books.id', '=', 'favorite_books.book_id')
+            ->select('books.id')
+            ->get();
+    }
 
     /**
-     * Returns Eloquent query builder instance with added 'where' condition which forces to query Book model's records that are only 
-     * associated with passed user's id value, where user id must be id of currently logged in user as user is allowed to access and modify
-     * only books created by user itself.
+     * Adds a book specified by identifier to favorite book list.
+     *
+     * @param @param \Illuminate\Http\Request $request $request
+     * @param integer $id - value of 'book' table 'id' column specifying book identifier which must be added to favorite book list
+     * @return if book specified by id is successfully added to favorites list returns HTTP 204 response code (no content). If book is not
+     * found, returns json with error description with HTTP 404 response code (not found); if book is already added to favorites, returns
+     * json with error description with HTTP 409 response code (conflict)
+     */
+    public function addBookToFavorites(Request $request, int $id)
+    {
+        usleep(100000);
+
+        //before adding to favorites, check 1)if book with such id exists in 'books' table (can not add to favorites a book that does not
+        //exist among user's books), 2) if book already is added to favorites (trying to add a book already added to favorites must be
+        //responded with error)
+        $bookTableAndFavoriteTableRecord = $this->getBookTableRecordLeftJoinedWIthFavoriteBooksTable($request, $id);
+
+        //if query result is empty, book with suplied id is not found, return error
+        if (empty($bookTableAndFavoriteTableRecord)) {
+            return $this->createBookWithIdNotFoundResponseBodyAndCode($id);
+        }
+
+        //if 'book_id' column (comes from 'favorite_books') from query result is not null book is adready added to favorites, return error
+        if (!empty($bookTableAndFavoriteTableRecord->book_id)) {
+            $error = [
+                'message' => "Book with id $id is already added to favorites"
+            ];
+            return response()->json($error, 409);
+
+        //record in joined 'favorite_books' table doesn't exists, book is not added to favorites. Add it by inserting record into
+        //'favorite_books' table
+        }else{
+            DB::table('favorite_books')->insert([
+                'book_id' => $id
+            ]);
+            return response()->noContent();
+        }
+    }
+
+
+    public function removeBookFromFavorites(Request $request, int $id)
+    {
+        usleep(100000);
+
+        //before removing from favorites, check 1)if book with such id exists in 'books' table (can not remove from favorites a book that
+        //does not exist among user's books), 2) if book is not added to favorites (trying to remove a book not added added to favorites
+        //will be respond with error)
+        $bookTableAndFavoriteTableRecord = $this->getBookTableRecordLeftJoinedWIthFavoriteBooksTable($request, $id);
+
+        //if query result is empty, book with suplied id is not found, return error
+        if (empty($bookTableAndFavoriteTableRecord)) {
+            return $this->createBookWithIdNotFoundResponseBodyAndCode($id);
+        }
+
+        //if 'book_id' column (comes from 'favorite_books') from query result is not null book is added to favorites, remove record from
+        //favorites table
+        if (!empty($bookTableAndFavoriteTableRecord->book_id)) {
+            DB::table('favorite_books')
+                ->where('book_id', '=', $id)
+                ->delete();
+            return response()->noContent();
+
+        //record in joined 'favorite_books' table doesn't exists, book is not added to favorites, return 404 error
+        }else{
+            $error = [
+                'message' => "Book with id $id is is not added to favorites"
+            ];
+            return response()->json($error, 404);
+        }
+    }
+
+    /**
+     * Returns object which is result of executed Eloquent query builder created SQL query. Query is select from 'books' table by book's id
+     * and currently logged in user's id left joined with 'favorite_books' table. The result will be used to check record existance before
+     * performing adding or removing record in 'favorite_books' table
+     *
+     * @param @param \Illuminate\Http\Request $request $request
+     * @param integer $id - value of 'book' table 'id' column specifying book identifier which must be added to favorite book list
+     * @return object - result of Eloquent query builder generated query. Null will be returned if record with specified book id does not
+     * exist in 'books' table
+     */
+    private function getBookTableRecordLeftJoinedWIthFavoriteBooksTable(Request $request, int $bookId){
+        return $this->getBooksTableQueryWithCurrentUserConstraint($request)
+            ->leftJoin('favorite_books', 'books.id', '=', 'favorite_books.book_id')
+            ->where('books.id', $bookId)
+            ->select('books.id', 'favorite_books.book_id')
+            ->first();
+    }
+
+    /**
+     * Adds a book specified by identifier to favorite book list.
+     *
+     * @param @param \Illuminate\Http\Request $request $request
+     * @param integer $id - value of 'book' table 'id' column specifying book identifier which must be added to favorite book list
+     * @return if book specified by id is successfully added to favorites list returns HTTP 204 response code (no content). If book is not
+     * found, returns json with error description with HTTP 404 response code (not found); if book is already added to favorites, returns
+     * json with error description with HTTP 409 response code (conflict)
+     */
+    private function createBookWithIdNotFoundResponseBodyAndCode($bookId){
+        return response()->json(['message' => "Book with id $bookId not found"], 404);
+    }
+
+
+    /**
+     * Returns Eloquent query builder instance with called methods instructing to add SQL query parts "FROM books" and
+     * "WHERE user_id = <currently logged in user ID>".
+     * When user queries book list, makes updatates or deletes books, he can only access book records that were created therefore condition
+     * on 'user_id' column will be needed in every SQL query performing reading, updating and deleting and this method add it to Eloquent
+     * query builder instance along with "FROM books" part also needed in every query quering books data.
      * 
-     * 'books' table 'user_id' column is foreing key to 'users' table primary key, 'books' and 'users' table has "one to many" relation.
      * Function returns Eloquent query builder instance and the function call can be followed by other Eloquent query builder method calls
      * allowing method calls chaining adding additional conditions and invoking retrieving methods, for example
-     * return $this->getBookQueryWithUserIdConstraint($userId)->select(['column1', 'column2'])->get();
+     * $this->getBooksTableQueryWithCurrentUserConstraint($request)
+     *  ->select(['column1', 'column2'])
+     *  ->get();
      *
-     * @param int $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    private function getBookQueryWithUserIdConstraint(int $bookOwnerUserId)
+    private function getBooksTableQueryWithCurrentUserConstraint(Request $request)
     {
-        return Book::where('user_id', $bookOwnerUserId);
+        $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
+        return Book::where('user_id', $currentlyLoggedInUserId);
     }
 
     /**
@@ -178,19 +305,20 @@ class BookController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return int
      */
-    private function getCurrentlyLoggedInUserId(Request $request) {
+    private function getCurrentlyLoggedInUserId(Request $request)
+    {
         return $request->user()->id;
     }
 
     /**
      * returns true if book with given title exists among user's created books
      *
-     * @param [type] $userId
-     * @param [type] $title
+     * @param \Illuminate\Http\Request $request
+     * @param string $title
      * @return void
      */
-    private function doesBookTitleExistAmongUsersBooks(int $userId, string $title){
-        $bookByTitle = $this->getBookQueryWithUserIdConstraint($userId)
+    private function doesBookTitleExistAmongUsersBooks(Request $request, string $title){
+        $bookByTitle = $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->where('title', $title)
             ->select(['id'])
             ->first();
@@ -205,7 +333,7 @@ class BookController extends Controller
      * @param string $title - title that is trying to be saved for book that already is used for existing book
      * @return array
      */
-    private function createDataForJsonErrorDescription(string $title){
+    private function createDataForExistingTitleErrorResponse(string $title){
         $generalMessage = "Book with title \"$title\" already exists";
         $error = [
             'message' => $generalMessage,

@@ -4,17 +4,20 @@ import { useNavigate } from "react-router-dom";
 import { 
   bookCollectionAddedToSelection, 
   singleBookRemovedFromSelection,
-  selectIsBookAddedToSelection } from "../../features/booksSlice";
+  selectIsBookAddedToSelection,
+  selectIsBookAddedToFavoriteBooks } from "../../features/booksSlice";
 import { ButtonWithIconAndBackground } from '../ui_elements/ButtonWithIconAndBackground';
 import { Book } from '../../types/Book';
 
 type BookListItemProps = {
   book: Book,
   editUrl: string,
-  deleteUrl: string
+  deleteUrl: string,
+  addToFavoritesQueryTrigger: (bookId: number) => void,
+  removeFromFavoritesQueryTrigger: (bookId: number) => void
 }
 
-export function BookListItem({book, editUrl, deleteUrl}: BookListItemProps) {
+export function BookListItem({book, editUrl, deleteUrl, addToFavoritesQueryTrigger, removeFromFavoritesQueryTrigger}: BookListItemProps) {
   //TODO maybe remove comment
   //button with redirection will be used instead of react router <Link/> element to have uniform styling - 
   //most of elements on page are html <button> elements, only couple of anchor <a/> elements might be needed on page
@@ -23,6 +26,8 @@ export function BookListItem({book, editUrl, deleteUrl}: BookListItemProps) {
   const dispatch = useAppDispatch();
 
   const isBookAddedToSelection = useAppSelector((state) => selectIsBookAddedToSelection(state, book.id));
+
+  const isBookAddedToFavoriteBooks = useAppSelector((state) => selectIsBookAddedToFavoriteBooks(state, book.id));
 
   /**
    * handles checbox checking/unchecking event for a single book by adding or removing that book to selection for deleting.
@@ -43,15 +48,20 @@ export function BookListItem({book, editUrl, deleteUrl}: BookListItemProps) {
   }
 
   /**
-   * when cliking on favourites icon, add or remove from favourites
+   * when cliking on favourites icon, add or remove from favourites depending on whether book currently is added to favorites
    */
-  function handleAddToFavoritesClick(){
-    //dispatch(bookFavoriteStateToggled(book.id));
+  function handleAddRemoveFromFavoritesClick(bookId: number, isCurrentlyAddedToFavorites: boolean){
+    if(isCurrentlyAddedToFavorites){
+      removeFromFavoritesQueryTrigger(bookId)
+
+    }else{
+      addToFavoritesQueryTrigger(bookId)
+    }
   }
 
   
   let addToFavoritesButtonIconName = "add-to-favorites";
-  if(book.isAddedToFavorites){
+  if(isBookAddedToFavoriteBooks){
     addToFavoritesButtonIconName = "is-added-to-favorites";
   }
 
@@ -88,7 +98,7 @@ export function BookListItem({book, editUrl, deleteUrl}: BookListItemProps) {
         {/*add to favorites button*/}
         <ButtonWithIconAndBackground
           iconName = {addToFavoritesButtonIconName}
-          clickHandler={handleAddToFavoritesClick}/>
+          clickHandler={()=>{handleAddRemoveFromFavoritesClick(book.id, isBookAddedToFavoriteBooks)}}/>
 
         {/*edit button*/}
         <ButtonWithIconAndBackground

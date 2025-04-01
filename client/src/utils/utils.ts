@@ -213,3 +213,34 @@ export function extractMessageOrMessagesObjFromQueryError(queryError: FetchBaseQ
     return extractMessageFromQueryErrorObj(queryError)
   }
 }
+
+/**
+ * an error object returned by endpoint in {error} field can be object of type FetchBaseQueryError or SerializedError or undefined (no
+ * error returned)
+ */
+type FetchBaseErrorTypes = FetchBaseQueryError | SerializedError | undefined
+
+/**
+ * in situations where script has more than one endpoint (f.e, one for data fetching and another for sending updates) and each of them can
+ * return error it is needed to find out which of them has returned a non empty error object to extract a message from it. This method lets
+ * make code that finds which of error containing variable value is not 'undefined' shorter, it replaces code like
+ * 
+ * if(firstEndpointError){
+ *  activeError = firstEndpointError
+ * }else if(secondEndpointError){
+ *  activeError = secondEndpointError
+ * }else if (anotherEndpointError) {
+ *  ...
+ * }
+ * 
+ * @param errors - variables that possibly can have non empty value assigned from endpoint's result object's {error} field, at least two
+ * such variables must be passed as parameters to function, parameter number is not fixed
+ * 
+ * @returns 'undefined' if all of parameter values are 'undefined' or first non 'undefined' value from function parameters
+ */
+export function findNonEmptyErrorFromList(...errors: [FetchBaseErrorTypes, FetchBaseErrorTypes, ...FetchBaseErrorTypes[]]):
+  FetchBaseQueryError | SerializedError | undefined {
+
+  const possiblyNonEmptyError = errors.find(error => error !== undefined)
+  return possiblyNonEmptyError
+}

@@ -1,6 +1,7 @@
 import { createSlice, createSelector } from '@reduxjs/toolkit';
+import { apiSlice } from './api/apiSlice';
 import type { PayloadAction } from '@reduxjs/toolkit'
-import { Book } from '../types/Book.ts';
+import { Book, FavoriteBook } from '../types/Book.ts';
 import { RootState } from "../store/store";
 
 /**
@@ -128,7 +129,7 @@ export const selectIsBookAddedToSelection = (state: RootState, bookId: number) =
   //actually ckecking if property with value equel to bookId parameter exists
   bookId in state.booksState.booksSelectedInList
 
-//
+
 /**
  * return array of book ids thare currently are selected. Return in form of array as usually in comsuming component list of 
  * values are needed, same is in current application - there wont be need to convert object to array
@@ -138,6 +139,32 @@ export const selectIsBookAddedToSelection = (state: RootState, bookId: number) =
 export const selectBooksInSelection = createSelector(
   (state: RootState) => state.booksState.booksSelectedInList,
   selectedBookObj => Object.keys(selectedBookObj)
+)
+
+/**
+ * creating selector that checks if book is added to favorites. Favorite books is obtained from server as list of books that are added to 
+ * favorites, there must be done some logic to find out if specified book is added to books list, this logic is placed in chain of 
+ * selectors. 
+ * The final selector returns true if book specified by id is added to favorite books, false otherwise 
+ */
+const emptyFavoriteBooks: FavoriteBook[] = []
+//accessing favorite books list data fetched by RTQ Query endpoint
+const selectFavorBooksResult = apiSlice.endpoints.getFavoriteBooks.select()
+
+//memorize data from endpoint or empty array in endpoint returns undefined
+const selectFavorBooks = createSelector(
+  selectFavorBooksResult,
+  favorBooksResult => favorBooksResult?.data ?? emptyFavoriteBooks
+)
+
+//final selector - returns true if book specified by id is added to favorite books, false otherwise
+export const selectIsBookAddedToFavoriteBooks = createSelector(
+  selectFavorBooks,
+  (state: RootState, bookId: number) => bookId,
+  (favoriteBooks, bookId) => {
+    const bookInFavorBooksList = favoriteBooks.find(book => book.id === bookId)
+    return bookInFavorBooksList !== undefined
+  }
 )
 
 

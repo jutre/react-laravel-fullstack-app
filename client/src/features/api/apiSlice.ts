@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { restApiBaseUrl } from '../../config';
 import { User, UserCredentials } from '../../types/User';
-import { Book, NewBook } from '../../types/Book';
+import { Book, NewBook, FavoriteBook } from '../../types/Book';
 import { getCookie } from '../../utils/utils'
 import { booksCollectionRemovedFromSelection } from '../booksSlice';
 
@@ -25,7 +25,7 @@ export const apiSlice = createApi({
       return headers
     }
   }),
-  tagTypes: ['Book'],
+  tagTypes: ['Book', 'FavoriteBook'],
   endpoints: (builder) => ({
 
     /**
@@ -72,7 +72,7 @@ export const apiSlice = createApi({
               { type: 'Book', id: 'LIST' },
               ...result.map(({ id }) => ({ type: 'Book', id }) as const)
             ]
-          :// an error occurred, but we still want to refetch this query when `{ type: 'Posts', id: 'LIST' }` is invalidated
+          :// an error occurred, but we still want to refetch this query when `{ type: 'Book', id: 'LIST' }` is invalidated
           [{ type: 'Book', id: 'LIST' }]
     }),
 
@@ -108,8 +108,8 @@ export const apiSlice = createApi({
       invalidatesTags: (result, error, arg) => [{ type: 'Book', id: arg.id }]
     }),
 
-    //one endpoint for deleting books. Endpoint argument is array of book identifiers. Can be used to delete one or multiple books,
-    //in case of one book argument must be array with one element, the identifier of deletable book
+    //endpoint for deleting single or multiple books. Endpoint argument is array of book identifiers.
+    //In case of single book argument must be array with one element, the identifier of deletable book
     deleteBook: builder.mutation<void, number[]>({
       query(deletableBooksIdsArray) {
         let requestBody = JSON.stringify({ids: deletableBooksIdsArray})
@@ -131,7 +131,61 @@ export const apiSlice = createApi({
       },
       // Invalidates all queries that provides tags which includes "id" property of each delatable Book 
       invalidatesTags: (result, error, arg) => [...arg.map(( bookId ) => ({ type: 'Book', bookId }) as const)],
-    })
+    }),
+
+    /**
+     * Fetches list of favorite books.
+     * Favorite books list is fetched separatelly from query fetching books list although "added to favorites" logically is attribute of
+     * book item in books list along with title, author it is also displayed next to title and author of book in books list. The reason
+     * "added to favorites" attributes are fetched separatelly is because "added to favorites" attribute for each book can be changed in
+     * book list screen and due how RTQ Query works the whole book list with all it's attributes would be re-fetched when a single book is
+     * added/removed from favorites. Having favorite books list as a separate endpoint results in re-fetching only list of books that are
+     * currently added to favorites list, each item containing only book ID which is more effecient in terms of transferred data.
+     *  
+     * Favorite books list is returned from REST API in form of array of favorite books, each favorite book is object containig only book
+     * identifier.
+     * Json format received from server is following -
+     * [
+     *   {"id":"<bookId1>"},
+     *   {"id":"<bookId2>",
+     *   ...
+     * ]
+
+     */
+
+    getFavoriteBooks: builder.query<FavoriteBook[], void>({
+      query: () => 'favorite-books',
+      //on success of failure create tag only for list of favorite books, there is only query that fetches list of favorite books no query
+      //that fetches single favorite book
+      providesTags: () => [{ type: 'FavoriteBook', id: 'LIST' }]
+    }),
+
+    //adds book to favorite book. Response body is empty, excection just response code. After book is added, the favorite books list will be
+    //fetched by getFavoriteBooks endpoint
+    addBookToFavorites: builder.mutation<void, number>({
+      query(bookId) {
+        return {
+          url: `favorite-books/${bookId}`,
+          method: 'POST'
+        }
+      },
+      //invalidates query that fetches list of favorite books providing the 'LIST' id - refetch favorite book list after
+      //adding favorite book book
+      invalidatesTags: [{ type: 'FavoriteBook', id: 'LIST' }],
+    }),
+
+    removeBookFromFavorites: builder.mutation<void, number>({
+      query(removableBookId) {
+        return {
+          url: `favorite-books/${removableBookId}`,
+          method: 'DELETE'
+        }
+      },
+
+      //invalidates query that fetches list of favorite books providing the 'LIST' id - refetch favorite book list after
+      //removing book from favorites
+      invalidatesTags: [{ type: 'FavoriteBook', id: 'LIST' }],
+    }),
 
   }),
 })
@@ -140,7 +194,10 @@ export const {
   useGetBooksListQuery,
   useGetFilteredBooksListQuery,
   useLazyGetFilteredBooksListQuery,
+  useGetFavoriteBooksQuery,
   useGetBookQuery,
   useAddBookMutation,
   useUpdateBookMutation,
-  useDeleteBookMutation } = apiSlice
+  useDeleteBookMutation,
+  useAddBookToFavoritesMutation,
+  useRemoveBookFromFavoritesMutation } = apiSlice

@@ -4,13 +4,22 @@ import { Link, NavLink } from "react-router-dom";
 import BooksListItemsSelectionBar from "./BooksListItemsSelectionBar"
 import { BookListItem } from "./BooksListItem";
 import { FAVORITE_BOOKS_LIST } from "../../constants/bookListModes";
+import { DataFetchingStatusLabel } from '../ui_elements/DataFetchingStatusLabel';
 import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
 import { selectSearchString } from "../../features/booksSlice";
-import { useGetBooksListQuery, useGetFilteredBooksListQuery } from '../../features/api/apiSlice';
-import { extractMessageFromQueryErrorObj, getBookListBaseUrl } from '../../utils/utils';
+import { useGetBooksListQuery,
+  useGetFilteredBooksListQuery,
+  useGetFavoriteBooksQuery,
+  useAddBookToFavoritesMutation,
+  useRemoveBookFromFavoritesMutation } from '../../features/api/apiSlice';
+import { extractMessageFromQueryErrorObj,
+  findNonEmptyErrorFromList,
+  getBookListBaseUrl } from '../../utils/utils';
 import { useAppSelector } from "../../store/reduxHooks";
 import { Book } from '../../types/Book';
 import { skipToken } from '@reduxjs/toolkit/query/react'
+
+
 
 type BooksListBodyParams = { listMode?: string }
 /**
@@ -68,6 +77,8 @@ export function BooksListBody({ listMode }: BooksListBodyParams) {
     setWasRenderedForFirstTime(true)
   }, []);
 
+
+
   //create url for returning to unfiltered list link that will be shown when search string is filtered by search string
   let allBooksListUrl = routes.bookListPath;
 
@@ -112,7 +123,6 @@ export function BooksListBody({ listMode }: BooksListBodyParams) {
     }
   }
 
-  //console.log("currentSearchString", currentSearchString, 'wasRenderedForFirstTime', wasRenderedForFirstTime, 'queryConfig', booksListQueryExecSkippingConfig);
 
   const { data: booksListQueryData = [],
     error: booksListQueryError,
@@ -124,29 +134,62 @@ export function BooksListBody({ listMode }: BooksListBodyParams) {
     isFetching: isFetchingBooksFiltering } =
     useGetFilteredBooksListQuery(skipBooksFilteringQueryExecuting ? skipToken : currentSearchString);
 
-  //one of two fethcing processes
-  let currentlyFetching = isFetchingBooksList || isFetchingBooksFiltering
+  //favorite books list fetching endpoint is launched in this component, endpoint's loading, fetching states and returned error are
+  //displayed in current component, but returned data is used in component displaying single book item
+  const { error: favoriteBooksQueryError,
+    isFetching: isFetchingFavoriteBooks,
+    isLoading: isLoadingFavoriteBooks } =
+    useGetFavoriteBooksQuery()
+
+
+
+  //loading state, error variables returned by mutations adding and removing book from favorites will be displayed on top of books list
+  //where same purpose variables from book list, favorite books fetching queries are displayed. Mutation trigger will be passed to child
+  //book list item components
+  const [triggerAddToFavoritesMutation, {
+    error: addToFavoritesError,
+    isLoading: isAddingToFavorites }] = useAddBookToFavoritesMutation()
+
+  const [triggerRemoveFromFavoritesMutation, {
+    error: removeFromFavoritesError,
+    isLoading: isRemovingFromFavorites }] = useRemoveBookFromFavoritesMutation()
+
+
+  //capture fetching progress  while all books or filtered books list or favorite books list are being fetched, adding/removing from
+  //favorites mutations are executed
+  let currentlyFetching = isFetchingBooksList || isFetchingBooksFiltering || isFetchingFavoriteBooks
+    || isAddingToFavorites || isRemovingFromFavorites
 
   if (!wasRenderedForFirstTime) {
     return null;
   }
 
+  //assigning data from executed endpoint (books list or filtering endpoint) to variable that will output do create actual list in markup
   let booksToDisplay: Book[] = [];
-
-  //'search' query param was set, use filtering query result
   if (currentSearchString) {
     booksToDisplay = booksFilteringQueryData
-
-    //if non empty search string is too short, assign empty array to currently displayable books as there may be returned non empty result
-    //from previous filtering endpoint invocation, it is still assigned to booksFilteringQueryData result variable as endpoint result is
-    //not reset any way
-    if (currentSearchString.length < 3) {
-      booksToDisplay = []
-    }
-
-    //'search' query param was not set, all books list was queried
   } else {
     booksToDisplay = booksListQueryData
+  }
+
+  //There are cases when already fetched books data must not be displayed in books list. In those cases assign books list containing
+  //variable empty array:
+  //1)while favorite books endpoint is loading (fetching data for very first time), books list must not be displayed as it is not known
+  //which books are to be displayed as favorite books
+  if (isLoadingFavoriteBooks) {
+    booksToDisplay = []
+
+  //on favorite books fetching endpoint error books list must not be displayed as it is not known which books are to be displayed as
+  //favorite books
+  }else if (favoriteBooksQueryError) {
+    booksToDisplay = []
+  
+  //if non empty search string is too short, make currently displayable books variable empty as there may be returned non empty result
+  //from previous filtering endpoint invocation, it is still assigned to booksFilteringQueryData result variable as endpoint result is
+  //not reset any way
+  }else if (currentSearchString && currentSearchString.length < 3) {
+    booksToDisplay = booksFilteringQueryData
+    booksToDisplay = []
   }
 
 
@@ -165,13 +208,17 @@ export function BooksListBody({ listMode }: BooksListBodyParams) {
 
   let queryErrorMsg: string | undefined;
 
-  if (booksListQueryError) {
-    queryErrorMsg = extractMessageFromQueryErrorObj(booksListQueryError)
-  } else if (booksFilteringQueryError) {
-    queryErrorMsg = extractMessageFromQueryErrorObj(booksFilteringQueryError)
+  let currentErrorFromEndpoint = findNonEmptyErrorFromList(booksListQueryError, 
+    booksFilteringQueryError,
+    favoriteBooksQueryError,
+    addToFavoritesError,
+    removeFromFavoritesError)
+  if (currentErrorFromEndpoint) {
+    queryErrorMsg = extractMessageFromQueryErrorObj(currentErrorFromEndpoint)
   }
 
-  const hasAnyFetchingOrSearchStrLengthError = booksListQueryError || booksFilteringQueryError || searchStrTooShortErrorMessage
+  const hasAnyFetchingOrSearchStrLengthError =
+    booksListQueryError || booksFilteringQueryError || searchStrTooShortErrorMessage || favoriteBooksQueryError
 
   //if fetching process is done and book list is empty a message about this fact will be snown if there are no fetching or search string  
   //length error. Custom message depending on list type 
@@ -237,7 +284,7 @@ export function BooksListBody({ listMode }: BooksListBodyParams) {
 
 
         {(currentlyFetching) &&
-          <div>loading...</div>
+          <DataFetchingStatusLabel labelText="loading..." />
         }
 
         {booksToDisplay.length > 0 &&
@@ -251,7 +298,9 @@ export function BooksListBody({ listMode }: BooksListBodyParams) {
               <BookListItem key={book.id}
                 book={book}
                 editUrl={getBookEditUrl(book.id, listMode)}
-                deleteUrl={getBookDeletionUrl(book.id, currentSearchString, listMode)} />
+                deleteUrl={getBookDeletionUrl(book.id, currentSearchString, listMode)}
+                addToFavoritesQueryTrigger={triggerAddToFavoritesMutation}
+                removeFromFavoritesQueryTrigger={triggerRemoveFromFavoritesMutation} />
             )}
           </>
         }

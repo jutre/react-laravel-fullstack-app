@@ -18,6 +18,9 @@ return new class extends Migration
             $table->text("preface")->nullable();
             $table->timestamps();
             $table->unsignedBigInteger('user_id');
+
+            //'books' table 'user_id' column is foreing key to 'users' table primary key, 'books' and 'users' table has "one to many" 
+            //relation.
             $table->foreign('user_id')->references('id')->on('users');
         });
     }
