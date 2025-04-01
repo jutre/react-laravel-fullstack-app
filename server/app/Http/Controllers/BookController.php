@@ -135,6 +135,21 @@ class BookController extends Controller
     public function destroy(Request $request)
     {
         usleep(500000);
+
+        //before deleting book(s) execute delete statement with deletable books identifiers in 'favorite_books' table. Possible deletable
+        //books are added to favorites, records from 'favorite_books' table must be deleted before records from 'books' table as favorites
+        //table contains foreign keys to books table
+        $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
+        //start building query with 'favorite_books' table to delete from 'favorite_books' table (and only from this table)
+        DB::table('favorite_books')
+            ->join('books', 'favorite_books.book_id', '=', 'books.id')
+            //belongs to current user
+            ->where('books.user_id', $currentlyLoggedInUserId)
+            //deletable books ids
+            ->whereIn('id', $request->input('ids'))
+            ->delete();
+
+        //safely delete from 'books' table.
         $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->whereIn('id', $request->input('ids'))
             ->delete();

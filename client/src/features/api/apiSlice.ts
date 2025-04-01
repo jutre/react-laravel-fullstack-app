@@ -65,7 +65,7 @@ export const apiSlice = createApi({
     
     getBooksList: builder.query<Book[], void>({
       query: () => "books",
-      providesTags: (result = []) =>
+      providesTags: (result) =>
         result
           ? // successful query, create tag for each returned list item and a tag to be invalidated when new book is created 
             [
@@ -129,8 +129,12 @@ export const apiSlice = createApi({
 
         }
       },
-      // Invalidates all queries that provides tags which includes "id" property of each delatable Book 
-      invalidatesTags: (result, error, arg) => [...arg.map(( bookId ) => ({ type: 'Book', bookId }) as const)],
+      // Invalidates all queries that provides tags which includes "id" property of each delatable Book
+      //and favorite books list fetching query provided tags (if book is deleted it must invalidate also 'FavoriteBook' tag with book's
+      //identifer as if deletable book(s) was added to favorites list then new favorites list must be refetched - without that book included)
+      invalidatesTags: (result, error, arg) =>
+        [...arg.map(( bookId ) => ({ type: 'Book', id: bookId }) as const),
+        ...arg.map(( bookId ) => ({ type: 'FavoriteBook', id: bookId }) as const)],
     }),
 
     /**
@@ -155,9 +159,18 @@ export const apiSlice = createApi({
 
     getFavoriteBooks: builder.query<FavoriteBook[], void>({
       query: () => 'favorite-books',
-      //on success of failure create tag only for list of favorite books, there is only query that fetches list of favorite books no query
-      //that fetches single favorite book
-      providesTags: () => [{ type: 'FavoriteBook', id: 'LIST' }]
+      providesTags: (result) =>
+        //provide { type: 'FavoriteBook', id: 'LIST' } tag, it will be invalidated when adding or removing book to favorites and 
+        //{ type: 'FavoriteBook', <book id> } tags - if user deletes a book and it is added to favorites, favorite books list will be
+        //re-fetched getting new list without deleted book
+        result
+          ?
+            [
+              { type: 'FavoriteBook', id: 'LIST' },
+              ...result.map(({ id }) => ({ type: 'FavoriteBook', id }) as const)
+            ]
+          :// an error occurred, but we still want to refetch this query when `{ type: 'FavoriteBook', id: 'LIST' }` is invalidated
+          [{ type: 'FavoriteBook', id: 'LIST' }]
     }),
 
     //adds book to favorite book. Response body is empty, excection just response code. After book is added, the favorite books list will be
