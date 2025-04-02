@@ -17,22 +17,21 @@ import { extractMessageFromQueryErrorObj,
   getBookListBaseUrl } from '../../utils/utils';
 import { useAppSelector } from "../../store/reduxHooks";
 import { Book } from '../../types/Book';
+import { BooksListModeParams, BooksListModes } from '../../types/BooksListMode'
 import { skipToken } from '@reduxjs/toolkit/query/react'
 
 
-
-type BooksListBodyParams = { listMode?: string }
 /**
- * This component displays book list from store. It might display all books or 
- * filtered list is search string is set in filters state
+ * Displays book list, filtered books list or favorite books list displaying items with links to book editing, deleting, adding/removing
+ * from favorites list.
  * 
- * @param {string} listMode - current list mode (all books of favarites), used to calculate urls for deleting, editing operations
- * to get back to list user came from before choosing deleting or editing url
+ * @param {string} listMode - current list mode - all books or favarite books. Used to create params for fetching corresponding list from 
+ * backend (all or favorite books), used to calculate URL for deleting, editing operations which includes also information URL to get back
  */
 
-export function BooksListBody({ listMode }: BooksListBodyParams) {
+export function BooksListBody({ listMode }: BooksListModeParams) {
 
-  function getBookEditUrl(bookId: number, listMode: string | undefined) {
+  function getBookEditUrl(bookId: number, listMode: BooksListModes) {
     //replace bookId segment in book edit route pattern
     let editUrl = routes.bookEditPath.replace(":bookId", String(bookId));
     //if current list is other than all books list, add parameter which contains url to which list to return
@@ -54,7 +53,7 @@ export function BooksListBody({ listMode }: BooksListBodyParams) {
    * @param {string} searchGetParamVal 
    * @returns 
    */
-  function getBookDeletionUrl(bookId: number, searchGetParamVal: string | null, listMode: string | undefined) {
+  function getBookDeletionUrl(bookId: number, searchGetParamVal: string | null, listMode: BooksListModes) {
 
     let deleteUrl = getBookListBaseUrl(listMode);
     deleteUrl += "?deleteId=" + bookId;

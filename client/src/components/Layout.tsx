@@ -1,7 +1,9 @@
 import { routes } from "../config";
+import { FAVORITE_BOOKS_LIST } from "../constants/bookListModes";
 import { PageHeader } from "./page_header/PageHeader";
+import { BooksListTypeMenu } from "./BooksListTypeMenu";
 import { BooksList } from "./books_list/BooksList";
-import { BookEditing } from "./BookEditing.tsx";
+import { BookEditing } from "./BookEditing";
 import {
   BrowserRouter as Router,
   Routes,
@@ -10,9 +12,9 @@ import {
 
 import { selectUserLoadingStatus, selectIsUserLoggenIn } from '../features/authSlice';
 import { useAppSelector, useAppDispatch } from '../store/reduxHooks';
-import { LoginForm } from "./LoginForm.tsx";
+import { LoginForm } from "./LoginForm";
 import { apiSlice } from "../features/api/apiSlice";
-import { BookCreating } from "./BookCreating.tsx";
+import { BookCreating } from "./BookCreating";
 
 
 const Layout = () => {
@@ -39,6 +41,7 @@ const Layout = () => {
       content =
       <Routes>
         <Route path={routes.bookListPath} element={<BooksList />} />
+        <Route path={routes.favoriteBooksListPath} element={<BooksList listMode={FAVORITE_BOOKS_LIST} />} />
         <Route path={routes.bookEditPath} element={<BookEditing />} />
         <Route path={routes.createBookPath} element={<BookCreating />} />
       </Routes>
@@ -53,7 +56,7 @@ const Layout = () => {
       <Router>
 
         <div className="lg:grow lg:flex lg:justify-center xl:justify-end xl:shrink-0 xl:basis-0">
-          {/*BooksListTypeMenu/*/}
+          <BooksListTypeMenu/>
         </div>
         <div className="grow lg:grow-0 lg:shrink-0 lg:basis-[840px] xl:basis-[950px] flex flex-col relative">
           <PageHeader isUserLoggenIn={isUserLoggenIn}/>

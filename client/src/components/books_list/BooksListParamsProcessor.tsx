@@ -1,3 +1,12 @@
+import { useEffect } from "react";
+import { useAppDispatch } from '../../store/reduxHooks';
+import { searchStringUpdated } from "../../features/booksSlice"
+import { BooksListModeParams } from '../../types/BooksListMode'
+import { useLocation } from "react-router-dom";
+import { getQueryParamValue, getBookListBaseUrl } from "../../utils/utils";
+import { BookDeletionProcessorForBooksListPage } from "./BookDeletionProcessorForBooksListPage";
+import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
+
 /**
  * This component is dedicated for processing get parameters for book list component: search string param and book delete id params.
  * Search param value is assigned to redux store; in response to delete id param delete confirm modal dialog markup is displayed.
@@ -5,20 +14,14 @@
  * Parameter processing is done in separate component because in response to url change component that uses react-router api
  * for url processing is re-rendering, it would not be optimal to process parameters where book list is displayed because the whole
  * book list would re-render in vain also on an url with deleting param when deletion confirm dialog is displayed; also if then user 
- * cancels deleting then list would re-render again as delete id param isremoved from url 
+ * cancels deleting then list would re-render again as delete id param is removed from url
+ * 
+ * @param listMode - indicates current mode books list is currently working in - all books list or favorites books list, value is used
+ * to calculate base URL when creating links for deletion confirmation dialog. If page displays favorite books list, after deleting page
+ * must be redirected to favorites books list
  */
-import { useEffect } from "react";
-//import { useDispatch } from 'react-redux';
-import { useAppDispatch } from '../../store/reduxHooks';
-import { searchStringUpdated } from "../../features/booksSlice"
-import { useLocation } from "react-router-dom";
-import { getQueryParamValue, getBookListBaseUrl } from "../../utils/utils";
-import { BookDeletionProcessorForBooksListPage } from "./BookDeletionProcessorForBooksListPage";
-import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
 
-type BooksListParamProcessorParams = { listMode?: string }
-
-function BooksListParamProcessor({ listMode }: BooksListParamProcessorParams) {
+function BooksListParamProcessor({ listMode }: BooksListModeParams) {
   const dispatch = useAppDispatch();
 
   //it is needed to call a hook from react-router to cause this component to re-render when react-router generated 
@@ -58,8 +61,7 @@ function BooksListParamProcessor({ listMode }: BooksListParamProcessorParams) {
 
   //the url of book list (general or favorites list) user will be redirected after he confirms or cancels book deleting 
   //List url is created here, search params might be added later 
-  let baseUrl = getBookListBaseUrl(listMode);
-  let currentBookListUrl = baseUrl;
+  let currentBookListUrl = getBookListBaseUrl(listMode);
 
   if (deleteBookIdParamVal) {
     //delete id must be string consisting of comma separated positive integers. List of integers is used in case of deleting multiple
