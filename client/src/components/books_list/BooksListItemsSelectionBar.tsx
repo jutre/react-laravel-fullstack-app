@@ -20,11 +20,11 @@ type BooksListItemsSelectionBarProps = {
  * to do batch selecting of list items - selects all items when none is selected or deselects all if any item is selected.
  * When there are any items selected, delete button becomes active - if user clicks on it, browser url is set to deletion url
  * 
- * @param {Book[]} allDisplayedBooksIds - array of book objects currently displayed in list. In case user clicks "select all items"
+ * @param allDisplayedBooks - array of book objects currently displayed in list. In case user clicks "select all items"
  * control all books from array will be added to selected items state.
- * @param {string} searchGetParamVal - current search parameter value. After delete operation page will be redirected to list url with
+ * @param searchGetParamVal - current search parameter value. After delete operation page will be redirected to list url with
  * search paramater preserved
- * @param {string} baseUrl - base path for current list (all books or favarite books list), needed to be included in delete url to
+ * @param baseUrl - base path for current list (all books or favarite books list), needed to be included in delete url to
  * stay on current list when redirected to deletion url
  * @returns 
  */
