@@ -138,13 +138,15 @@ export const apiSlice = createApi({
     }),
 
     /**
-     * Fetches list of favorite books.
+     * Fetches list of favorite books identifiers.
      * Favorite books list is fetched separatelly from query fetching books list although "added to favorites" logically is attribute of
-     * book item in books list along with title, author it is also displayed next to title and author of book in books list. The reason
-     * "added to favorites" attributes are fetched separatelly is because "added to favorites" attribute for each book can be changed in
-     * book list screen and due how RTQ Query works the whole book list with all it's attributes would be re-fetched when a single book is
-     * added/removed from favorites. Having favorite books list as a separate endpoint results in re-fetching only list of books that are
-     * currently added to favorites list, each item containing only book ID which is more effecient in terms of transferred data.
+     * book item in books list along with title, etc., "added to favorites" icon is displayed next to title and author in books list. The
+     * reason books that are added to favorites are fetched separatelly is because "added to favorites" attribute for each book is
+     * changeable in book list and due how RTQ Query works the whole book list with all attributes would be re-fetched when a single book is
+     * added/removed from favorites. Having favorite books list as a separate endpoint results in re-fetching only list of identifiers of
+     * books that are currently added to favorites list when addeding/removing book from favorites. Each item in favorite books list
+     * contains only book 'id' field. Such approach is more effecient in terms of transferred data per book, also there may be few books
+     * added to favorites which also results in smaller transferred data amount on adding/removing book from favorites.
      *  
      * Favorite books list is returned from REST API in form of array of favorite books, each favorite book is object containig only book
      * identifier.
@@ -154,10 +156,43 @@ export const apiSlice = createApi({
      *   {"id":"<bookId2>",
      *   ...
      * ]
-
      */
 
-    getFavoriteBooks: builder.query<FavoriteBook[], void>({
+    getFavoriteBooksIdentifiers: builder.query<FavoriteBook[], void>({
+      query: () => 'favorite-books?include_only_book_identifiers=true',
+      providesTags: (result) =>
+        //provide { type: 'FavoriteBook', id: 'LIST' } tag, it will be invalidated when adding or removing book to favorites and 
+        //{ type: 'FavoriteBook', <book id> } tags - if user deletes a book and it is added to favorites, favorite books list will be
+        //re-fetched getting new list without deleted book
+        result
+          ?
+            [
+              { type: 'FavoriteBook', id: 'LIST' },
+              ...result.map(({ id }) => ({ type: 'FavoriteBook', id }) as const)
+            ]
+          :// an error occurred, but we still want to refetch this query when `{ type: 'FavoriteBook', id: 'LIST' }` is invalidated
+          [{ type: 'FavoriteBook', id: 'LIST' }]
+    }),
+
+
+    /**
+     * Fetches list of favorite books.
+     * This endpoint is used when user chooses "Favorite books" section, favorite books is returned from backend. In favorite books list
+     * user can only remove book from favorites, it is done the whole favorites list will be refetched.
+     * Returned favorite books list contains all attributes (id, title, author, preface), but information that book is also in favorites
+     * list is taken from favorite list returned by getFavoriteBooksIdentifiers endpoint which is used also in all books list to identify
+     * which books are added to favorites. This way favorite books in favorites list and all books list are identified to be added to
+     * favorites by same code the only difference is the list of books to be displayed.
+     *
+     * Json format received from server is following -
+     * [
+     *   {"id":"<bookId1>", "author":"<author>", "title":"<title>", "preface":"<preface>"},
+     *   {"id":"<bookId2>", "author":"<author>", "title":"<title>", "preface":"<preface>"},
+     *   ...
+     * ]
+     */
+
+    getFavoriteBooks: builder.query<Book[], void>({
       query: () => 'favorite-books',
       providesTags: (result) =>
         //provide { type: 'FavoriteBook', id: 'LIST' } tag, it will be invalidated when adding or removing book to favorites and 
@@ -207,6 +242,7 @@ export const {
   useGetBooksListQuery,
   useGetFilteredBooksListQuery,
   useLazyGetFilteredBooksListQuery,
+  useGetFavoriteBooksIdentifiersQuery,
   useGetFavoriteBooksQuery,
   useGetBookQuery,
   useAddBookMutation,

@@ -170,21 +170,34 @@ class BookController extends Controller
     }
 
     /**
-     * return list which contain book identifiers of books that user currently logged in has added to favorites list.
-     *
-     * Json format returned is following -
+     * returns JSON which is list containing book objects of books that are added to favorites by user currently logged in. 
+     * Two distinct formats of JSON is returned depending on resource's URL query parameter's 'include_only_book_identifiers' value. If
+     * parameters value is 'true' like 'https://path?include_only_book_identifiers=true' then book objects in JSON contains only 'id'
+     * attritube,  JSON format is following -
      * [
      *   {"id":"<bookId1>"},
-     *   {"id":"<bookId2>",
+     *   {"id":"<bookId2>"},
+     *   ...
+     * ]
+     * If 'include_only_book_identifiers' value is any other then "true" then book objects in JSON contain 'id', 'author', 'title',
+     * 'preface' attribute, JSON format is following -
+     * [
+     *   {"id":"<bookId1>", "author":"<author>", "title":"<title>", "preface":"<preface>"},
+     *   {"id":"<bookId2>", "author":"<author>", "title":"<title>", "preface":"<preface>"},
      *   ...
      * ]
      */
     public function getFavoriteBooks(Request $request)
     {
         usleep(100000);
+        $selectedBookColumns = ['books.id', 'books.author', 'books.title', 'books.preface'];
+        $includeOnlyBookIdentifiers = $request->string('include_only_book_identifiers')->trim()->toString();
+        if($includeOnlyBookIdentifiers === 'true'){
+            $selectedBookColumns = ['books.id'];
+        }
         return $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->join('favorite_books', 'books.id', '=', 'favorite_books.book_id')
-            ->select('books.id')
+            ->select($selectedBookColumns)
             ->get();
     }
 
@@ -311,7 +324,7 @@ class BookController extends Controller
     private function getBooksTableQueryWithCurrentUserConstraint(Request $request)
     {
         $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
-        return Book::where('user_id', $currentlyLoggedInUserId);
+        return Book::where('books.user_id', $currentlyLoggedInUserId);
     }
 
     /**

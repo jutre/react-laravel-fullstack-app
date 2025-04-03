@@ -149,7 +149,7 @@ export const selectBooksInSelection = createSelector(
  */
 const emptyFavoriteBooks: FavoriteBook[] = []
 //accessing favorite books list data fetched by RTQ Query endpoint
-const selectFavorBooksResult = apiSlice.endpoints.getFavoriteBooks.select()
+const selectFavorBooksResult = apiSlice.endpoints.getFavoriteBooksIdentifiers.select()
 
 //memorize data from endpoint or empty array in endpoint returns undefined
 const selectFavorBooks = createSelector(
