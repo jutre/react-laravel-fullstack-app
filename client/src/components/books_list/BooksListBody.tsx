@@ -116,8 +116,8 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
 
     }else{
 
-      //if 'listMode' property is not set to favorite books list, component will display filtered books list if filter string is not empty,
-      //all books list if search string is empty; if search
+      //if 'listMode' property is not set to favorite books list, component will display filtered books list if filter string is not empty
+      //and if search string is empty all books list is displayed
       if (currentSearchString) {
         currentlyDisplayedList = 'filtered_list'
       }else{
