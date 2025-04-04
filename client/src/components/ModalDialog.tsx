@@ -1,19 +1,36 @@
 import { useRef, useEffect } from 'react';
+
+
+type ModalDialogProps = {
+  content: string,
+  confirmFunction: () => void,
+  cancelFunction: () => void
+}
+
 /**
+ * creates modal dialog with message and two buttons representing 'confirm' and 'cancel' actions intended to offer ability for user to
+ * confirm on cancel action described in message, like deleting of some object. If 'confirm' button is pressed then function passed in
+ * 'confirmFunction' component prop is envoked, if 'cancel' button is pressed then function passed in 'cancelFunction' is envoked. In
+ * real user case 'confirmFunction' function would contain other function invocation that performs f.e. deleting of some object,
+ * 'confirmFunction' would contains function that changes parent component's (that has ModalDialog as child component) state to hide
+ * ModalDialog component
  * 
- * @param {string} content - string that will be displayed in modal box as a question
- * @param {function} confirmFunction - function that will be executed when use pressed "Yes" button
- * @param {function} cancelFunction - - function that will be executed when use pressed "No" button
+ * @param content - string that will be displayed in modal box as a question
+ * @param confirmFunction - function that will be executed when use pressed "Yes" button
+ * @param cancelFunction - - function that will be executed when use pressed "No" button
  * @returns 
  */
-export function ModalDialog({ content, confirmFunction, cancelFunction }) {
 
-  const beginningModalBody = useRef(null);
+export function ModalDialog({ content, confirmFunction, cancelFunction }: ModalDialogProps) {
 
-  const initialFocusElement = useRef(null);
+  const beginningModalBody = useRef<HTMLDivElement>(null);
+
+  const initialFocusElement = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    initialFocusElement.current.focus();
+    if (initialFocusElement.current !== null) {
+      initialFocusElement.current.focus()
+    }
   }, []);
 
   /**
@@ -24,7 +41,7 @@ export function ModalDialog({ content, confirmFunction, cancelFunction }) {
     document.body.style.overflow = 'auto';
   }
 
-  const _confirm = (event) => {
+  const _confirm = (event: React.MouseEvent) => {
     //there is event handler on ancestor that closes modal, don't bubble event to prevent triggering
     //that handler as modal is alread closed in current function
     event.stopPropagation();
@@ -32,7 +49,7 @@ export function ModalDialog({ content, confirmFunction, cancelFunction }) {
     confirmFunction();
   };
 
-  const _cancel = (event) => {
+  const _cancel = (event: React.MouseEvent) => {
     //there is event handler on ancestor that closes modal, don't bubble event to prevent triggering
     //that handler as modal is alread closed in current function
     event.stopPropagation();
@@ -46,8 +63,8 @@ export function ModalDialog({ content, confirmFunction, cancelFunction }) {
    * @param {*} event 
    * @returns void 
    */
-  const closeModalOnClickOnModal = (event) => {
-    let eventPropogationPathElement = event.target;
+  const closeModalOnClickOnModal = (event: React.MouseEvent) => {
+    let eventPropogationPathElement: HTMLElement | null = event.target as HTMLElement;
     while (eventPropogationPathElement) {
       //traverse elements starting from clicked element to every next ancestor.
       //If modal body element is found, don't do anytning as user has clicked inside of central modal div which
@@ -58,7 +75,7 @@ export function ModalDialog({ content, confirmFunction, cancelFunction }) {
         return;
       }
 
-      eventPropogationPathElement = eventPropogationPathElement.parentNode;
+      eventPropogationPathElement = eventPropogationPathElement.parentElement;
     }
 
     //user clicked outside modal body but inside modal root element, close modal and execute cancel function of modal element
