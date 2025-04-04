@@ -56,7 +56,9 @@ const Layout = () => {
       <Router>
 
         <div className="lg:grow lg:flex lg:justify-center xl:justify-end xl:shrink-0 xl:basis-0">
-          <BooksListTypeMenu/>
+          {isUserLoggenIn === true &&
+            <BooksListTypeMenu/>
+          }
         </div>
         <div className="grow lg:grow-0 lg:shrink-0 lg:basis-[840px] xl:basis-[950px] flex flex-col relative">
           <PageHeader isUserLoggenIn={isUserLoggenIn}/>

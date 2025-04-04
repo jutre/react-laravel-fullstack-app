@@ -16,7 +16,7 @@ export function PageHeader( {isUserLoggenIn}: PageHeaderProps){
       <div className="flex gap-3.5 flex-wrap items-center relative z-[1000]">
         <AboutInfoPopupMenu/>
         {isUserLoggenIn === true &&
-        <SearchBar/>
+          <SearchBar/>
         }
       </div>
     </div>
