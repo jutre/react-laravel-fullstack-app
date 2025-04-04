@@ -6,7 +6,7 @@ import {
   singleBookRemovedFromSelection,
   selectIsBookAddedToSelection,
   selectIsBookAddedToFavoriteBooks } from "../../features/booksSlice";
-import { ButtonWithIconAndBackground } from '../ui_elements/ButtonWithIconAndBackground';
+import { ButtonWithIconAndBackground, IconNameValues } from '../ui_elements/ButtonWithIconAndBackground';
 import { Book } from '../../types/Book';
 
 type BookListItemProps = {
@@ -60,7 +60,7 @@ export function BookListItem({book, editUrl, deleteUrl, addToFavoritesQueryTrigg
   }
 
   
-  let addToFavoritesButtonIconName = "add-to-favorites";
+  let addToFavoritesButtonIconName: IconNameValues = "add-to-favorites";
   if(isBookAddedToFavoriteBooks){
     addToFavoritesButtonIconName = "is-added-to-favorites";
   }

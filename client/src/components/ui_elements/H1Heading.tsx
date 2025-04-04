@@ -1,9 +1,12 @@
+type H1HeadingProps = {
+  headingText: string
+}
+
 /**
- * h2 is repeating element on several pages with styling created using Tailwing css. To reduce code dublication and updating 
- * necessarity in multiple places a separate React component is created
+ * h2 is repeating element on several pages with same styling
  * 
  */
-export function H1Heading({headingText}) {
+export function H1Heading({headingText}: H1HeadingProps) {
   return (
     <h1 className="mb-[30px] text-[24px] leading-[29px] font-extrabold">{headingText}</h1>
   )

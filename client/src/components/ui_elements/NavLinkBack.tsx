@@ -1,10 +1,15 @@
 import { NavLink} from "react-router-dom";
+
+type NavLinkBackProps = {
+  url: string
+}
+
 /**
- * navigation link a is repeating element on several pages with styling created using Tailwing css. To reduce code dublication
- * and updating necessarity in multiple places a separate React component is created
+ * navigation link a is repeating element on several pages with same styling 
  * 
+ * @param url - link url
  */
-export function NavLinkBack({url}) {
+export function NavLinkBack({url}: NavLinkBackProps) {
   return (
     <NavLink className={() => "block max-w-max mb-[30px] underline uppercase font-bold"}
       to={url}>

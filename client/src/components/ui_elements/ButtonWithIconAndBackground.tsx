@@ -14,8 +14,9 @@ import { ButtonWithIcon } from '../ui_elements/ButtonWithIcon';
  * @param {string} buttonTypeAttrValue -
  */
 
+export type IconNameValues = 'is-added-to-favorites' | 'add-to-favorites' | 'delete' | 'edit'
 type ButtonWithIconAndBackgroundProps = {
-  iconName: 'is-added-to-favorites' | 'add-to-favorites' | 'delete' | 'edit',
+  iconName: IconNameValues
   clickHandler?: () => void,
   buttonDisabled?: boolean,
   buttonTypeAttrValue?: 'button' | 'submit' | 'reset'
