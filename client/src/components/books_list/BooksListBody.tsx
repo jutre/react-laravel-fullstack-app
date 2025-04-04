@@ -152,18 +152,18 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
     isFetching: isFetchingBooksFiltering } =
     useGetFilteredBooksListQuery(skipBooksFilteringQueryExecuting ? skipToken : currentSearchString);
 
-  //favorite books list fetching endpoint is launched in this component, endpoint's loading, fetching states and returned error are
-  //displayed in current component, but returned data is used in component displaying single book item
+  //favorite books identifiers list fetching endpoint is launched in this component, it's loading, fetching states and returned error are
+  //displayed in current component along with other endpoints' loading and error states but returned data is accessed and displayed in
+  //single book item component using selectors 
   const { error: favoriteBooksIdentifiersQueryError,
     isFetching: isFetchingFavoriteBooksIdentifiers,
     isLoading: isLoadingFavoriteBooksIdentifiers } =
     useGetFavoriteBooksIdentifiersQuery()
 
-    const {  data: favoriteBooksQueryData = [],
-      error: favoriteBooksQueryError,
-      isFetching: isFetchingFavoriteBooks,
-      isLoading: isLoadingFavoriteBooks } =
-      useGetFavoriteBooksQuery(skipFavoriteBooksQueryExecuting ? skipToken : undefined)
+  const { data: favoriteBooksQueryData = [],
+    error: favoriteBooksQueryError,
+    isFetching: isFetchingFavoriteBooks } =
+    useGetFavoriteBooksQuery(skipFavoriteBooksQueryExecuting ? skipToken : undefined)
 
 
 
@@ -196,9 +196,9 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
 
   //There are cases when already fetched books data must not be displayed in books list. In those cases assign books list containing
   //variable empty array:
-  //1)while favorite books endpoint is loading (fetching data for very first time), 2) on favorite books fetching endpoint error. In those
-  //cases books list must not be displayed as it is not known which books are to be displayed as favorite books
-  if (isLoadingFavoriteBooksIdentifiers || isLoadingFavoriteBooks || favoriteBooksIdentifiersQueryError || favoriteBooksQueryError) {
+  //1)while favorite books identifiers endpoint is loading (fetching data for very first time), 2) on favorite books identifiers fetching
+  //endpoint error. In those cases books list must not be displayed as it is not known which books are to be displayed as favorite books
+  if (isLoadingFavoriteBooksIdentifiers || favoriteBooksIdentifiersQueryError) {
     booksToDisplay = []
 
   //if non empty search string is too short, make currently displayable books variable empty as there may be returned non empty result
