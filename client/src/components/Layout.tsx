@@ -10,9 +10,10 @@ import {
   Route
 } from "react-router-dom";
 
-import { selectUserLoadingStatus, selectIsUserLoggenIn } from '../features/authSlice';
 import { useAppSelector, useAppDispatch } from '../store/reduxHooks';
+import { selectUserLoadingStatus, selectIsUserLoggenIn } from '../features/authSlice';
 import { LoginForm } from "./LoginForm";
+import { UserInfoAndLogoutControls } from "./UserInfoAndLogoutControls";
 import { apiSlice } from "../features/api/apiSlice";
 import { BookCreating } from "./BookCreating";
 
@@ -62,8 +63,11 @@ const Layout = () => {
         </div>
         <div className="grow lg:grow-0 lg:shrink-0 lg:basis-[840px] xl:basis-[950px] flex flex-col relative">
           <PageHeader isUserLoggenIn={isUserLoggenIn}/>
-          {/*SettingsMenu/*/}
-
+          {isUserLoggenIn === true &&
+            <div className="absolute top-[7px] right-[20px] z-[1100]">
+              <UserInfoAndLogoutControls/>
+            </div>
+          }
           <div className="bg-white relative pt-[30px] px-[15px] pb-[65px] sm:px-[30px] grow">
             {content}
           </div>

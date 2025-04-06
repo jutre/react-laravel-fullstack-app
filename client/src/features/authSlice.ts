@@ -61,14 +61,15 @@ export const initiateUserFetchingOnAppStart = () => (dispatch: AppDispatch) => {
 }
 
 /**
- * function that dispatches two Redux actions: one that sets authState.user field to undefined and one that resets
- * state in api slice (all data fetched by api clice must be removed from cache to prevent any possibility to access
- * previously loggen in user's data - first obvious way to access the cache would be Redux devtools extension, if installed).
- * Used in two cases: in Redux store middleware function which tracks returning error with "unauthenticated" HTTP status 
- * produced by RTKQuery api clice and for thunk function that is dispathed when user presses "logout" button
+ * function that dispatches two Redux actions: 'userLogged' action and 'resetApiState'. Action userLogged causes setting authState.user
+ * field to 'undefined', resets whole Redux state to initial and 'resetApiState' resets state in api slice.
+ * Whole Redux state and api slice cache must be removed to prevent any possibility to access
+ * previously loggen in user's data - first obvious way to access the cache would be Redux devtools extension if installed.
+ * Function invoked in two places: when Redux store middleware function encounters error with HTTP "401 Unauthorized" status 
+ * produced by RTKQuery api clice and when user performs "logout" action in user interface
  * 
  */
-const dispatchLogoutActions = (dispatch: AppDispatch) => {
+export const dispatchLogoutActions = (dispatch: AppDispatch) => {
   dispatch(userLoggedOut());
   dispatch(apiSlice.util.resetApiState());
 }
@@ -77,6 +78,9 @@ const authSlice = createAppSlice({
   name: 'auth',
   initialState,
   reducers: {
+    //on user logout clear logged in user data;
+    //also there is a reducer that resets whole Redux state to initial in store definition file store.ts when 'userLoggetOut' action is
+    //dispatched
     userLoggedOut(state){
       state.user = undefined;
     }

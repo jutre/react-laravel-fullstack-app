@@ -6,8 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-use stdClass;
+
 
 class AuthController extends Controller
 {
@@ -56,6 +55,15 @@ class AuthController extends Controller
         }
 
         return response()->json(['message'=> 'invalid email and/or password'], 401);
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->noContent();
     }
 
     /**

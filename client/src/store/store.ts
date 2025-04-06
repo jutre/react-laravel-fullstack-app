@@ -1,20 +1,31 @@
-import { configureStore } from '@reduxjs/toolkit'
+import { configureStore, combineReducers, UnknownAction } from '@reduxjs/toolkit'
 import booksReducer from '../features/booksSlice';
 import authReducer from '../features/authSlice';
 import { apiSlice } from '../features/api/apiSlice'
+import { userLoggedOut } from '../features/authSlice';
 
 
 import { unauthenticatedResponseListener } from '../features/authSlice';
 
-const store = configureStore({
-    reducer: {
+const combinedReducer = combineReducers({
         authState: authReducer,
         booksState: booksReducer,
         [apiSlice.reducerPath]: apiSlice.reducer,
-    },
+})
+
+//creating reducer that resets whole state to initial when 'userLoggedOut' action is dispatched to clear all user's data from Redux state.
+//This is done to to prevent any user's data leaks (f.e, if browser has ReduxDevTools installed)
+const rootReducer = (state: ReturnType<typeof combinedReducer> | undefined , action: UnknownAction) => {
+    if (userLoggedOut.match(action)) {
+        return combinedReducer(undefined, action);
+    }
+    return combinedReducer(state, action);
+};
+
+const store = configureStore({
+    reducer: rootReducer,
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat(apiSlice.middleware).concat(unauthenticatedResponseListener),
-    //preloadedState
 });
 
 // Infer the type of `store`

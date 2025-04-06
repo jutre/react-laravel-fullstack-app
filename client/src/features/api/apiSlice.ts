@@ -52,6 +52,17 @@ export const apiSlice = createApi({
 
 
     /**
+     * sends logout request
+     */
+    userLogout: builder.mutation<void, void>({
+      query: () => ({
+        url: 'login',
+        method: 'DELETE'
+      })
+    }),
+
+
+    /**
      * response contains user data if HTTP session is active
      */
     getCurrentLoggedInUser: builder.query<User, void>({
@@ -238,7 +249,8 @@ export const apiSlice = createApi({
   }),
 })
 
-export const { 
+export const {
+  useUserLogoutMutation,
   useGetBooksListQuery,
   useGetFilteredBooksListQuery,
   useLazyGetFilteredBooksListQuery,

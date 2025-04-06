@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/current_logged_in_user', [AuthController::class, 'getCurrentLoggedInUser'])->middleware('auth:sanctum');
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::delete('/login', [AuthController::class, 'logout']);
 
 //books - CRUD operations
 Route::get('/books', [BookController::class, 'index'])->middleware('auth:sanctum');
