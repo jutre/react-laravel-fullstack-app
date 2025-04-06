@@ -9,6 +9,7 @@ import { useAppSelector, useAppDispatch } from '../store/reduxHooks';
 import { useUserLogoutMutation } from '../features/api/apiSlice'
 import { selectCurrentUser } from '../features/authSlice';
 import { dispatchLogoutActions } from '../features/authSlice';
+import { SquareButton } from './ui_elements/SquareButton';
 
 export function UserInfoAndLogoutControls(){
   //actually settings form could be shown/hidden by outputting or not  outputting form component depending
@@ -120,11 +121,11 @@ export function UserInfoAndLogoutControls(){
       </div>
 
 
-      <div className={isMenuOpened ? "relative" : "hidden"}>
-        <button type='button'
-          className='w-full mt-[5px] rounded-[8px] text-white hover:text-white bg-[#46aae9] hover:bg-[#0076c0] p-[10px]'
-          onClick={logoutBtnClickHandler}
-        >Logout</button>
+      <div className={isMenuOpened ? "relative" : "hidden"}> 
+        <SquareButton buttonContent='Logout'
+          clickHandler={logoutBtnClickHandler}
+          additionalTwcssClasses='w-full mt-[5px]'/>
+
       </div>
       
       {errorMsg &&

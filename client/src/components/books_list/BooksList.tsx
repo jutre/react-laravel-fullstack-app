@@ -1,11 +1,12 @@
 import { useEffect } from "react";
 import { routes } from "../../config";
+import { useNavigate } from "react-router-dom";
 import { FAVORITE_BOOKS_LIST } from "../../constants/bookListModes";
 import BooksListParamProcessor from "./BooksListParamsProcessor";
 import { BooksListBody } from "./BooksListBody";
 import { setPageTitleTagValue } from "../../utils/setPageTitleTagValue";
 import { H1Heading } from "../ui_elements/H1Heading";
-import { AddBookLink } from "../ui_elements/AddBookLink";
+import { SquareButton } from '../ui_elements/SquareButton';
 import { BooksListModeParams } from '../../types/BooksListMode'
 
 /**
@@ -26,11 +27,16 @@ export function BooksList({ listMode }: BooksListModeParams) {
     setPageTitleTagValue(listTitle);
   }, [listTitle]);
 
+  const navigate = useNavigate();
+
+  let addBookButtonContent = <><span className="mr-[7px]">+</span>Add book</>
+
   return  (
     <div className="relative">
       <H1Heading headingText={listTitle}/>
       <div className="absolute top-0 right-0">
-        <AddBookLink url={routes.createBookPath} linkText="Add book"/>
+        <SquareButton buttonContent={addBookButtonContent}
+          clickHandler={()=>{navigate(routes.createBookPath)}}  />
       </div>
       <BooksListParamProcessor listMode={listMode}/>
       <BooksListBody listMode={listMode}/>

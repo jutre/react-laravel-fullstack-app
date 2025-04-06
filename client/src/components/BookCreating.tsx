@@ -6,7 +6,7 @@ import {
 } from "../config";
 import { H1Heading } from "./ui_elements/H1Heading";
 import { NavLinkBack } from "./ui_elements/NavLinkBack";
-import { AddBookLink } from "./ui_elements/AddBookLink";
+import { SquareButton } from './ui_elements/SquareButton';
 import { DataFetchingStatusLabel, LABEL_TYPE_ERROR } from "./ui_elements/DataFetchingStatusLabel";
 import { ButtonWithIconAndBackground } from './ui_elements/ButtonWithIconAndBackground';
 import { FormBuilder, SubmittedFormData } from '../utils/FormBuilder';
@@ -98,14 +98,14 @@ export function BookCreating() {
   if (createdBook !== null) {
     //display screen with book infor that just has been created
     let editUrl = routes.bookEditPath.replace(":bookId", String(createdBook.id))
+    let addBookButtonContent = <><span className="mr-[7px]">+</span>Add another book</>
+
     mainContent = (
       <>
-        {/*link for adding another book */}
-        <div className="absolute top-0 right-0"
-          //click event bubles to this container div when user clicks on child anchor element
-          onClick={handleAddNewBookLinkClick} >
-          <AddBookLink url={routes.createBookPath} linkText="Add another book" />
-        </div>
+        {/*button for adding another book on top right corner*/}
+          <SquareButton buttonContent={addBookButtonContent}
+            clickHandler={handleAddNewBookLinkClick}
+            additionalTwcssClasses="absolute top-0 right-0"/>
 
         <div>
           <DisappearingMessage messageText="Book was added" initialDisplayDuration={1000} />
