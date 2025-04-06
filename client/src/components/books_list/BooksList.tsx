@@ -31,13 +31,17 @@ export function BooksList({ listMode }: BooksListModeParams) {
 
   let addBookButtonContent = <><span className="mr-[7px]">+</span>Add book</>
 
+  let redirectToBookCreatingPage = () => {navigate(routes.createBookPath)}
+
   return  (
     <div className="relative">
       <H1Heading headingText={listTitle}/>
-      <div className="absolute top-0 right-0">
-        <SquareButton buttonContent={addBookButtonContent}
-          clickHandler={()=>{navigate(routes.createBookPath)}}  />
-      </div>
+
+      {/*button for adding book on top right corner*/}
+      <SquareButton buttonContent={addBookButtonContent}
+        clickHandler={redirectToBookCreatingPage}
+        additionalTwcssClasses="absolute top-0 right-0"/>
+
       <BooksListParamProcessor listMode={listMode}/>
       <BooksListBody listMode={listMode}/>
     </div>
