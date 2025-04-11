@@ -7,17 +7,25 @@ import { useState, useEffect } from "react";
  * objects on server had ended successfully and displaying success message or redirecting to other page.
  * 
  * After endpoint was executing and finished successfully current hook re-renders component where it is used and hook's returned array first
- * element's value becomes true. When endpoint starts execution again, hook's returned array first element's value becomes false
+ * element's value becomes true. When endpoint starts execution again, hook's returned array first element's value becomes false.
  * 
- * Captures that thunk was executing and terminated seccessfully, setting first variable in array returned by
- * hook to true
+ * There may be logic in React component that uses current hook that is dependant on current hook's returned array first element value and
+ * also requires possibility to set first array element to "false" again, this hook lets do that by invoking reset function available in
+ * hooks returned array.
  * 
- * @param string asyncThunkExecutionStatus - current execution status of redux async thunk passed from component
- * @returns array - first array element is set to "true" when hook was called subsequentelly with parameter value
- * first with "pending" and after with "idle" which corresponds to thunks execution being executed and finishing 
- * successfully;
- * first array element - function to reset hooks returnes array first element - see description of function
- * resetDisplaySuccessMsg() in compnent's body
+ * 
+ * @param isLoadingFlag - RTK Query generated endpoint's returned object's 'isLoading' field value (if used for queries not mutations also 
+ * 'isFetching' prop value can be used to track if data quering ended successfully)
+ * @param error - RTK Query generated endpoint's returned object's 'error' field value
+ * 
+ * @returns array - array with two elements: first element is boolean value that is set to boolean 'true' after endpoint execution finished
+ * successfully, second is function that sets returned array first element to boolean 'false'.
+ * First element is set to "true" when hook is invoked subsequentelly two times: first time with parameter values
+ * (isLoadingFlag=true, error=undefined) and after that with values (isLoadingFlag=false, error=undefined) which corresponds to endpoint
+ * first being in loading state and execution finishing successfully after that; if on second hook's invocation 'error' parameter is set
+ * no non undefined value then first array element stays 'false'. 
+ * Second element is function that when invoked sets hook's internal state variable to 'false', if it was 'true' before than parent
+ * component is re-rendered and hook's returned array first element becomes 'false'.
  */
 export function useTrackEndpointSuccessfulFinishing(isLoadingFlag: boolean, error: unknown): [boolean, () => void] {
   //previous status info is needed to know that endpoint had been loading previously when a successful execution finishing condition 
@@ -47,16 +55,12 @@ export function useTrackEndpointSuccessfulFinishing(isLoadingFlag: boolean, erro
 
 
   /**
-   * in situations where after successfull thunk execution instead of success message a created object is displayed when
-   * this hook's returned displaySuccessMsg is true and there is a functionality to "create another object", a way to set 
-   * displaySuccessMsg variable to "false" is needed to display initial screen with form for repatative submittion. As
-   * displaySuccessMsg value comes to component from this hook, return this function for setting displaySuccessMsg to "false"
-   * in this hook
-   */
+   * function that lets set current hook's returned array first element to "false", it is returned by current hook as array second element.
+   * 
+   * */
   function resetDisplaySuccessMsg() {
     setDisplaySuccessMsg(false);
   }
 
-  console.log('useTrackEndpointSuccessfulFinishing - returns');
   return [displaySuccessMsg, resetDisplaySuccessMsg];
 }
