@@ -11,6 +11,7 @@ type SquareButtonProps = {
  * @param buttonContent - text or React node (html tags, React Fragment tag) that will be placed as <button> element content 
  * @param clickHandler - optional click handler that performs some action when button clicked
  * @param additionalTwcssClasses - some additional valid Tailwind css classes f.e, adding margins, width
+ * @param disabled - boolean attribute, if present and equals to true then button is disabled
  * 
  */
 export function SquareButton({buttonContent, clickHandler, additionalTwcssClasses, disabled}: SquareButtonProps) {
