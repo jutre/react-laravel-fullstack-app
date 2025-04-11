@@ -105,7 +105,7 @@ export const apiSlice = createApi({
           body: newBook,
         }
       },
-      // Invalidates all Book-type queries providing the 'LIST' id - refetch list to include also newly created book
+      //refetch list to include also newly created book
       invalidatesTags: [{ type: 'Book', id: 'LIST' }],
     }),
 
@@ -246,6 +246,18 @@ export const apiSlice = createApi({
       invalidatesTags: [{ type: 'FavoriteBook', id: 'LIST' }],
     }),
 
+
+    resetDemoData: builder.mutation<void, void>({
+      query() {
+        return {
+          url: 'demo-data-reset',
+          method: 'POST',
+        }
+      },
+      //refetch books list after data reset
+      invalidatesTags: [{ type: 'Book', id: 'LIST' }]
+    })
+
   }),
 })
 
@@ -261,4 +273,5 @@ export const {
   useUpdateBookMutation,
   useDeleteBookMutation,
   useAddBookToFavoritesMutation,
-  useRemoveBookFromFavoritesMutation } = apiSlice
+  useRemoveBookFromFavoritesMutation,
+  useResetDemoDataMutation } = apiSlice

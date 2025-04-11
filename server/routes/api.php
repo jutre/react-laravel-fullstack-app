@@ -38,3 +38,5 @@ Route::get('/favorite-books', [BookController::class, 'getFavoriteBooks'])->midd
 Route::post('/favorite-books/{id}', [BookController::class, 'addBookToFavorites'])->middleware('auth:sanctum');
 Route::delete('/favorite-books/{id}', [BookController::class, 'removeBookFromFavorites'])->middleware('auth:sanctum');
 
+//reseting demo data
+Route::post('/demo-data-reset', [BookController::class, 'resetDemoData'])->middleware('auth:sanctum');

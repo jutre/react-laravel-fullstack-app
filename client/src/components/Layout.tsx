@@ -4,6 +4,7 @@ import { PageHeader } from "./page_header/PageHeader";
 import { BooksListTypeMenu } from "./BooksListTypeMenu";
 import { BooksList } from "./books_list/BooksList";
 import { BookEditing } from "./BookEditing";
+import { DemoDataReset } from "./DemoDataReset";
 import {
   BrowserRouter as Router,
   Routes,
@@ -45,6 +46,7 @@ const Layout = () => {
         <Route path={routes.favoriteBooksListPath} element={<BooksList listMode={FAVORITE_BOOKS_LIST} />} />
         <Route path={routes.bookEditPath} element={<BookEditing />} />
         <Route path={routes.createBookPath} element={<BookCreating />} />
+        <Route path={routes.demoDataResetPath} element={<DemoDataReset />} />
       </Routes>
 
     } else {

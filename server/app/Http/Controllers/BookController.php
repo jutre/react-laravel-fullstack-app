@@ -191,10 +191,12 @@ class BookController extends Controller
     {
         usleep(100000);
         $selectedBookColumns = ['books.id', 'books.author', 'books.title', 'books.preface'];
+
         $includeOnlyBookIdentifiers = $request->string('include_only_book_identifiers')->trim()->toString();
         if($includeOnlyBookIdentifiers === 'true'){
             $selectedBookColumns = ['books.id'];
         }
+
         return $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->join('favorite_books', 'books.id', '=', 'favorite_books.book_id')
             ->select($selectedBookColumns)
@@ -368,5 +370,34 @@ class BookController extends Controller
             'errors' => ['title' => [$generalMessage]]
         ];
         return $error;
+    }
+
+
+    /**
+     * Resets data in 'books' and 'favorite_books' tables. All data from both tables are deleted and 10 records are inserted into 'books'
+     * table referencing user with id=1
+     * 
+     * @return void
+     */
+    public function resetDemoData()
+    {
+        usleep(100000);
+        DB::table('favorite_books')->delete();
+        DB::table('books')->delete();
+
+        //insert books records in empty 'books' table
+        $booksDataArr = [];
+        for($i = 1; $i <= 10; $i++){
+            $booksDataArr[] = [
+                "id" => $i,
+                "title" => "Book $i",
+                "author" => "author $i",
+                "preface" => "preface for book $i",
+                "user_id" => 1
+            ];
+        }
+        DB::table('books')->insert($booksDataArr);
+
+        return response()->noContent();
     }
 }

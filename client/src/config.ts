@@ -17,7 +17,8 @@ export const routes = {
     bookListPath:"/",
     favoriteBooksListPath:"/favorites/",
     bookEditPath:"/:bookId/edit/",
-    createBookPath:"/create/"
+    createBookPath:"/create/",
+    demoDataResetPath:"/demo-data-reset/"
 };
 
 
@@ -64,4 +65,3 @@ export const bookEditFormFieldsDef = [
     ...bookCreatingFormFieldsDef,
     { label: "id", name: "id", type: "hidden" }
 ];
-
