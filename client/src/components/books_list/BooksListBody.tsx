@@ -23,11 +23,13 @@ import { skipToken } from '@reduxjs/toolkit/query/react'
 
 
 /**
- * Displays book list, filtered books list or favorite books list displaying items with links to book editing, deleting, adding/removing
- * from favorites list.
+ * Displays all books list or favorite books list depending on listMode prop value. Mode displaying all books list lets activate filtered
+ * books list mode if page URL query param containing filtering string is present. All three modes have common functionality of list items
+ * output (link to book editing, deleting, adding/removing from favorites list). Distinct API endpoints are used for each mode, different
+ * messages in case list is empty, messages about used filtering string (current string, too short string message)
  * 
- * @param {string} listMode - current list mode - all books or favarite books. Used to create params for fetching corresponding list from 
- * backend (all or favorite books), used to calculate URL for deleting, editing operations which includes also information URL to get back
+ * @param listMode - determines type of data that will be displayed. If parameter is undefined than all books list or filtered list if
+ * query param is present in page URL, if dedicted value is suplied then displays favorite books.
  */
 
 export function BooksListBody({ listMode }: BooksListModeParams) {
@@ -94,77 +96,38 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
   //use trimmed version of search string, suitable to check length after trimming anywhere in further code
   currentSearchString = currentSearchString.trim()
 
-  //depending on 'listMode' component property's value and search query parameter presence list can display all books list, filtered books
-  //list of favorite books list
-  let currentlyDisplayedList: 'all_books_list' | 'filtered_list' | 'favorites_list' | null = null;
+  //after first render search string is available in Redux store (see comments on useEffect that sets setWasRenderedForFirstTime(true)).
+  //Now it's possible to figure out the type of current list to display, and which endpoint should be executed
+  let currentlyDisplayedList: BooksListMode | null = null
+  let executableEndpoint: ExecutableEndpoint = null
 
-  let searchStrTooShortErrorMessage: string | undefined;
-
-  //defaults to skip book list, favorite books list and book filtering query executing until it is known whether which of them should be
-  //displayed
-  let skipFavoriteBooksQueryExecuting = true
-  let skipBooksListQueryExecuting = true
-  let skipBooksFilteringQueryExecuting = true
-
-  //after first render possible search string is available. Figure out 1)type of current list to display, 2) which query should be executed
   if (wasRenderedForFirstTime) {
-
-    //if 'listMode' property is set to favorite books list, component will display favorite books, ignore search query param in such case as
-    //filtering functionality is not present in favorite books list
-    if(listMode === FAVORITE_BOOKS_LIST){
-      currentlyDisplayedList = 'favorites_list'
-
-    }else{
-
-      //if 'listMode' property is not set to favorite books list, component will display filtered books list if filter string is not empty
-      //and if search string is empty all books list is displayed
-      if (currentSearchString) {
-        currentlyDisplayedList = 'filtered_list'
-      }else{
-        currentlyDisplayedList = 'all_books_list'
-      }
-    }
-
-    if (currentlyDisplayedList === 'favorites_list') {
-      skipFavoriteBooksQueryExecuting = false
-
-    }else if (currentlyDisplayedList === 'filtered_list') {
-
-      //execute books filtering endpoint only if search string length is at least three symbols
-      if (currentSearchString.length >= 3) {
-        skipBooksFilteringQueryExecuting = false
-      }
-
-      //search string is not set, execute books list query, data from it is used when displaying all books list and also favorites list
-    } else {
-      skipBooksListQueryExecuting = false
-    }
+    currentlyDisplayedList = getCurrentListMode(listMode, currentSearchString)
+    executableEndpoint = getExecutableEndpoint(currentlyDisplayedList, currentSearchString)
   }
 
 
   const { data: booksListQueryData = [],
     error: booksListQueryError,
     isFetching: isFetchingBooksList } =
-    useGetBooksListQuery(skipBooksListQueryExecuting ? skipToken : undefined);
+    useGetBooksListQuery(executableEndpoint !== 'all_books_query' ? skipToken : undefined);
 
   const { data: booksFilteringQueryData = [],
     error: booksFilteringQueryError,
     isFetching: isFetchingBooksFiltering } =
-    useGetFilteredBooksListQuery(skipBooksFilteringQueryExecuting ? skipToken : currentSearchString);
-
-  //favorite books identifiers list fetching endpoint is launched in this component, it's loading, fetching states and returned error are
-  //displayed in current component along with other endpoints' loading and error states but returned data is accessed and displayed in
-  //single book item component using selectors 
-  const { error: favoriteBooksIdentifiersQueryError,
-    isFetching: isFetchingFavoriteBooksIdentifiers,
-    isLoading: isLoadingFavoriteBooksIdentifiers } =
-    useGetFavoriteBooksIdentifiersQuery()
+    useGetFilteredBooksListQuery(executableEndpoint !== 'filtered_list_query' ? skipToken : currentSearchString);
 
   const { data: favoriteBooksQueryData = [],
     error: favoriteBooksQueryError,
     isFetching: isFetchingFavoriteBooks } =
-    useGetFavoriteBooksQuery(skipFavoriteBooksQueryExecuting ? skipToken : undefined)
+    useGetFavoriteBooksQuery(executableEndpoint !== 'favorites_list_query' ? skipToken : undefined)
 
+  //favorite books identifiers list fetching endpoints loading, fetching states and returned error are used in current component along with
+  //other endpoints' similar variables but returned data is accessed single book item component using selector 
+  const { error: favoriteBooksIdentifiersQueryError,
+    isFetching: isFetchingFavoriteBooksIdentifiers,
+    isLoading: isLoadingFavoriteBooksIdentifiers } =
+    useGetFavoriteBooksIdentifiersQuery()
 
 
   //loading state, error variables returned by mutations adding and removing book from favorites will be displayed on top of books list
@@ -184,7 +147,8 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
     return null;
   }
 
-  //assigning data from executed endpoint (books list or filtering endpoint) to variable that will output do create actual list in markup
+  //assign to common variable that is used in loop that creates the actual list HTML markup data from executed endpoint according to
+  //presentation mode
   let booksToDisplay: Book[] = [];
   if (currentlyDisplayedList === 'favorites_list') {
     booksToDisplay = favoriteBooksQueryData
@@ -208,6 +172,7 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
     booksToDisplay = []
   }
 
+  let searchStrTooShortErrorMessage: string | undefined;
 
   //if search string is not empty but shorter than three symbols, assigne error message
   if (currentlyDisplayedList === 'filtered_list' && currentSearchString.length < 3) {
@@ -338,6 +303,65 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
       </div>
     </>
   )
-
-
 }
+
+
+type BooksListMode = 'all_books_list' | 'filtered_list' | 'favorites_list'
+
+/**
+ * Depending on 'listMode' component property's value and search query parameter presence list can display all books list, filtered books 
+ * list of favorite books list. Default is all books list
+ * 
+ * Returns string that specifies data mode that component must work in (all books list, filtered list of favorites list). If 'listMode'
+ * parameter is undefined and empty search string parameter than all books list mode is returned, if search string is not empty then 
+ * filtered list mode returned; If 'listMode' equals to "FAVORITE_BOOKS_LIST" string then favorite list mode is returned
+ * 
+ * @param listMode
+ * @param currentSearchString
+ * @returns
+ */
+export function getCurrentListMode(listMode: BooksListModes, currentSearchString: string | null): BooksListMode {
+  //if 'listMode' property is set to favorite books list, component will display favorite books, ignore search query param in such case as
+  //filtering functionality is not present in favorite books list
+  if(listMode === FAVORITE_BOOKS_LIST){
+    return 'favorites_list'
+
+  }else if (currentSearchString) {
+    return 'filtered_list'
+
+  //no search string then all books list
+  }else{
+    return 'all_books_list'
+  }
+}
+
+type ExecutableEndpoint = 'all_books_query' | 'filtered_list_query' | 'favorites_list_query' | null;
+
+/**
+ * Returns string which determines which endpoint should be executed depending on list mode and whether or not it should be executed.
+ * Distinct case is filtered_list mode as in this mode in case of search string being too short endpoint must not be executed, null is
+ * returned in such case. In othercases a dedicated endpoint must be executed, an endpoint determing string is returned
+ * 
+ * @param currentListMode
+ * @param currentSearchString
+ * @returns
+ */
+export function getExecutableEndpoint(currentListMode: BooksListMode, currentSearchString: string | null): ExecutableEndpoint {
+  if (currentListMode === 'favorites_list') {
+    return 'favorites_list_query'
+
+  }else if (currentListMode === 'filtered_list') {
+    //execute books filtering endpoint only if search string length is at least three symbols
+    if (currentSearchString !== null && currentSearchString.length >= 3) {
+      return 'filtered_list_query'
+
+    }else{
+      return null;
+    }
+
+    //search string is not set, execute books list query
+  } else {
+    return 'all_books_query'
+  }
+}
+

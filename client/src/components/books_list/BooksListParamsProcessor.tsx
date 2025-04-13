@@ -59,9 +59,14 @@ function BooksListParamProcessor({ listMode }: BooksListModeParams) {
   let errorMessage;
   let displayDeletionConfirmationDialog = false;
 
-  //the url of book list (general or favorites list) user will be redirected after he confirms or cancels book deleting 
-  //List url is created here, search params might be added later 
+  //the url of book list (general or favorites list) page will be redirected to after deletion is confirmed or canceled; keep also search
+  //query param (may delete a book from filtered list, must be redirected to list with same search string as other books may still found by
+  //current search string)
   let currentBookListUrl = getBookListBaseUrl(listMode);
+  if (searchStringParamVal) {
+    let searchGetParam = "?search=" + searchStringParamVal;
+    currentBookListUrl += searchGetParam
+  }
 
   if (deleteBookIdParamVal) {
     //delete id must be string consisting of comma separated positive integers. List of integers is used in case of deleting multiple
@@ -79,13 +84,6 @@ function BooksListParamProcessor({ listMode }: BooksListModeParams) {
       bookIdsStrValues.forEach((bookIdStrVal) => {
         deletableBooksIdsArr.push(parseInt(bookIdStrVal));
       })
-
-      //if search param is entered then add it to book list page to redirect to list with search string user entered before 
-      //choosing deleting option to display books that are still found by search string
-      if (searchStringParamVal) {
-        let searchGetParam = "?search=" + searchStringParamVal;
-        currentBookListUrl += searchGetParam
-      }
     }
   }
 
@@ -102,9 +100,11 @@ function BooksListParamProcessor({ listMode }: BooksListModeParams) {
       }
 
       {displayDeletionConfirmationDialog &&
-        <BookDeletionProcessorForBooksListPage 
+        <BookDeletionProcessorForBooksListPage
+        listMode={listMode}
         deletableBooksIds={deletableBooksIdsArr} 
-        booksListPageUrl={currentBookListUrl} />
+        booksListPageUrl={currentBookListUrl}
+        currentSearchString={searchStringParamVal} />
      }
     </>
   )

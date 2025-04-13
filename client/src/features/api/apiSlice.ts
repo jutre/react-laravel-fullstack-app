@@ -83,12 +83,27 @@ export const apiSlice = createApi({
               { type: 'Book', id: 'LIST' },
               ...result.map(({ id }) => ({ type: 'Book', id }) as const)
             ]
-          :// an error occurred, but we still want to refetch this query when `{ type: 'Book', id: 'LIST' }` is invalidated
+          : // an error occurred, refetch this query when `{ type: 'Book', id: 'LIST' }` is invalidated f.e. new book is added, refetch books
+            //list
           [{ type: 'Book', id: 'LIST' }]
     }),
 
     getFilteredBooksList: builder.query<Book[], string>({
       query: (searchString) => `books/search/${searchString}`,
+      /* for each book create tag with it's 'id' as 1) it is possible to delete book included in search result cache and after deleting that
+      filtering result must be refetched to get list without deleted book, 2) create also 'LIST' 'id' tag as if a new book is created all
+      existing filtering result caches must be refetched as new book migth be included to some of search results according to some book's
+      title */
+      providesTags: (result) =>
+        result
+          ? // successful query, create tag for each returned list item and a tag to be invalidated when new book is created 
+            [
+              { type: 'Book', id: 'LIST' },
+              ...result.map(({ id }) => ({ type: 'Book', id }) as const)
+            ]
+          : // an error occurred, refetch this query when `{ type: 'Book', id: 'LIST' }` is invalidated f.e. new book is added, refetch books
+            //list
+          [{ type: 'Book', id: 'LIST' }]
     }),
 
     getBook: builder.query<Book, number>({
