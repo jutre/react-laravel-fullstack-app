@@ -7,9 +7,9 @@ import { AppDispatch, RootState } from "../store/store";
 import { createAppSlice } from '../store/createAppSlice'
 import { createAsyncThunk, isRejectedWithValue, Middleware, MiddlewareAPI  } from '@reduxjs/toolkit';
 import { extractMessageFromQueryErrorObj } from "../utils/utils";
-export const STATUS_PENDING = "pending";
-export const STATUS_IDLE = "idle";
-export const STATUS_REJECTED = "rejected"
+import { STATUS_IDLE,
+  STATUS_PENDING,
+  STATUS_REJECTED } from '../constants/asyncThunkExecutionStatus.ts';
 
 interface AuthState { 
   //when user is logged out, user is undefined

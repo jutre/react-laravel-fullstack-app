@@ -6,7 +6,8 @@ import { BookListItem } from "./BooksListItem";
 import { FAVORITE_BOOKS_LIST } from "../../constants/bookListModes";
 import { DataFetchingStatusLabel } from '../ui_elements/DataFetchingStatusLabel';
 import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
-import { selectSearchString } from "../../features/booksSlice";
+import { selectSearchString, selectBookDeletingEndpointLoadingStatus } from "../../features/booksSlice";
+import { STATUS_PENDING } from'../../constants/asyncThunkExecutionStatus.ts'
 import { useGetBooksListQuery,
   useGetFilteredBooksListQuery,
   useGetFavoriteBooksIdentifiersQuery,
@@ -81,6 +82,8 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
   }, []);
 
 
+  //book deleting endpoint is invoked in other component, getting it's execution status
+  let bookDeletingEndpointLoadingStatus = useAppSelector(state => selectBookDeletingEndpointLoadingStatus(state));
 
   //create url for returning to unfiltered list link that will be shown when search string is filtered by search string
   let allBooksListUrl = routes.bookListPath;
@@ -190,6 +193,7 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
     favoriteBooksQueryError,
     addToFavoritesError,
     removeFromFavoritesError)
+
   if (currentErrorFromEndpoint) {
     errorMsgFromAnyEndpoint = extractMessageFromQueryErrorObj(currentErrorFromEndpoint)
   }
@@ -205,17 +209,17 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
   }
 
   //if books to display array is empty and fetching is done, without fetching errors display message that list is empty
-  let showEmptyFavoritesListMessage;
-  let showEmptyListMessage;
+  let showEmptyFavoritesListMessage = false;
+  let showEmptyListMessage = false;
 
   //capture fetching progress  while all books or filtered books list or favorite books list are being fetched, adding/removing from
   //favorites mutations are executed
   let currentlyFetching = isFetchingBooksList || isFetchingBooksFiltering || isFetchingFavoriteBooksIdentifiers || isFetchingFavoriteBooks
     || isAddingToFavorites || isRemovingFromFavorites
 
-  //when creating messages about empty books list, favorites list, filtered books list only care about if there any data fetching errors
-  //obtaining books list, filtered list, favorites list, filter string too short error. Only in case of absence of those errors a message
-  //about empty books/favorites/filtering list will be created. On presence of any of mentioned errors, error message will be snown instead
+  //one of conditions to create message about empty all books, filtered, favorites books list or found books count is absence of
+  //fetching errors from corresponding endpoint or filter string too short error. Create a single variable that is assigned a non undefined
+  //value if any of error is defined
   const hasAnyFetchingOrSearchStrLengthError =
     booksListQueryError || booksFilteringQueryError || favoriteBooksIdentifiersQueryError || favoriteBooksQueryError
     || searchStrTooShortErrorMessage
@@ -243,6 +247,9 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
     searchResultsInfoMessage += ` Number of records found is ${booksToDisplay.length}.`;
   }
 
+  //while some action is pending (adding to favorites, deleting, loading list after deleting, adding/removing from favorites)
+  //all buttons next to each book (editing, deleting, adding/removing from favorites) must be disabled
+  let disableListButtons = currentlyFetching || bookDeletingEndpointLoadingStatus === STATUS_PENDING
 
   return (
     <>
@@ -286,7 +293,10 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
         }
 
         {booksToDisplay.length > 0 &&
-          <>
+          //using <fieldset> to make all child button elements disabled by adding disabled attribute
+          <fieldset disabled={disableListButtons}
+            className={'relative after:absolute disabled:after:inset-0 disabled:after:bg-[gray] disabled:after:opacity-30 ' +
+            'disabled:opacity-50 disabled:after:rounded-[8px] disabled:after:z-[2000]'} >
             {<BooksListItemsSelectionBar
               allDisplayedBooks={booksToDisplay}
               searchGetParamVal={currentSearchString}
@@ -300,7 +310,7 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
                 addToFavoritesQueryTrigger={triggerAddToFavoritesMutation}
                 removeFromFavoritesQueryTrigger={triggerRemoveFromFavoritesMutation} />
             )}
-          </>
+          </fieldset>
         }
       </div>
     </>

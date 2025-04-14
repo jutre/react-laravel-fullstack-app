@@ -3,6 +3,7 @@ import { apiSlice } from './api/apiSlice';
 import type { PayloadAction } from '@reduxjs/toolkit'
 import { Book, FavoriteBook } from '../types/Book.ts';
 import { RootState } from "../store/store";
+import { STATUS_IDLE, STATUS_PENDING } from '../constants/asyncThunkExecutionStatus.ts';
 
 /**
  * book slice stores 1) current search string for sending as parameter to backend to get filtered books list;
@@ -19,11 +20,13 @@ import { RootState } from "../store/store";
 interface BooksState {
   searchString: string | null
   booksSelectedInList: { [index: number]: boolean }
+  bookDeletingEndpointLoadingStatus: "idle" | "pending"
 }
 
 let initialState: BooksState = {
   searchString: null,
-  booksSelectedInList: {}
+  booksSelectedInList: {},
+  bookDeletingEndpointLoadingStatus: "idle"
 };
 
 const booksSlice = createSlice({
@@ -92,6 +95,27 @@ const booksSlice = createSlice({
         state.booksSelectedInList = {}
       })
 
+    /*
+    tracking fetching statuses and returned data from api endpoint which fetches currently logged in user
+    */
+    .addMatcher(
+      apiSlice.endpoints.deleteBook.matchFulfilled,
+      (state) => {
+        state.bookDeletingEndpointLoadingStatus = "idle"
+      }
+    )
+    .addMatcher(
+      apiSlice.endpoints.deleteBook.matchPending,
+      (state) => {
+        state.bookDeletingEndpointLoadingStatus = STATUS_PENDING
+      }
+    )
+    .addMatcher(
+      apiSlice.endpoints.deleteBook.matchRejected,
+      (state) => {
+        state.bookDeletingEndpointLoadingStatus = STATUS_IDLE
+      }
+    )
   }
 });
 
@@ -140,6 +164,8 @@ export const selectBooksInSelection = createSelector(
   (state: RootState) => state.booksState.booksSelectedInList,
   selectedBookObj => Object.keys(selectedBookObj)
 )
+
+export const selectBookDeletingEndpointLoadingStatus = (state: RootState) => state.booksState.bookDeletingEndpointLoadingStatus;
 
 /**
  * creating selector that checks if book is added to favorites. Favorite books is obtained from server as list of books that are added to 

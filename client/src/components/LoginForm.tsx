@@ -3,10 +3,9 @@ import { useAppDispatch, useAppSelector } from '../store/reduxHooks';
 import {
   initiateSessionSendLoginCredentials,
   selectSendLoginRequestStatus,
-  selectSendLoginRequestError,
-  STATUS_PENDING,
-  STATUS_REJECTED
+  selectSendLoginRequestError
 } from "../features/authSlice";
+import { STATUS_PENDING, STATUS_REJECTED } from'../constants/asyncThunkExecutionStatus.ts'
 import { FormBuilder, FormFieldsDefinition, SubmittedFormData } from '../utils/FormBuilder';
 import { GeneralErrorMessage } from './ui_elements/GeneralErrorMessage';
 import { useState } from 'react';
