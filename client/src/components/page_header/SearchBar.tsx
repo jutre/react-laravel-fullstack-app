@@ -9,9 +9,14 @@ function SearchBar() {
   //holds value of controlled <input/> element
   const [searchTerm, setSearchTerm] = useState("");
 
+  //maximum items to be output in quick result div
+  let maxItemsCountForOutput = 5;
 
   //using {currentData} result variable not {data} as if error occurs, the {currentData} will be empty array and seach bar will be hidden
-  const [trigger, { currentData: searchResultFromQuery = [], isFetching }] = useLazyGetFilteredBooksListQuery();
+  const [trigger, { currentData: searchQueryResult, isFetching }] = useLazyGetFilteredBooksListQuery();
+
+  //extract book rows from result
+  let foundBooks = searchQueryResult ? searchQueryResult.data : []
 
   useEffect(() => {
     let filterText = searchTerm.trim();
@@ -23,10 +28,10 @@ function SearchBar() {
     if (filterText.length >= 3 && !isFetching) {
 
       //set current search result to state
-      setSearchResult(searchResultFromQuery);
+      setSearchResult(foundBooks);
 
       //if search results array has items, then show the result bar
-      if (searchResultFromQuery.length > 0) {
+      if (foundBooks.length > 0) {
         setIsSearchResultBarVisible(true);
 
         //if search result is empty with current input, hide result bar, it might be visible 
@@ -36,7 +41,6 @@ function SearchBar() {
       }
     }
 
-    console.log('[isFetching]', isFetching, "searchResultFromQuery", searchResultFromQuery);
   }, [isFetching]);
 
 
@@ -145,11 +149,10 @@ function SearchBar() {
     if (filterText.length < 3) {
       setIsSearchResultBarVisible(false);
       setSearchResult([]);
-      console.log('setting result to empty');
 
       //send search request, search phrase at least three symbols long. A useEffect hook will process the result
     } else {
-      trigger(filterText);
+      trigger({filterString: filterText, limit: maxItemsCountForOutput});
     }
   }
 
@@ -253,14 +256,15 @@ function SearchBar() {
 
   //result bar displays not more than defined items count. If there are more items in results, display link to all
   //results listing page which leads to book list url with entered search string
-  let searchResultArrForOutput;
-  let maxItemsCountForOutput = 5;
+  const totalRowsInfoFromResponseJson = searchQueryResult ? searchQueryResult.total_rows_found : 0;
+  //get slice from result array to contain at most maximum items equal to limit number. This guards agains outputting too much rows
+  //in quick result div in case backend returns more rows then was specified in limit result (too much rows from backend would be
+  //inconsistency)
+  let searchResultArrForOutput = searchResult.slice(0, maxItemsCountForOutput);
+
   let resultCountExceedsMaxOutputCount = false;
-  if (searchResult.length > maxItemsCountForOutput) {
-    searchResultArrForOutput = searchResult.slice(0, maxItemsCountForOutput);
+  if (totalRowsInfoFromResponseJson > maxItemsCountForOutput) {
     resultCountExceedsMaxOutputCount = true;
-  } else {
-    searchResultArrForOutput = searchResult;
   }
 
   return (
@@ -331,7 +335,7 @@ function SearchBar() {
             <div onClick={handleSearchResultLinkClick}>
               <NavLink className={() => "block p-[15px] relative z-[1] text-center"}
                 to={bookListWithSearchResultUrl}>
-                Show all {searchResult.length} found items...
+                Show all {totalRowsInfoFromResponseJson} found items...
               </NavLink>
             </div>
           }

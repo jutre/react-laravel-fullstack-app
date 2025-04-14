@@ -120,10 +120,12 @@ export function BookDeletionProcessorForBooksListPage({
     isFetching: isFetchingBooksList } =
     apiSlice.endpoints.getBooksList.useQueryState(executableEndpoint !== 'all_books_query' ? skipToken : undefined);
 
-    const { data: booksFilteringQueryData = [],
+    const { data: booksFilteringQueryData,
       error: booksFilteringQueryError,
       isFetching: isFetchingBooksFiltering } =
-      apiSlice.endpoints.getFilteredBooksList.useQueryState(executableEndpoint !== 'filtered_list_query' ? skipToken : currentSearchString);
+      apiSlice.endpoints.getFilteredBooksList.useQueryState(executableEndpoint !== 'filtered_list_query'
+        ? skipToken
+        : {filterString: currentSearchString});
 
     const { data: favoriteBooksQueryData = [],
       error: favoriteBooksQueryError,
@@ -142,7 +144,7 @@ export function BookDeletionProcessorForBooksListPage({
   if (currentlyDisplayedList === 'favorites_list') {
     allBooksDisplayedInList = favoriteBooksQueryData
   }else if (currentlyDisplayedList === 'filtered_list') {
-    allBooksDisplayedInList = booksFilteringQueryData
+    allBooksDisplayedInList = booksFilteringQueryData ? booksFilteringQueryData.data : []
   } else {
     allBooksDisplayedInList = booksListQueryData
   }

@@ -112,10 +112,12 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
     isFetching: isFetchingBooksList } =
     useGetBooksListQuery(executableEndpoint !== 'all_books_query' ? skipToken : undefined);
 
-  const { data: booksFilteringQueryData = [],
+  const { data: booksFilteringQueryData,
     error: booksFilteringQueryError,
     isFetching: isFetchingBooksFiltering } =
-    useGetFilteredBooksListQuery(executableEndpoint !== 'filtered_list_query' ? skipToken : currentSearchString);
+    useGetFilteredBooksListQuery(executableEndpoint !== 'filtered_list_query'
+      ? skipToken
+      : {filterString: currentSearchString});
 
   const { data: favoriteBooksQueryData = [],
     error: favoriteBooksQueryError,
@@ -153,7 +155,7 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
   if (currentlyDisplayedList === 'favorites_list') {
     booksToDisplay = favoriteBooksQueryData
   }else if (currentlyDisplayedList === 'filtered_list') {
-    booksToDisplay = booksFilteringQueryData
+    booksToDisplay = booksFilteringQueryData ? booksFilteringQueryData.data : []
   } else {
     booksToDisplay = booksListQueryData
   }

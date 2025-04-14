@@ -5,6 +5,15 @@ import { Book, NewBook, FavoriteBook } from '../../types/Book';
 import { getCookie } from '../../utils/utils'
 import { booksCollectionRemovedFromSelection } from '../booksSlice';
 
+type FilterQueryResultJsonFormat = {
+  data: Book[],
+  total_rows_found: number
+}
+
+type FilterQueryInputParameter = {
+  filterString: string,
+  limit?: number
+}
 
 // Define a service using a base URL and expected endpoints
 export const apiSlice = createApi({
@@ -88,8 +97,14 @@ export const apiSlice = createApi({
           [{ type: 'Book', id: 'LIST' }]
     }),
 
-    getFilteredBooksList: builder.query<Book[], string>({
-      query: (searchString) => `books/search/${searchString}`,
+    /*
+    filtering string parameter contains search string and optional limit parameter. Limit parameter is used to limit number of records
+    received in response which is used to optimise request for quick search component as only few records are displayed in results div;
+    record amount limiting is not used in filtered books list body
+    */
+    getFilteredBooksList: builder.query<FilterQueryResultJsonFormat, FilterQueryInputParameter>({
+      query: (searchStringAndLimit) => `books/search/${searchStringAndLimit.filterString}` +
+        (searchStringAndLimit.limit ? `?limit=${searchStringAndLimit.limit}` : ''),
       /* for each book create tag with it's 'id' as 1) it is possible to delete book included in search result cache and after deleting that
       filtering result must be refetched to get list without deleted book, 2) create also 'LIST' 'id' tag as if a new book is created all
       existing filtering result caches must be refetched as new book migth be included to some of search results according to some book's
@@ -99,7 +114,7 @@ export const apiSlice = createApi({
           ? // successful query, create tag for each returned list item and a tag to be invalidated when new book is created 
             [
               { type: 'Book', id: 'LIST' },
-              ...result.map(({ id }) => ({ type: 'Book', id }) as const)
+              ...result.data.map(({ id }) => ({ type: 'Book', id }) as const)
             ]
           : // an error occurred, refetch this query when `{ type: 'Book', id: 'LIST' }` is invalidated f.e. new book is added, refetch books
             //list

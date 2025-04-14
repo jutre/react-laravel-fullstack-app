@@ -158,15 +158,68 @@ class BookController extends Controller
     }
 
     /**
-     * search book by title among books belonging to current user logged in.
+     * returns books records which title contains search string optionally letting limit returned records count; search is performed among
+     * books belonging to user currently logged in.
+     * Function obtains search string from second function's input parameter which is set by Laravel according to URL path parameter
+     * mapping which is mapped to current controller method; record limit count is obtained inside function's body from URL query parameter
+     * 'limit'.
+     * @param \Illuminate\Http\Request $request - used to get 'limit' URL query parameter's value
+     * @param string $filterString - search string, must contain at least three symbols
+     * @return array - accociative array which conforms to needed JSON structure that will be sent as response. Contains books records and
+     * number of all 'books' table records where title contains search string. If 'limit' URL query parameter is set then contained book
+     * records count will not exceed 'limit' parameter value. Returned array conforms to following JSON structure
+     * 
+     * {
+     *  "data":[
+     *      {"id":"<bookId1>", "author":"<author>", "title":"<title>", "preface":"<preface>"},
+     *      {"id":"<bookId2>", "author":"<author>", "title":"<title>", "preface":"<preface>"},
+     *      ...
+     *  ],
+     *  "total_rows_found": <row count>
+     * }
+     * 
+     * Retuns error describing response if search string contains less than three symbols 
      */
-    public function search(Request $request, string $title)
+    public function search(Request $request, string $filterString)
     {
         usleep(100000);
-        return $this->getBooksTableQueryWithCurrentUserConstraint($request)
-            ->where('title', 'like', '%' . $title . '%')
-            ->select(['id', 'title'])
-            ->get();
+        //if search string too short send error message
+        $filterString = trim($filterString);
+        if(strlen($filterString) < 3){
+            $error = [
+                'message' => "Searching string must contain at least three symbols"
+            ];
+            return response()->json($error, 422);
+        }
+
+        //URL query param value less than 1 will be ignored further
+        $limit = $request->integer('limit');
+
+        //select record according to filtering string, do limiting returned row number if limit set
+        $recordsQuery = $this->getBooksTableQueryWithCurrentUserConstraint($request)
+            ->where('title', 'like', '%' . $filterString . '%')
+            ->select(['id', 'title']);
+        if($limit > 0){
+            $recordsQuery = $recordsQuery->limit($limit);
+        }
+        $selectedRecords = $recordsQuery->get();
+
+
+        $totalRowsNumber = 0;
+        if($limit > 0){
+            //count query
+            $totalRowsNumber = $this->getBooksTableQueryWithCurrentUserConstraint($request)
+            ->where('title', 'like', '%' . $filterString . '%')
+            ->count();
+        }else{
+            $totalRowsNumber = count($selectedRecords);
+        }
+
+        $responseData = [
+            'data' => $selectedRecords,
+            'total_rows_found' => $totalRowsNumber
+        ];
+        return $responseData;
     }
 
     /**
