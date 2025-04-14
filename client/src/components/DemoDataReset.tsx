@@ -6,9 +6,8 @@ import { SquareButton } from "./ui_elements/SquareButton";
 import { DataFetchingStatusLabel } from "./ui_elements/DataFetchingStatusLabel";
 import { GeneralErrorMessage } from "./ui_elements/GeneralErrorMessage";
 import { useResetDemoDataMutation } from "../features/api/apiSlice";
-import DisappearingMessage from './DisappearingMessage';
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
-import { extractMessageOrMessagesObjFromQueryError, getQueryParamValue } from "../utils/utils";
+import { extractMessageFromQueryErrorObj, getQueryParamValue } from "../utils/utils";
 
 
 export function DemoDataReset() {
@@ -49,15 +48,9 @@ export function DemoDataReset() {
   //in form of object where key is name of submitted object field name and value is error description. F.e., if trying to create book with 
   //title that already exists an error object contains object with 'title' field and approprite error message
   let errorMsg: string | null = null;
-  let validationErrors: { [index:string]: string } | null = null;
 
   if(error){
-    const errMsgOrObject = extractMessageOrMessagesObjFromQueryError(error)
-    if(typeof errMsgOrObject === 'string'){
-      errorMsg = errMsgOrObject
-    }else{
-      validationErrors = errMsgOrObject
-    }
+    errorMsg = extractMessageFromQueryErrorObj(error)
   }
 
   async function handleResetDataBtnClick() {
