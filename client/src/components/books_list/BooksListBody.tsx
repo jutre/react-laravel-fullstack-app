@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { routes } from "../../config";
-import { Link, NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 import BooksListItemsSelectionBar from "./BooksListItemsSelectionBar"
 import { BookListItem } from "./BooksListItem";
 import { FAVORITE_BOOKS_LIST } from "../../constants/bookListModes";
