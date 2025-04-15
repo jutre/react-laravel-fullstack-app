@@ -66,7 +66,7 @@ const Layout = () => {
         <div className="grow lg:grow-0 lg:shrink-0 lg:basis-[840px] xl:basis-[950px] flex flex-col relative">
           <PageHeader isUserLoggenIn={isUserLoggenIn}/>
           {isUserLoggenIn === true &&
-            <div className="absolute top-[7px] right-[20px] z-[1100]">
+            <div className="absolute top-[10px] right-[15px] sm:right-[30px] md:right-[15px] z-[1100]">
               <UserInfoAndLogoutControls/>
             </div>
           }
