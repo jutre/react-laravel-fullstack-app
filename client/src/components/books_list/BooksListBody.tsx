@@ -4,6 +4,7 @@ import { Link, NavLink } from "react-router-dom";
 import BooksListItemsSelectionBar from "./BooksListItemsSelectionBar"
 import { BookListItem } from "./BooksListItem";
 import { FAVORITE_BOOKS_LIST } from "../../constants/bookListModes";
+import { NavLinkBack } from "../ui_elements/NavLinkBack";
 import { DataFetchingStatusLabel } from '../ui_elements/DataFetchingStatusLabel';
 import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
 import { selectSearchString, selectBookDeletingEndpointLoadingStatus } from "../../features/booksSlice";
@@ -229,7 +230,7 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
   if (booksToDisplay.length === 0 && !currentlyFetching && !hasAnyFetchingOrSearchStrLengthError) {
 
     if (currentlyDisplayedList === 'filtered_list') {
-      searchResultsInfoMessage += " Nothing was found."
+      searchResultsInfoMessage += " No books were found."
     } else if (listMode === FAVORITE_BOOKS_LIST) {
       showEmptyFavoritesListMessage = true;
     } else {
@@ -254,43 +255,48 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
   return (
     <>
       <div>
+        {//loading indicator
+        (currentlyFetching) &&
+          <DataFetchingStatusLabel labelText="loading..." />
+        }
+
+        {//filtered_list mode. Display link to all book, entered search string, error message about too short search string
+        currentlyDisplayedList === 'filtered_list' &&
+        <>
+          <div>
+            <NavLinkBack url={allBooksListUrl} 
+              linkLabelOverrideText='Display all records'/> 
+          </div>
+          <div className="mb-[15px]">
+            {searchResultsInfoMessage}
+          </div>
+          {//dispay error if search string too short
+            searchStrTooShortErrorMessage &&
+            <GeneralErrorMessage msgText={searchStrTooShortErrorMessage} />
+          }
+        </>
+        }
+
+
         {errorMsgFromAnyEndpoint &&
           <GeneralErrorMessage msgText={errorMsgFromAnyEndpoint} />
         }
-
-        {//dispay error if search string too short
-          searchStrTooShortErrorMessage &&
-          <GeneralErrorMessage msgText={searchStrTooShortErrorMessage} />
-        }
-        {//when searching was done, always display entered search phrase, link to all records
-          searchResultsInfoMessage &&
-          <>
-            <div className="py-[15px]">
-              {searchResultsInfoMessage}
-            </div>
-            <div className="py-[15px]">
-              <NavLink className={() => "underline font-bold"}
-                to={allBooksListUrl}>Display all records</NavLink>
-            </div>
-          </>
-        }
-
 
 
         {showEmptyFavoritesListMessage &&
           <div>There are no books added to favorite books list.</div>
         }
+
+
         {//if books array is empty and no searching is done (it might be the case nothing is found), offer adding some books 
           (showEmptyListMessage) &&
-          <p>There are no books added yet. Add them by
-            using <Link to={routes.createBookPath}>"Add book"</Link> link!
+          <p><strong>Books list is empty.</strong> <br/><br/>
+           Books can be added manually using form on <Link to={routes.createBookPath}>"Add book"</Link> page
+           or created automatically on <Link to={routes.demoDataResetPath}>"Demo data reset"</Link> page. "Demo data reset" page lets create
+           demo data with ten book records.
           </p>
         }
 
-
-        {(currentlyFetching) &&
-          <DataFetchingStatusLabel labelText="loading..." />
-        }
 
         {booksToDisplay.length > 0 &&
           //using <fieldset> to make all child button elements disabled by adding disabled attribute

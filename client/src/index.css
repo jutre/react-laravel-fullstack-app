@@ -24,7 +24,7 @@
     }
 
     p{
-        @apply my-[16px]
+        @apply my-[16px] leading-[24px]
     }
 
 
