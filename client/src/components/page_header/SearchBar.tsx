@@ -245,22 +245,15 @@ function SearchBar() {
     navigate(bookListWithSearchResultUrl);
   }
 
-  //calculate search bar class
-  let searchResultsCssClassName = "absolute w-full mt-[-15px] pt-[15px] border border-[gray] bg-white rounded-b-lg";
-  if (isSearchResultBarVisible) {
-    searchResultsCssClassName += " block";
-  } else {
-    searchResultsCssClassName += " hidden";
-  }
+  let searchResultWrapperClasses = "absolute w-full mt-[-15px] pt-[15px] border border-[gray] bg-white rounded-b-[8px]";
 
 
-  //result bar displays not more than defined items count. If there are more items in results, display link to all
-  //results listing page which leads to book list url with entered search string
+  //items count displayed in result bar must not contain more than defined maximum items count. If there are more items in result then add
+  //link to page displaying all found items (all book list URL with search string URL query param).
+  //Also get slice from result array to contain at most defined maximum items number. This guards againt breaking UI by outputting too much
+  //rows in quick result div in case backend returns more rows then was specified in limit result
   const totalRowsInfoFromResponseJson = searchQueryResult ? searchQueryResult.total_rows_found : 0;
-  //get slice from result array to contain at most maximum items equal to limit number. This guards agains outputting too much rows
-  //in quick result div in case backend returns more rows then was specified in limit result (too much rows from backend would be
-  //inconsistency)
-  let searchResultArrForOutput = searchResult.slice(0, maxItemsCountForOutput);
+  const searchResultArrForOutput = searchResult.slice(0, maxItemsCountForOutput);
 
   let resultCountExceedsMaxOutputCount = false;
   if (totalRowsInfoFromResponseJson > maxItemsCountForOutput) {
@@ -270,10 +263,6 @@ function SearchBar() {
   return (
     <div className="flex relative grow shrink-0 basis-auto min-w-[90%] md:min-w-[unset] min-[800px]:justify-center
                     xl:absolute xl:top-1/2 xl:left-1/2 xl:[transform:translateX(-50%)_translateY(-50%)] xl:w-[500px]">
-      {/*TODO - implement spinner correctly styled, removing for now
-      isFetching &&
-        <div> getting books</div>
-      */}
 
       {/*close opened search bar by clicking outside div that contains form and result list (they will be visible to
         user bounded in rectangle), the area outside this rectangle is "outside" */}
@@ -287,7 +276,7 @@ function SearchBar() {
             onChange={handleSearchTermInputChange}
             onFocus={handleSearchInputFocus}
             ref={searchInputFieldRef}
-            className='w-full p-2.5 pr-[70px] rounded-lg border border-[#e5e7eb] focus:border-solid 
+            className='w-full p-2.5 pr-[70px] rounded-[8px] border border-[#e5e7eb] focus:border-solid 
             bg-white focus:border-[#6b7280] focus:outline-none'/>
 
           <div className='absolute top-0 right-0 bottom-0 flex items-center pr-[8px]'>
@@ -311,35 +300,51 @@ function SearchBar() {
           </div>
         </form>
 
-        <div className={searchResultsCssClassName}>
 
-          {searchResultArrForOutput.map((book) => {
-            //display result list as book titles with link to their edit page.
-            //replace bookId segment in book edit route pattern
-            let editUrl = routes.bookEditPath.replace(":bookId", String(book.id));
-            return (
-              <div key={book.id}
-                className="relative before:block before:absolute before:left-1/2 before:translate-x-[-50%] before:top-0 
-                    before:bg-[#f4f4f6] before:h-full before:w-0 last:before:rounded-b-[8px] hover:before:w-full 
-                    before:transition-all before:ease-in before:duration-100"
-                onClick={handleSearchResultLinkClick}>
-                <NavLink className={() => "block p-[15px] relative z-[1] hover:text-[#1f2937]"}
-                  to={editUrl}>{book.title}
+        {(searchResultArrForOutput.length > 0 && !isFetching) &&
+          <div className={searchResultWrapperClasses +
+          (isSearchResultBarVisible
+          ? " block"
+          : " hidden")}>
+
+            {searchResultArrForOutput.map((book) => {
+              //display result list as book titles with link to their edit page.
+              //replace bookId segment in book edit route pattern
+              let editUrl = routes.bookEditPath.replace(":bookId", String(book.id));
+              return (
+                <div key={book.id}
+                  className="relative before:block before:absolute before:left-1/2 before:translate-x-[-50%] before:top-0 
+                      before:bg-[#f4f4f6] before:h-full before:w-0 last:before:rounded-b-[8px] hover:before:w-full 
+                      before:transition-all before:ease-in before:duration-100"
+                  onClick={handleSearchResultLinkClick}>
+                  <NavLink className={() => "block p-[15px] relative z-[1] hover:text-[#1f2937]"}
+                    to={editUrl}>{book.title}
+                  </NavLink>
+                </div>
+              )
+            })}
+
+            {resultCountExceedsMaxOutputCount &&
+              <div onClick={handleSearchResultLinkClick}>
+                <NavLink className={() => "block p-[15px] relative z-[1] text-center"}
+                  to={bookListWithSearchResultUrl}>
+                  Show all {totalRowsInfoFromResponseJson} found items...
                 </NavLink>
               </div>
-            )
-          }
-          )}
+            }
+          </div>
+        }
 
-          {resultCountExceedsMaxOutputCount &&
-            <div onClick={handleSearchResultLinkClick}>
-              <NavLink className={() => "block p-[15px] relative z-[1] text-center"}
-                to={bookListWithSearchResultUrl}>
-                Show all {totalRowsInfoFromResponseJson} found items...
-              </NavLink>
-            </div>
-          }
-        </div>
+        {//add sleketon while fetching
+        isFetching &&
+          <div className={searchResultWrapperClasses}>
+            {[...Array(4)].map((e, index) =>
+            <div key={index} className="p-[15px]">
+              <div className="h-[19px] bg-[gray] opacity-20 rounded-[5px] animate-pulse"></div>
+            </div>)
+            }
+          </div>
+        }
       </div>
     </div>
   );
