@@ -6,7 +6,6 @@ import { BookListItem } from "./BooksListItem";
 import { BooksListLoadingSketeton } from './BooksListLoadingSketeton.tsx';
 import { FAVORITE_BOOKS_LIST } from "../../constants/bookListModes";
 import { NavLinkBack } from "../ui_elements/NavLinkBack";
-import { DataFetchingStatusLabel } from '../ui_elements/DataFetchingStatusLabel';
 import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
 import { selectSearchString, selectBookDeletingEndpointLoadingStatus } from "../../features/booksSlice";
 import { STATUS_PENDING } from'../../constants/asyncThunkExecutionStatus.ts'
