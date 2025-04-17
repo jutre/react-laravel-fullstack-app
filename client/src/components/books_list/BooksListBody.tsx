@@ -3,6 +3,7 @@ import { routes } from "../../config";
 import { Link } from "react-router-dom";
 import BooksListItemsSelectionBar from "./BooksListItemsSelectionBar"
 import { BookListItem } from "./BooksListItem";
+import { BooksListLoadingSketeton } from './BooksListLoadingSketeton.tsx';
 import { FAVORITE_BOOKS_LIST } from "../../constants/bookListModes";
 import { NavLinkBack } from "../ui_elements/NavLinkBack";
 import { DataFetchingStatusLabel } from '../ui_elements/DataFetchingStatusLabel';
@@ -255,10 +256,6 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
   return (
     <>
       <div>
-        {//loading indicator
-        (currentlyFetching) &&
-          <DataFetchingStatusLabel labelText="loading..." />
-        }
 
         {//filtered_list mode. Display link to all book, entered search string, error message about too short search string
         currentlyDisplayedList === 'filtered_list' &&
@@ -297,12 +294,20 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
           </p>
         }
 
+        {//skeleton as loading indicator when book list is empty. Book list is empty on initial app start and when books are deleted in one
+        //list type and page is navigated to other. This is RTK Query behaviour when cache is invalidated, usually deleting from one list
+        //other type lists is invalidated
+        (currentlyFetching && booksToDisplay.length === 0) &&
+            <BooksListLoadingSketeton/>
+        }
 
         {booksToDisplay.length > 0 &&
-          //using <fieldset> to make all child button elements disabled by adding disabled attribute
+          //using <fieldset> as parent element to make all contained child button elements disabled by adding disabled attribute
           <fieldset disabled={disableListButtons}
+            //classes to gray out list which acts as loading indicator
             className={'relative after:absolute disabled:after:inset-0 disabled:after:bg-[gray] disabled:after:opacity-30 ' +
-            'disabled:opacity-50 disabled:after:rounded-[8px] disabled:after:z-[2000]'} >
+            'disabled:opacity-50 disabled:after:rounded-[8px] disabled:after:z-[2000]'}>
+
             {<BooksListItemsSelectionBar
               allDisplayedBooks={booksToDisplay}
               searchGetParamVal={currentSearchString}
