@@ -4,16 +4,26 @@ import { useLazyGetFilteredBooksListQuery } from '../../features/api/apiSlice';
 import { routes } from '../../config';
 import { NavLink, useNavigate } from "react-router-dom";
 import { ButtonWithIcon } from '../ui_elements/ButtonWithIcon';
+import { SerializedError } from '@reduxjs/toolkit';
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
 function SearchBar() {
   //holds value of controlled <input/> element
   const [searchTerm, setSearchTerm] = useState("");
 
+  //using a state variable where an {error} field's value returned by useLazyQuery will be stored. useLazyQuery does not have a method to
+  //reset {error} to undefined but it is needed to remove error from UI on certain interactions: error message must be removed in all
+  //cases when resetSearchBar() is called, when user navigates to other page, search string in input field becomes less than three symbols
+  const [errorFromEndpoint, setErrorFromEndpoint] = useState<FetchBaseQueryError | SerializedError | undefined>(undefined);
+
   //maximum items to be output in quick result div
-  let maxItemsCountForOutput = 5;
+  const maxItemsCountForOutput = 5;
 
   //using {currentData} result variable not {data} as if error occurs, the {currentData} will be empty array and seach bar will be hidden
-  const [trigger, { currentData: searchQueryResult, isFetching }] = useLazyGetFilteredBooksListQuery();
+  const [trigger,
+    { currentData: searchQueryResult,
+      isFetching,
+      error: queryError }] = useLazyGetFilteredBooksListQuery();
 
   //extract book rows from result
   let foundBooks = searchQueryResult ? searchQueryResult.data : []
@@ -44,6 +54,24 @@ function SearchBar() {
   }, [isFetching]);
 
 
+  useEffect(() => {
+    //set current error (error value or undefined) from endpoint to state
+    setErrorFromEndpoint(queryError)
+
+    //fixing result in case of error response in case of using previously used argument by setting search result state to empty array and
+    //hiding quick search result div. Currently useLazyQuery behaves following way - ff search string "boo" is sent in request and
+    //successful response containing items is received, then "book" is sent and successful response containing items is received, then if
+    //again "boo" is sent and error response is received, useLazyQuery returns cached result from previous response with "boo" argument
+    //as a result result bar is shown. Expected behaviour of endpoint in case of error would be to return undefined, as it works when
+    //sending previously not used argument "books" and error response is received
+    if(queryError !== undefined){
+      setSearchResult([]);
+      setIsSearchResultBarVisible(false);
+    }
+
+  }, [queryError]);
+
+
 
   //search result list could be displayed based only on criteria that local search result variable is not empty, but we have additional
   //functionality - when user clicks any element in document outside of search bar while there are search results, 
@@ -68,19 +96,22 @@ function SearchBar() {
 
   /**
    * This is a function attached to window.document as "click" event handler when there is any input in search string input field.
-   * Function does following - when user clicks any element except anchor ("a" tag) in document outside of search bar starting div, 
-   * hide search result list; if clicked element was inside anchor ("a" tag), then additionally set result list to empty array,
-   * set search input field's value to empty string and remove this function from window.document, actually "reset" search bar 
-   * as user havigated to other page.
+   * Function does following - when user clicks any element except "a" or "button" tag in document outside of search bar starting div,
+   * hide search result list but don't modify input field's value, user may focus it again and edit existing value;
+   * If clicked inside element "a" or "button", then set result list to empty array, set search input field's value to empty string, remove
+   * error near search input field and remove this function from window.document because user actially navigated to other page by
+   * click on "a" or "button" tag. Button elements outside of search bar are used to redirect to other page (editing) as wall as do actions
+   * like deleting and adding/removing to favorites, in those cases UI changes or spinner appears - search string value is to be cleared.
+   * 
    * Event listerner function is created using useCallback() hook. This is done to be able to remove
    * previously attached event handler when needeed as on each render of React component a defined  
    * function inside component is created as new function and such function won't be removed by a 
    * document.removeEventListener() call. Using useCallback creates memorized function which
-   * can be removed byremoveEventListener() method.
+   * can be removed by removeEventListener() method.
    */
   const manageSearchBarOnClickOutsideOfSearchBar = useCallback((event: MouseEvent) => {
 
-    let anchorElementFound = false;
+    let anchorOrButtonElementFound = false;
     //event.target returns object of type "EventTarget | null", it does not have any of "parentElement" that might be used to traverse
     //ancestor nodes, but it is known that click target element is a DOM element which is represented by HTMLElement type
     let eventPropogationPathElement: HTMLElement | null = event.target as HTMLElement;
@@ -91,36 +122,35 @@ function SearchBar() {
         return;
       }
 
-      //if one of ancestors is anchor element <a></a>, remember that, click was on element inside anchor
-      if (eventPropogationPathElement.nodeName === "A" && anchorElementFound === false) {
-        anchorElementFound = true;
+      //if one of ancestors is anchor element "a" or "button" , remember that, click was on element inside of those elements 
+      if (eventPropogationPathElement.nodeName === "A" || eventPropogationPathElement.nodeName === "BUTTON" ) {
+        anchorOrButtonElementFound = true;
       }
 
       eventPropogationPathElement = eventPropogationPathElement.parentElement;
     }
 
-    //we have clicked outside of search bar div - 
-    //hide search results bar - set menu opened state to false. It might be already be
-    //hidden (state is 'false'), setting it to 'false' again won't cause re-render, don't check "if it is already 'false'"
-    //(we can't check current React's components state variable conveniently in event handler attached
-    //outside of component because of React lifecycle; possible could with some additional hacks, but we won't do it this time)
+    //we have clicked outside of search bar div but don't modify search input field value
     setIsSearchResultBarVisible(false);
 
 
-    //if the click was inside anchor element, also set search term input field's value to empty string and clear search results.
-    //A click on link outside of search bar means a user is navigated to same page according to react-router setup but search
-    //bar remains unchanged. Here result list is removed and input field is cleared to make user feel as he is traditionally
-    //navigated to other page. Also remove current event handler as search bar is not used when navigated to new page
-    if (anchorElementFound) {
+    //if the click was inside "a" or "button" also set search term input field's value to empty string, clear search results, remove
+    //error near search input field
+    if (anchorOrButtonElementFound) {
       setSearchTerm("");
       setSearchResult([]);
+      setErrorFromEndpoint(undefined)
       documentRef.current.removeEventListener('click', manageSearchBarOnClickOutsideOfSearchBar);
     }
   }, [])
 
 
   /**
-   * depending on current search text input field value, performs search, displays result list in popup div
+   * 1) manage input field value as controlled input - set it's value to state,
+   * 2) trigger filtering endpoint if search string length after trimming is at least three symbols
+   * 3) hide result div if search string length less than three symbols (if length is less than three symbols, search is not performed, hide
+   * any existing results).
+   * 4) add or remove click handler that closes search results on document depending on search string length after trimming
    * @param {*} event 
    */
 
@@ -146,9 +176,13 @@ function SearchBar() {
     //If search results div is currently displayed, hide it, remove any results from results state 
     //(search bar visiblity state var might be "true" in situations when there were results from previous search input 
     //string when length was three or more symbols)
+    //set errorFromEndpoint in state to undefined as search is not perfomed with string too short and endpoint will not change the error
+    //to undefined as it happens then another string is entered and endpoint is triggered again
     if (filterText.length < 3) {
       setIsSearchResultBarVisible(false);
       setSearchResult([]);
+
+      setErrorFromEndpoint(undefined);
 
       //send search request, search phrase at least three symbols long. A useEffect hook will process the result
     } else {
@@ -164,13 +198,15 @@ function SearchBar() {
    * 1) Sets search term text input field value to empty string
    * 2) hides results bar (migth be visible from current input) 
    * 3) sets search results to empty array (migth be present with current search string input)
-   * 4) removes event listener from window.document that hides result list on search bar when user clicks anywhere in 
+   * 4) set errorFromEndpoint in state to undefined to hide possible currently non empty error
+   * 5) removes event listener from window.document that hides result list on search bar when user clicks anywhere in
    * documet except on search bar
    */
   function resetSearchBar() {
     setSearchTerm('');
     setIsSearchResultBarVisible(false);
     setSearchResult([]);
+    setErrorFromEndpoint(undefined)
     documentRef.current.removeEventListener('click', manageSearchBarOnClickOutsideOfSearchBar);
   }
 
@@ -301,7 +337,9 @@ function SearchBar() {
         </form>
 
 
-        {(searchResultArrForOutput.length > 0 && !isFetching) &&
+        {//condition of not fetching (!isFetching) is added to hide result bar as soon as fetching starts because instead of result bar
+        //loading skeleton must be shown and value of "searchResultArrForOutput" var does not become empty immidiatelly when fetching starts
+        (searchResultArrForOutput.length > 0 && !isFetching) &&
           <div className={searchResultWrapperClasses +
           (isSearchResultBarVisible
           ? " block"
@@ -345,6 +383,11 @@ function SearchBar() {
             }
           </div>
         }
+
+        {errorFromEndpoint &&
+        <div className='absolute mt-[4px] text-[red] border border-[red] rounded-[8px] mb-[15px] py-[2px] px-[10px]'>
+          an error occured
+        </div>}
       </div>
     </div>
   );
