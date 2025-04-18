@@ -308,6 +308,7 @@ function SearchBar() {
           autoComplete="off"
           className="search-form relative z-[12]">
           <input type='text'
+            placeholder='Search book titles...'
             value={searchTerm}
             onChange={handleSearchTermInputChange}
             onFocus={handleSearchInputFocus}
