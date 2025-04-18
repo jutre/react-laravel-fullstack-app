@@ -9,7 +9,9 @@ import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
 
 /**
  * This component is dedicated for processing get parameters for book list component: search string param and book delete id params.
- * Search param value is assigned to redux store; in response to delete id param delete confirm modal dialog markup is displayed.
+ * Search param value is assigned to redux store (and as a result search string consuming components re-renders);
+ * in response to URL delete query param presence the delete processing component is displayed which in turn displays confirmation modal
+ * dialog and performs deleting or cancelation.
  * 
  * Parameter processing is done in separate component because in response to url change component that uses react-router api
  * for url processing is re-rendering, it would not be optimal to process parameters where book list is displayed because the whole

@@ -1,11 +1,8 @@
-import { useEffect } from "react";
 import { routes } from "../../config";
 import { useNavigate } from "react-router-dom";
-import { FAVORITE_BOOKS_LIST } from "../../constants/bookListModes";
 import BooksListParamProcessor from "./BooksListParamsProcessor";
 import { BooksListBody } from "./BooksListBody";
-import { setPageTitleTagValue } from "../../utils/setPageTitleTagValue";
-import { H1Heading } from "../ui_elements/H1Heading";
+import { BooksListHeadingAndTitleSelector } from "./BooksListHeadingAndTitleSelector";
 import { SquareButton } from '../ui_elements/SquareButton';
 import { BooksListModeParams } from '../../types/BooksListMode'
 
@@ -16,17 +13,6 @@ import { BooksListModeParams } from '../../types/BooksListMode'
  */
 export function BooksList({ listMode }: BooksListModeParams) {
   
-  let listTitle: string;
-  if(listMode === FAVORITE_BOOKS_LIST){
-    listTitle = "Favorite books";
-  }else{
-    listTitle = "All books";
-  }
-
-  useEffect(() => {
-    setPageTitleTagValue(listTitle);
-  }, [listTitle]);
-
   const navigate = useNavigate();
 
   let addBookButtonContent = <><span className="mr-[7px]">+</span>Add book</>
@@ -35,7 +21,7 @@ export function BooksList({ listMode }: BooksListModeParams) {
 
   return  (
     <div className="relative">
-      <H1Heading headingText={listTitle}/>
+      <BooksListHeadingAndTitleSelector listMode={listMode}/>
 
       {/*button for adding book on top right corner*/}
       <SquareButton buttonContent={addBookButtonContent}

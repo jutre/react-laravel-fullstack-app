@@ -30,8 +30,9 @@ import { skipToken } from '@reduxjs/toolkit/query/react'
  * output (link to book editing, deleting, adding/removing from favorites list). Distinct API endpoints are used for each mode, different
  * messages in case list is empty, messages about used filtering string (current string, too short string message)
  * 
- * @param listMode - determines type of data that will be displayed. If parameter is undefined than all books list or filtered list if
- * query param is present in page URL, if dedicted value is suplied then displays favorite books.
+ * @param listMode - determines primary type of data that component will display. If value is undefined than all or filtered books list
+ * is displayed (filtered list is displayed if URL search query parameter is set); if value is equals to "FAVORITE_BOOKS_LIST" then favorite
+ * books list is displayed.
  */
 
 export function BooksListBody({ listMode }: BooksListModeParams) {
