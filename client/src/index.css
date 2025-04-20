@@ -24,7 +24,7 @@
     }
 
     p{
-        @apply my-[16px] leading-[24px]
+        @apply leading-[24px]
     }
 
 
@@ -123,7 +123,8 @@
     }
 
     form.form_builder textarea,
-    form.form_builder [type="text"] {
+    form.form_builder [type="text"],
+    form.form_builder [type="password"] {
         width: 100%;
     }
 
@@ -152,7 +153,8 @@
     }
 
     form.form_builder textarea:focus,
-    form.form_builder [type="text"]:focus {
+    form.form_builder [type="text"]:focus,
+    form.form_builder [type="password"]:focus {
         border-color: #6b7280;
         outline: none;
     }
@@ -163,6 +165,12 @@
     }
 
     form.form_builder input[type="submit"]{
-        background-color: #e9e9ed;
+        background-color: #46aae9;
+        color: white;
+        border-width: 0px;
+    }
+
+    form.form_builder input[type="submit"]:hover{
+        background-color:#0076c0;
     }
 }

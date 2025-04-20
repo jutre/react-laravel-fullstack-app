@@ -327,7 +327,8 @@ export function FormBuilder({
         //create "input", "textarea", etc. html tag corresponding to type of input in form definition object
         //TODO - add code for "select" tag creation, "<input type='radio' />
         let inputTag;
-        if (formElementDef.type === "text" || formElementDef.type === "checkbox" || formElementDef.type === "hidden") {
+        if (formElementDef.type === "text" || formElementDef.type === "checkbox" || formElementDef.type === "hidden"
+        || formElementDef.type === "password") {
           inputElemAttributes.type = formElementDef.type;
           inputTag = <input {...inputElemAttributes} />;
 
