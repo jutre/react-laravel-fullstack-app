@@ -104,7 +104,7 @@ export function LoginForm() {
 
       <div className='rounded-[8px] border-[2px] border-[grey] p-[10px] mt-[12px]'>
         <p>
-        To access authencicated part of application entering following data in form fields:<br/>
+        To access authencicated part of application enter following data in form fields:<br/>
         <span className='inline-block mt-[12px]'>
           E-mail - john.doe@example.com<br/>
           Password - password
