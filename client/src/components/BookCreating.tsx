@@ -14,7 +14,8 @@ import { Book, NewBook } from "../types/Book";
 import { useAddBookMutation } from "../features/api/apiSlice";
 import DisappearingMessage from './DisappearingMessage';
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
-import { extractMessageOrMessagesObjFromQueryError } from "../utils/utils";
+import { extractMessageOrMessagesObjFromQueryError,
+  createTargetObjFromSubmittedData } from "../utils/utils";
 
 
 export function BookCreating() {
@@ -50,11 +51,14 @@ export function BookCreating() {
   }
 
   async function saveSubmittedData(submittedFormData: SubmittedFormData) {
-    const newBokData: NewBook = {
-      title: String(submittedFormData.title),
-      author: String(submittedFormData.author),
-      preface: String(submittedFormData.preface),
+
+    let templateNewBookObj: NewBook = {
+      title: "",
+      author: "",
+      preface: ""
     }
+
+    let newBokData: NewBook = createTargetObjFromSubmittedData<NewBook>(submittedFormData, templateNewBookObj)
 
     //saving to state data from mutation response to display created book data after book successfully saved
     try {
@@ -93,9 +97,12 @@ export function BookCreating() {
 
 
   let mainContent;
+  let pageHeading: string;
   //condition to display created book info is createdBook state variable to be not null, it is set to created book data on sucessfull book
   //creation response
   if (createdBook !== null) {
+    pageHeading = "Created book"
+
     //display screen with book infor that just has been created
     let editUrl = routes.bookEditPath.replace(":bookId", String(createdBook.id))
     let addBookButtonContent = <><span className="mr-[7px]">+</span>Add another book</>
@@ -134,7 +141,10 @@ export function BookCreating() {
         </div>
       </>
     );
+
   } else {
+    pageHeading = "Add book"
+
     mainContent =
       <FormBuilder formFieldsDefinition={bookCreatingFormFieldsDef}
         successfulSubmitCallback={saveSubmittedData}
@@ -146,7 +156,7 @@ export function BookCreating() {
     <div className="relative">
       <NavLinkBack url={routes.bookListPath} />
 
-      <H1Heading headingText="Add book" />
+      <H1Heading headingText={pageHeading} />
 
       {/*if data sending has failed, display message*/}
       {errorMsg &&

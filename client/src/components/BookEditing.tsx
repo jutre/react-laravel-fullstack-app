@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getQueryParamValue, extractMessageOrMessagesObjFromQueryError } from "../utils/utils";
+import { getQueryParamValue,
+  extractMessageOrMessagesObjFromQueryError,
+  createTargetObjFromSubmittedData} from "../utils/utils";
 import { Book } from "../types/Book";
 import { useGetBookQuery, useUpdateBookMutation } from "../features/api/apiSlice";
 import { skipToken } from '@reduxjs/toolkit/query/react'
@@ -37,15 +39,15 @@ export function BookEditing() {
    * @param {*} submittedFormData 
    */
   async function saveSubmittedData(submittedFormData: SubmittedFormData) {
-    //object creation from form data could be automated by including target object's properties types to form definition and
-    //asserting that function result is of needed output data relying on correct definition of props' target types. Currently
-    //building needed small object hardcoded
-    let submittedBookData: Book = {
-      id: parseInt(String(submittedFormData.id)),
-      title: String(submittedFormData.title),
-      author: String(submittedFormData.author),
-      preface: String(submittedFormData.preface),
+
+    let templateBookObj: Book = {
+      id: 0,
+      title: "",
+      author: "",
+      preface: ""
     }
+
+    let submittedBookData: Book = createTargetObjFromSubmittedData<Book>(submittedFormData, templateBookObj)
 
     //saving to state data from mutation response to be snown in form
     try {

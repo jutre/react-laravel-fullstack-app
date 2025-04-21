@@ -3,6 +3,7 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { BooksListModes } from '../types/BooksListMode'
 import { FAVORITE_BOOKS_LIST } from "../constants/bookListModes";
 import { routes } from "../config";
+import { SubmittedFormData } from "./FormBuilder";
 /**
  * This function it intended to be used as a part of "click" event handler attached to attached to window.document. The other part of it
  * must be defined inside React compoent's function using useCallback() hook and invoke current function from it. The function defined
@@ -243,4 +244,56 @@ export function findNonEmptyErrorFromList(...errors: [FetchBaseErrorTypes, Fetch
 
   const possiblyNonEmptyError = errors.find(error => error !== undefined)
   return possiblyNonEmptyError
+}
+
+/**
+ * Returns object of type which is specified in funtion's generic argument assigning to returned object's properties values taken from
+ * submitted data object. Intended for converting submitted data received from form builder to create object with certain type which will be
+ * passed as argument to RTK Query endpoint.
+ * 
+ * Function copies property values from submitted data object whos type are either string or boolean to a target object which properties may
+ * be one of three primitive types: string, number or boolean, other types are not copied to object returned by function. Function return
+ * type is specified in function type generic argument which allows use returned value type safely. Function accepts a template object as
+ * it's second argument, it also must be of type specified in function type generic argument, this object acts as a source of information
+ * in runtime about type of function returned object's each property.
+ * 
+ * @param formData - submitted data which is key value object, value types are either string or boolean
+ * @param targetObjTemplate - object conforming to function's return type. The property values do not matter as they will be overwritten
+ * by data from submitted data object.
+ * 
+ * @returns object of type is specified in function type generic argument filled with values from submitted data argument
+ * 
+ * @throws error if property from target template object is not found in submitted data object which means logic error where form data
+ * lacks a property with same name as property name in target object. Error is thrown instead of silently convering an 'undefined' value to
+ * boolean false or number zero value to be noticed on time that possibly a field is missing in web form that must be present in object
+ * sent to backend
+ */
+export function createTargetObjFromSubmittedData<T extends object>(formData: SubmittedFormData, targetObjTemplate: T): T {
+
+  //the targetObjTemplate can be accessed as literal object (like obj.propName) not using indexed syntacs as it 'extends object'.
+  //Create copy of targetObjTemplate which is of indexed type because indexed object access syntacs will be used in loop to assign
+  //one property by one
+  let targetObjCopy: { [key: string]: any } = { ...targetObjTemplate }
+
+  for (let [blueprintObjKey, blueprintObjFieldVal] of Object.entries(targetObjCopy)) {
+
+    //get value from submitted data and assign to target object converting it to target object's runtime type
+    let formFieldVal = formData[blueprintObjKey]
+    if(formFieldVal === undefined){
+      throw new Error(`field name "${blueprintObjKey}" was not found in submitted form data, possibly not present in form`);
+
+    }
+    if (typeof blueprintObjFieldVal === 'string') {
+      targetObjCopy[blueprintObjKey] = String(formFieldVal)
+
+    } else if (typeof blueprintObjFieldVal === 'number') {
+      targetObjCopy[blueprintObjKey] = parseInt(String(formFieldVal))
+
+    } else if (typeof blueprintObjFieldVal === 'boolean') {
+      targetObjCopy[blueprintObjKey] = Boolean(formFieldVal)
+    }
+  }
+
+  //can safely assert that targetObjCopy is of type T because targetObjCopy was created by spread operator from object of type T
+  return targetObjCopy as T
 }
