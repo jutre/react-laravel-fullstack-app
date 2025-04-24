@@ -1,5 +1,4 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import { restApiBaseUrl } from '../../config';
 import { User, UserCredentials } from '../../types/User';
 import { Book, NewBook, FavoriteBook } from '../../types/Book';
 import { getCookie } from '../../utils/utils'
@@ -19,7 +18,7 @@ type FilterQueryInputParameter = {
 export const apiSlice = createApi({
   reducerPath: 'apiSlice',
   baseQuery: fetchBaseQuery({ 
-    baseUrl: restApiBaseUrl,
+    baseUrl: 'http://localhost/laravel_books_api/public/api/',
     credentials: 'include',
     prepareHeaders: (headers) => {
       headers.set("Accept", "application/json")

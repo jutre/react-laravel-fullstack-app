@@ -1,12 +1,6 @@
 import { FormFieldsDefinition } from './utils/FormBuilder';
 
 /**
- * REST API base path. Base URL for all requests, it's value is used in RTK Query createApi() definition for fetchBaseQuery.baseUrl 
- * property.
- */
-export const restApiBaseUrl = 'http://localhost/laravel_books_api/public/api/';
-
-/**
  * react-router paths
  */
 //routes for react-router library. Everywhere in code routes info is taken from this variable: for route matcher <Route> element 'path'
