@@ -5,7 +5,6 @@ import { BooksListBody } from "./BooksListBody";
 import { BooksListHeadingAndTitleSelector } from "./BooksListHeadingAndTitleSelector";
 import { SquareButton } from '../ui_elements/SquareButton';
 import { BooksListModeParams } from '../../types/BooksListMode'
-import { FAVORITE_BOOKS_LIST } from "../../constants/bookListModes";
 
 /**
  * 
