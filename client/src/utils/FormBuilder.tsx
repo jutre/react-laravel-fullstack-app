@@ -232,17 +232,23 @@ export function FormBuilder({
         continue;
       }
 
+
       const fieldName = formElementDef.name;
       const fieldValue = inputFieldValues[fieldName];
+      let errMsgForCurrentField = "";
+      //validate field value for every rule that is defined for field
+      /*Error about the last broken rule from rules array is set to be shown next to input field. If field has two validation rules in
+      following order: [{"minLength", ..} and {"email"} and input value is f.e. "aa" then both rules are broken, the error set to be shown
+      next to input field is "field value must be a valid email address" as it is last rule in rules array but error "field length must be
+      at least <n> symbols" should be snown better while string is too short. Therefore in rules array "minLength" should be the last one
+      as it is better to first state about too short string and if string lenght is enough only then display error about invalid email
+      format*/
       formElementDef.validationRules.forEach((validatRulesObj) => {
-        let errMsgForCurrentField: string | undefined = undefined;
 
         //rule "required" - don't allow empty string
         //fieldValue will be undefined if input field was not assigned default value and was not changed anyway (change 
         //handler did not mofify appropriate prop in inputFieldValues object). 
-        if (validatRulesObj.name === "required" &&
-          //TODO add casting to string in JS version
-          (fieldValue === undefined || String(fieldValue).trim() === "")) {
+        if (validatRulesObj.name === "required" &&  (fieldValue === undefined || String(fieldValue).trim() === "")) {
           const defaultErrMsg = "this field must not be empty";
 
           //use error message from form definition if it is set
@@ -254,12 +260,9 @@ export function FormBuilder({
           //string should be, if string is not empty and too short, create error message that field value's length
           //should not be shorter than specified in rule
         } else if (validatRulesObj.name === "minLength") {
-          //TODO possible add casting to string in JS version
           let fieldValueMinLength = parseInt(String(validatRulesObj.value));
 
-          if (fieldValue === undefined ||
-            //TODO add casting to string in JS version
-            String(fieldValue).trim().length < fieldValueMinLength) {
+          if (fieldValue === undefined || String(fieldValue).trim().length < fieldValueMinLength) {
             const defaultErrorMsg = `field's length must be at least ${fieldValueMinLength} 
                 symbol${fieldValueMinLength > 1 ? "s" : ""}`;
 
@@ -267,17 +270,30 @@ export function FormBuilder({
             errMsgForCurrentField = validatRulesObj.message ? validatRulesObj.message : defaultErrorMsg;
 
           }
-        }
 
-        if (errMsgForCurrentField) {
-          errors = { ...errors, [fieldName]: errMsgForCurrentField };
-          //if input validation error exists for current field, remove error initially snown error for field, invalid input error will be
-          //snown instead
-          if (fieldName in initialErrors) {
-            delete initialErrors[fieldName]
+          //rule "email" - must be valid email format string
+        }else if(validatRulesObj.name === "email"){
+          let inputTrimmedLoverCase = String(fieldValue).trim().toLowerCase();
+          if(!inputTrimmedLoverCase.match(
+            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+          )){
+            const defaultErrMsg = "field value must be a valid email address";
+
+            //use error message from form definition if it is set
+            errMsgForCurrentField = validatRulesObj.message ? validatRulesObj.message : defaultErrMsg;
           }
         }
+
+
       })
+      if (errMsgForCurrentField) {
+        errors = { ...errors, [fieldName]: errMsgForCurrentField };
+        //if input validation error exists for current field, remove error initially snown for field, invalid input error will be
+        //snown instead
+        if (fieldName in initialErrors) {
+          delete initialErrors[fieldName]
+        }
+      }
     }
 
 

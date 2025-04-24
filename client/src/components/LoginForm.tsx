@@ -7,7 +7,6 @@ import {
 } from "../features/authSlice";
 import { STATUS_PENDING, STATUS_REJECTED } from'../constants/asyncThunkExecutionStatus.ts'
 import { FormBuilder, FormFieldsDefinition, SubmittedFormData } from '../utils/FormBuilder';
-import { GeneralErrorMessage } from './ui_elements/GeneralErrorMessage';
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
 
 export function LoginForm() {
@@ -27,9 +26,11 @@ export function LoginForm() {
       type: "text",
       validationRules: [
         {
+          name: "email"
+        },
+        {
           name: "minLength",
-          value: 3,
-          message: "field length must be at least three symbols"
+          value: 3
         }
       ]
     },
@@ -40,8 +41,7 @@ export function LoginForm() {
       validationRules: [
         {
           name: "minLength",
-          value: 3,
-          message: "field length must be at least three symbols"
+          value: 8
         }
       ]
     }
@@ -70,18 +70,24 @@ export function LoginForm() {
   }
 
 
+  //if got rejected response from server form will be shown with previously entered e-mail in e-mail field, blank password and received
+  //error message under the e-mail field. The primary error expecred is error message about username (e-mail) and password not matching,
+  //also any other possible error messages received from API will be displayed under e-mail field)
   const sendLoginRequestStatus = useAppSelector(selectSendLoginRequestStatus);
-  const sendLoginRequestError = useAppSelector(selectSendLoginRequestError);
-
-  let formDisabled = sendLoginRequestStatus === STATUS_PENDING ? true : false;
-
-
   let initialFormData: { email?: string } = {}
-  //if got rejected response from server (primary this could be invalid email), show form with previously entered email,
-  //leaving password blank
   if (sendLoginRequestStatus === STATUS_REJECTED) {
     initialFormData.email = submittedEmail
   }
+
+  const sendLoginRequestError = useAppSelector(selectSendLoginRequestError);
+  let initiallyDisplayedErrors: { email: string } | null = null
+  if (sendLoginRequestError) {
+    initiallyDisplayedErrors = { email: sendLoginRequestError }
+  }
+
+
+  //disable form while request pending
+  let formDisabled = sendLoginRequestStatus === STATUS_PENDING ? true : false;
 
   return (
     <div className='max-w-[700px]'>
@@ -89,6 +95,7 @@ export function LoginForm() {
         <FormBuilder
           formFieldsDefinition={loginFormFieldsDef}
           initialFormData={initialFormData}
+          initiallyDisplayedErrors={initiallyDisplayedErrors}
           successfulSubmitCallback={onSubmit}
           submitButtonText="Login"
           disableAllFields={formDisabled} />
@@ -96,10 +103,6 @@ export function LoginForm() {
 
       {(sendLoginRequestStatus === "pending") &&
         <div>submitting...</div>
-      }
-
-      {sendLoginRequestError &&
-        <GeneralErrorMessage msgText={sendLoginRequestError} />
       }
 
       <div className='rounded-[8px] border-[2px] border-[grey] p-[10px] mt-[12px]'>
