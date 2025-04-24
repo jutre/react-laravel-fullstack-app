@@ -5,6 +5,7 @@ import { BooksListBody } from "./BooksListBody";
 import { BooksListHeadingAndTitleSelector } from "./BooksListHeadingAndTitleSelector";
 import { SquareButton } from '../ui_elements/SquareButton';
 import { BooksListModeParams } from '../../types/BooksListMode'
+import { FAVORITE_BOOKS_LIST } from "../../constants/bookListModes";
 
 /**
  * 
@@ -23,10 +24,13 @@ export function BooksList({ listMode }: BooksListModeParams) {
     <div className="relative">
       <BooksListHeadingAndTitleSelector listMode={listMode}/>
 
-      {/*button for adding book on top right corner*/}
-      <SquareButton buttonContent={addBookButtonContent}
-        clickHandler={redirectToBookCreatingPage}
-        additionalTwcssClasses="absolute top-0 right-0"/>
+      {/*button for redirect to book creating page on top right corner when not displaying favorite books - on empty favorites
+      list a button "Add book" would be misleading letting him thing about adding book to favorites list*/}
+      {listMode !=="FAVORITE_BOOKS_LIST" &&
+        <SquareButton buttonContent={addBookButtonContent}
+          clickHandler={redirectToBookCreatingPage}
+          additionalTwcssClasses="absolute top-[-5px] right-0"/>
+      }
 
       <BooksListParamProcessor listMode={listMode}/>
       <BooksListBody listMode={listMode}/>
