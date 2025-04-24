@@ -168,6 +168,7 @@
         background-color: #46aae9;
         color: white;
         border-width: 0px;
+        width: 120px;
     }
 
     form.form_builder input[type="submit"]:hover{
