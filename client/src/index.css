@@ -174,4 +174,8 @@
     form.form_builder input[type="submit"]:hover{
         background-color:#0076c0;
     }
+
+    form.form_builder input[type="submit"]:disabled{
+        background-color: gray;
+    }
 }
