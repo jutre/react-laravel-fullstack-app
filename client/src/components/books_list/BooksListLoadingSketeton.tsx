@@ -7,7 +7,7 @@ export function BooksListLoadingSketeton() {
   const pulsingBgndClasses = " bg-[gray] opacity-20 rounded-[5px] animate-pulse "
 
   return (
-    <div className="relative after:absolute after:inset-0 after:bg-[gray] after:opacity-30 opacity-50 after:rounded-[8px]">
+    <div className="relative">
       {/*replace mass checking/unckecking checkbox, delete button*/}
       <div className="flex">
         <div className="flex items-center pr-[15px]">
