@@ -14,16 +14,22 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # urls not starting with "api/" map to "index.html" file as those are paths other than "/" (serves index.html) and "/api" and can be one
+    # Redirect url like domain.com/index.html to domain.com/. Frontend React application is not configured to process url /index.html.
+    # Redirect to / which in fact is equvivalent to /index.html but supported by frontend app
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteCond %{REQUEST_URI} ^/index\.html$
+    RewriteRule ^ / [L,R=301]
+
+    # urls not starting with "/api/" map to "index.html" file as those are paths other than "/" (serves index.html) and "/api/" and can be one
     # of paths present in frontend React app which was entered by user directly in browser but not picked from frontend app's link
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_URI} !(api/(.+)$)
-    RewriteRule ^ index.html
+    RewriteCond %{REQUEST_URI} !(^/api/(.+)$)
+    RewriteRule ^ index.html [L]
 
     # Send Requests which url starts with "api/" To Front Controller as "api/" is beginning part of url for all REST API paths
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_URI} api/(.+)$
+    RewriteCond %{REQUEST_URI} ^/api/(.+)$
     RewriteRule ^ index.php [L]
 </IfModule>
