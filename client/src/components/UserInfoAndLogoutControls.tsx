@@ -1,7 +1,8 @@
 /**
- * displays or hides data source settings menu. Menu can be closed by click on same element that opened 
- * the menu or on any element in page except menu itself
+ * Displays currently logged in user name, surname and logout button while user is logged in, performs logout actions when user clicks on
+ * logout button.
  */
+import { useState, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from '../store/reduxHooks';
 import { useUserLogoutMutation } from '../features/api/apiSlice'
 import { selectCurrentUser } from '../features/authSlice';
@@ -9,14 +10,34 @@ import { dispatchLogoutActions } from '../features/authSlice';
 import { SquareButton } from './ui_elements/SquareButton';
 
 export function UserInfoAndLogoutControls(){
-
+  //state variable that has same value as {isLoading} variable returned by logout endpoint but with some delay to display a "Please wait.."
+  //loading indicator under button with some delay but not immediatelly after user clicks "Logout" button.
+  //The {isLoading} variable becomes true as soon as user clicks "Logout" and if network is fast the "Please wait.." indicator appears very
+  //shortly and page is redirected to login form. That looks bad, therefore loading indicator appears only if network response is longer
+  //than 500 miliseconds. Meanwhile "Logout" button changes the background immediatelly after user clicks "Logout" button and endpoint 
+  //starts loading serving as loading instant indicator
+  const [isUserLoggingOut, setIsUserLoggingOut] = useState(false);
 
   const dispatch = useAppDispatch();
 
   const [triggerUserLogoutMutation, {
     error: userLogoutError,
-    isLoading: isUserLoggingout}] = useUserLogoutMutation()
+    isLoading}] = useUserLogoutMutation()
 
+  
+  //reflects value of {isLoading} variable returned by logout endpoint - see comments on isUserLoggingOut state variable
+  useEffect(() => {
+    if(isLoading === true){
+      //as soon a  
+      let timer = setTimeout(() => {
+        setIsUserLoggingOut(true);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }else{
+      setIsUserLoggingOut(false)
+    }
+  }, [isLoading]);
 
   /**
    * function invokes endpoint to log out current user
@@ -45,6 +66,10 @@ export function UserInfoAndLogoutControls(){
     errorMsg = 'An error occured'
   }
 
+  //make button disabled as soon as logout endpoint starts loading, the background of button is changed to defined disabled style. But the
+  //"Please wait.." label appears with a little delay - see comments on isUserLoggingOut state variable
+  const isButtonDisabled = isLoading === true
+
   return (
     <div>
       <div className='flex items-center flex-wrap'>
@@ -54,6 +79,7 @@ export function UserInfoAndLogoutControls(){
           {/* "Logout" button, has less top/botton padding then button's default padding */}
           <SquareButton buttonContent='Logout'
             clickHandler={logoutBtnClickHandler}
+            disabled={isButtonDisabled}
             additionalTwcssClasses='py-[6px]'/>
       </div>
 
@@ -62,9 +88,9 @@ export function UserInfoAndLogoutControls(){
           {errorMsg}
         </div>}
       
-      {isUserLoggingout &&
+      {isUserLoggingOut &&
         <div className='absolute whitespace-nowrap right-0 mt-[5px] rounded-[8px] bg-white border border-black-800 p-[10px]'>
-          please wait..
+          please wait...
         </div>}
     </div>
   )
