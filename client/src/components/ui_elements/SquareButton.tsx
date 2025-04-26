@@ -26,7 +26,7 @@ export function SquareButton({buttonContent, clickHandler, additionalTwcssClasse
       {...clickHandlerAttributeContainer}
       disabled={disabled}
 
-      className={"rounded-[8px] text-white hover:text-white bg-[#46aae9] hover:bg-[#0076c0] disabled:bg-[#e9e9ed] disabled:text-[gray] p-[10px]" +
+      className={"rounded-[8px] text-white bg-[#46aae9] hover:bg-[#0076c0] disabled:bg-[#e9e9ed] disabled:bg-[gray] p-[10px]" +
       ( additionalTwcssClasses 
       ? " " + additionalTwcssClasses
       : "")}>{/*
