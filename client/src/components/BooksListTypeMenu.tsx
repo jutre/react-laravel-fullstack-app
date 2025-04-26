@@ -53,7 +53,7 @@ export function BooksListTypeMenu () {
     if (displayFullscreen) {
       return "block";
     } else {
-      return "flex justify-evenly py-[15px] bg-white border-t-2 border-black lg:pt-[110px] lg:block lg:border-t-0 lg:bg-transparent " +
+      return "flex justify-evenly py-[15px] bg-white border-t-2 border-black lg:pt-[140px] lg:block lg:border-t-0 lg:bg-transparent " +
         "xl:pr-[30px]";
     }
   }
