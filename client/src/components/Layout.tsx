@@ -48,24 +48,37 @@ const Layout = () => {
     <div className="bg-[#eeeeee] flex min-h-screen">
       <Router>
 
+        {/*menu if user is logged in, on larger devices on left side, on smaller at page bottom*/}
         <div className="lg:grow lg:flex lg:justify-center xl:justify-end xl:shrink-0 xl:basis-0">
           {isUserLoggenIn === true &&
             <BooksListTypeMenu/>
           }
         </div>
+
+        {/*main content section, on largest devices in center between two equal width side columns, on medium between two different width
+        columns, on smaller occupies whole screen width*/}
         <div className="grow lg:grow-0 lg:shrink-0 lg:basis-[840px] xl:basis-[950px] flex flex-col relative">
           <PageHeader isUserLoggenIn={isUserLoggenIn}/>
+
+          {/*logout controls at top right of page*/}
           {isUserLoggenIn === true &&
             <div className="absolute top-[10px] right-[15px] sm:right-[30px] md:right-[15px] z-[1100]">
               <UserInfoAndLogoutControls/>
             </div>
           }
-          <div className="bg-white relative pt-[30px] px-[15px] pb-[65px] sm:px-[30px] grow">
+
+          {/*content - book lists or login form*/}
+          <div className="bg-white relative pt-[30px] px-[15px] pb-[65px] xl:pb-[30px] sm:px-[30px] grow">
             {content}
           </div>
 
+          {/*beginning with largest devices display footer, has background*/}
+          <div className="bg-gray-300 h-[0px] xl:h-[35px]"></div>
         </div>
+
+        {/*left column visible on larger devices, has background*/}
         <div className="lg:grow lg:shrink xl:shrink-0 xl:basis-0"></div>
+
       </Router>
     </div>
   )

@@ -7,6 +7,8 @@
     --breakpoint-xl: 1366px;
 
     --font-sans: 'Source Sans Pro', 'sans-serif';
+
+    --color-gray-300: #c6c9ce;
 }
 
 @layer base {

@@ -73,7 +73,7 @@ export function BooksListTypeMenu () {
       anchorClasses += " mb-[20px] text-center";
     }
     if (isActive && !isDisplayedFullscreen) {
-      return anchorClasses + " bg-[#c6c9ce]";
+      return anchorClasses + " bg-gray-300";
     } else {
       return anchorClasses;
     }
