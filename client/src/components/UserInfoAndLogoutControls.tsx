@@ -1,7 +1,3 @@
-/**
- * Displays currently logged in user name, surname and logout button while user is logged in, performs logout actions when user clicks on
- * logout button.
- */
 import { useState, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from '../store/reduxHooks';
 import { useUserLogoutMutation } from '../features/api/apiSlice'
@@ -9,6 +5,11 @@ import { selectCurrentUser } from '../features/authSlice';
 import { dispatchLogoutActions } from '../features/authSlice';
 import { SquareButton } from './ui_elements/SquareButton';
 
+/**
+ * Displays logged in user name, surname, logout button, loading progress or error when loggint out; when user clicks "Logout" button, sends
+ * logout request to backend, if response is successfull then triggers action to perform state change in Redux store to reflect logged out
+ * user state.
+ */
 export function UserInfoAndLogoutControls(){
   //state variable that has same value as {isLoading} variable returned by logout endpoint but with some delay to display a "Please wait.."
   //loading indicator under button with some delay but not immediatelly after user clicks "Logout" button.
