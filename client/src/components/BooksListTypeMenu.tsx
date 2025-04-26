@@ -67,7 +67,7 @@ export function BooksListTypeMenu () {
    * Using <NavLink> as react-router-dom <Link> component does not allow to add className attribute
    */
   const getNavLinkClassName = (isActive: boolean, isDisplayedFullscreen: boolean) => {
-    let anchorClasses = "block px-[10px] py-[5px] border rounded-lg border-black font-bold  hover:text-[#959595] lg:border-0 lg:p-[10px] " +
+    let anchorClasses = "block px-[10px] py-[5px] border rounded-lg border-black font-bold  hover:text-[black] lg:border-0 lg:p-[10px] " +
       "lg:pr-[15px]";
     if ( isDisplayedFullscreen) {
       anchorClasses += " mb-[20px] text-center";
@@ -143,7 +143,7 @@ export function BooksListTypeMenu () {
                     : () => { }}>
 
                   {/*span inside link needed to scale only text inside link on hover*/}
-                  <span className={"whitespace-nowrap lg:hover:block lg:hover:transition-transform lg:hover:duration-200 " +
+                  <span className={"whitespace-nowrap block lg:hover:transition-transform lg:hover:duration-200 " +
                     "lg:hover:ease-linear lg:hover:scale-[1.08] lg:hover:origin-top-left"}>
                     {entry.linkText}
                   </span>
