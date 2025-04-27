@@ -5,6 +5,8 @@ namespace Database\Seeders;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Database\Seeders\Helper;
+
 
 class DatabaseSeeder extends Seeder
 {
@@ -21,15 +23,7 @@ class DatabaseSeeder extends Seeder
             'password' => \Illuminate\Support\Facades\Hash::make("password")
         ]);
 
-        $booksDataArr = [];
-        for($i = 1; $i <= 10; $i++){
-            $booksDataArr[] = [
-                "title" => "Book $i",
-                "author" => "author $i",
-                "preface" => "preface for book $i",
-                "user_id" => $userId
-            ];
-        }
+        $booksDataArr = Helper::getBookDataArray($userId);
 
         DB::table('books')->insert($booksDataArr);
     }

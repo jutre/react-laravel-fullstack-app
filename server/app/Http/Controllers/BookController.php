@@ -6,6 +6,7 @@ use App\Models\Book;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use Database\Seeders\Helper;
 
 class BookController extends Controller
 {
@@ -438,17 +439,8 @@ class BookController extends Controller
         DB::table('favorite_books')->delete();
         DB::table('books')->delete();
 
-        //insert books records in empty 'books' table
-        $booksDataArr = [];
-        for($i = 1; $i <= 10; $i++){
-            $booksDataArr[] = [
-                "id" => $i,
-                "title" => "Book $i",
-                "author" => "author $i",
-                "preface" => "preface for book $i",
-                "user_id" => 1
-            ];
-        }
+        //insert books records in empty 'books' table belonging to user with id=1
+        $booksDataArr = Helper::getBookDataArray(1);
         DB::table('books')->insert($booksDataArr);
 
         return response()->noContent();
