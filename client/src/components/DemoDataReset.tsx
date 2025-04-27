@@ -71,7 +71,7 @@ export function DemoDataReset() {
       <>
         <div>
           <div className="mb-[15px]">
-            Demo data has been reset
+            <p>Demo data has been reset!</p>
           </div>
         </div>
       </>
@@ -80,31 +80,37 @@ export function DemoDataReset() {
     mainContent =
       <div>
         <div className="mb-[15px]">
-          After "Reset demo data" is clicked the books data that is shown in books list will be reset to initial state.
-          There will be ten books displayed in books list.
+          <p>
+            After "Reset demo data" is clicked the books data that is shown in books list will be reset to initial state.
+            There will be ten books displayed in books list.
+          </p>
         </div>
 
         <SquareButton buttonContent="Reset demo data"
           clickHandler={handleResetDataBtnClick}
-          disabled={buttonDisabled}/>
+          disabled={buttonDisabled}
+          additionalTwcssClasses="mb-[15px]"/>
+
+        {/*text of loading state under disable button.
+        DataFetchingStatusLabel is has absotute position and negative top margin as mainly placed above form or list. Fix that by adding
+        wrapper with margin top*/}
+        {isLoading &&
+          <div className="mt-[25px]">
+            <DataFetchingStatusLabel labelText="resetting data..." />
+          </div>
+        }
+
+        {/*if resetting has failed, display message*/}
+        {errorMsg &&
+          <GeneralErrorMessage msgText={errorMsg} />
+        }
       </div>;
   }
 
   return (
     <div className="relative">
       <H1Heading headingText="Demo data reset" />
-
-      {/*if data sending has failed, display message*/}
-      {errorMsg &&
-        <GeneralErrorMessage msgText={errorMsg} />
-      }
-
-      {/*while data is being sent, show that data is loading*/}
-      {isLoading &&
-        <DataFetchingStatusLabel labelText="resetting data..." />
-      }
-
-      <div className="max-w-[700px]">
+      <div className="">
         {mainContent}
       </div>
     </div>
