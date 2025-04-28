@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from '../store/reduxHooks';
 import { useUserLogoutMutation } from '../features/api/apiSlice'
-import { selectCurrentUser } from '../features/authSlice';
-import { dispatchLogoutActions } from '../features/authSlice';
+import { selectCurrentUser, dispatchLogoutActions } from '../features/authSlice';
+import { useNavigate } from 'react-router-dom';
+import { routes } from '../config';
 import { SquareButton } from './ui_elements/SquareButton';
 
 /**
@@ -20,6 +21,8 @@ export function UserInfoAndLogoutControls(){
   const [isUserLoggingOut, setIsUserLoggingOut] = useState(false);
 
   const dispatch = useAppDispatch();
+
+  const navigate = useNavigate();
 
   const [triggerUserLogoutMutation, {
     error: userLogoutError,
@@ -46,8 +49,10 @@ export function UserInfoAndLogoutControls(){
   async function logoutBtnClickHandler(){
     try {
       await triggerUserLogoutMutation().unwrap();
-      //endpoint completed successfully, remove user info from state, reset whole Redux state to initial state
+      //endpoint completed successfully, remove user info and reset whole Redux state to initial state, redirect to home page
       dispatchLogoutActions(dispatch)
+      navigate(routes.bookListPath)
+
     } catch (error) {
       //not processing error here, it is assigned to variable in userLogout mutation hook returned object
     }
