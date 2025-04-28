@@ -4,7 +4,7 @@ import { routes } from "../config";
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
 import { H1Heading } from "./ui_elements/H1Heading";
 
-function PageNotFound() {
+export function PageNotFound() {
 
   useEffect(() => {
     setPageTitleTagValue("Page not found");
@@ -15,13 +15,9 @@ function PageNotFound() {
   return  (
     <div>
       <H1Heading headingText="Page not found"/>
-      <p>The page with URL "<em>{pagePath}</em>" for was not found.</p>
+      <p>The page with address "{pagePath}" was not found.</p>
       
-      <p>You can explore books list on <Link to={routes.bookListPath}>books list page</Link> or by using searching form 
-        at the to of the page.</p> 
+      <p className="mt-[30px]">Go to <Link to={routes.bookListPath}>home page</Link>.</p>
     </div>
   )
 }
-
-
-export default PageNotFound;

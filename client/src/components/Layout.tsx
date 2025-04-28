@@ -10,14 +10,19 @@ import {
   Routes,
   Route
 } from "react-router-dom";
-
 import { useAppSelector } from '../store/reduxHooks';
 import { selectUserLoadingStatus, selectIsUserLoggenIn } from '../features/authSlice';
 import { LoginForm } from "./LoginForm";
 import { UserInfoAndLogoutControls } from "./UserInfoAndLogoutControls";
 import { BookCreating } from "./BookCreating";
+import { PageNotFound } from "./PageNotFound";
 
-
+/**
+ * returns markup that creates layout structure (three columns beginning with larget tablet devices, one column on smaller tablet devices,
+ * phones) and outputs menu, header and content parts. If user is authenticated displays all sections, if user is not logged in the
+ * menu, search bar in header is hidden, login form is snown in content section
+ * @returns
+ */
 const Layout = () => {
   const userDataInitialLoadStatus = useAppSelector(selectUserLoadingStatus)
   const isUserLoggenIn = useAppSelector(selectIsUserLoggenIn);
@@ -25,22 +30,37 @@ const Layout = () => {
 
   let content: React.ReactNode;
 
+  //acquiring user info to find out whether a logged in user session exists
   if (userDataInitialLoadStatus === "pending") {
     content = <div>User session check...</div>
 
+  //got response from server. If user is authenticated display decicated component according to URL path; if user is not authenticated for
+  //each dedicated authenticated mode path show login form;
   } else {
     if (isUserLoggenIn) {
       content =
       <Routes>
-        <Route path={routes.bookListPath} element={<BooksList />} />
-        <Route path={routes.favoriteBooksListPath} element={<BooksList listMode={FAVORITE_BOOKS_LIST} />} />
-        <Route path={routes.bookEditPath} element={<BookEditing />} />
-        <Route path={routes.createBookPath} element={<BookCreating />} />
-        <Route path={routes.demoDataResetPath} element={<DemoDataReset />} />
+        <Route path={routes.bookListPath} element={<BooksList/>} />
+        <Route path={routes.favoriteBooksListPath} element={<BooksList listMode={FAVORITE_BOOKS_LIST}/>} />
+        <Route path={routes.bookEditPath} element={<BookEditing/>} />
+        <Route path={routes.createBookPath} element={<BookCreating/>} />
+        <Route path={routes.demoDataResetPath} element={<DemoDataReset/>} />
+        <Route path="*" element={<PageNotFound/>} />
       </Routes>
 
     } else {
-      content = <LoginForm />
+      content =
+      <Routes>
+        {//for all routes that in authrorized state have a decicated component in unauthenticated state display login form
+          [routes.bookListPath,
+          routes.favoriteBooksListPath,
+          routes.bookEditPath,
+          routes.createBookPath,
+          routes.demoDataResetPath].map((path, index) =>
+          <Route path={path} element={<LoginForm/>} key={index}/>
+        )}
+        <Route path="*" element={<PageNotFound/>} />
+      </Routes>
     }
   }
   
@@ -48,7 +68,7 @@ const Layout = () => {
     <div className="bg-[#eeeeee] flex min-h-screen">
       <Router>
 
-        {/*menu if user is logged in, on larger devices on left side, on smaller at page bottom*/}
+        {/*menu if user is logged in: on larger devices on left side, on smaller at page bottom*/}
         <div className="lg:grow lg:flex lg:justify-center xl:justify-end xl:shrink-0 xl:basis-0">
           {isUserLoggenIn === true &&
             <BooksListTypeMenu/>
