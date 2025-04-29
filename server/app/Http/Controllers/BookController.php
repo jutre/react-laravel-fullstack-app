@@ -438,6 +438,9 @@ class BookController extends Controller
         usleep(100000);
         DB::table('favorite_books')->delete();
         DB::table('books')->delete();
+        //reset 'id' auto increment column to 1 using 'ALTER TABLE' statement as cannot use 'TRUNCATE TABLE' can not be executed because
+        //'books' table is referenced in other table by foreign key
+        DB::statement('ALTER TABLE `books` AUTO_INCREMENT = 1');
 
         //insert books records in empty 'books' table belonging to user with id=1
         $booksDataArr = Helper::getBookDataArray(1);
