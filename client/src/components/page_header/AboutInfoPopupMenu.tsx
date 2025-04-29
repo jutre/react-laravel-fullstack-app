@@ -73,7 +73,7 @@ function AboutInfoPopupMenu(){
       <div onClick={closeOpenedInfoDiv} className="absolute inset-0"></div>
 
       <button onClick={handleMenuToggle} 
-          className={"relative z-[21] mb-[-1px] bg-[#83e6e6] border border-[grey] p-[15px] " +  
+          className={"relative z-[21] mb-[-1px] bg-[#83e6e6] border border-[grey] p-[10px] " +  
             /*when info pane opened, remove border under the tab
             //when tab becomes active, border under tab must disappear immediatelly because 
             //info div underneath is starting to appear and a tab must have common
@@ -92,7 +92,7 @@ function AboutInfoPopupMenu(){
       </button>
 
       <div className="flex overflow-hidden absolute z-[20]">
-        <div className={"w-full p-[15px] bg-[#83e6e6] border border-slate-400 leading-[26px] " + ( isMenuOpened 
+        <div className={"w-full p-[15px] bg-[#83e6e6] border border-[grey] leading-[26px] " + ( isMenuOpened 
               ? "mb-0 max-h-[1000000px] visible [transition:margin-bottom_0.3s_cubic-bezier(0,0,0,1)]"
               : "mb-[-2000px] max-h-0 invisible [transition:margin-bottom_0.3s_cubic-bezier(1,0,1,1),visibility_0s_0.3s,max-height_0s_0.3s]")}>
                 

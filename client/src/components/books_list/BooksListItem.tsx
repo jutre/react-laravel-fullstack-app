@@ -93,7 +93,7 @@ export function BookListItem({book, editUrl, deleteUrl, addToFavoritesQueryTrigg
         <div className='title'>{book.title}</div>
       </div>
       
-      <div className="grow-0 shrink-0 flex items-center gap-[10px] ml-[10px]">
+      <div className="grow-0 shrink-0 flex items-center gap-[10px] ml-[15px]">
         
         {/*add to favorites button*/}
         <ButtonWithIconAndBackground
