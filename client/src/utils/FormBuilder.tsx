@@ -42,8 +42,11 @@ export interface FieldDefinition {
 export type FormFieldsDefinition = FieldDefinition[]
 
 /**
- * form fields's can be filled with data, data is passed as plain object with keys corresponding to input field name and
- * property value is input field's initial value.
+ * if null value is passed as fields initial data the effect is same as there is no initial data passed for field - on initial render field
+ * is assigned a default value depending on forms input type as in case if initial data is not passed and in case initial data parameter is
+ * passed on subsequet render the field value is not overriden. The reason null value is added to parameter type is convenience of passing
+ * objects received from REST API as initial form data without need to convert object's null value properties to dedicated property type
+ * empty value (empty string, false boolean, zero), the form displays those fields as blank/unchecked html input fields
  */
 export type InitialFormData = {
   [index: string]: number | string | boolean | null
@@ -74,10 +77,6 @@ interface FormBuilderProps {
 }
 
 
-
-//TODO, move this cmnt up in JS version
-//TODO: possibly grab type from react element types or if using those
-//check it there is possibility in TS to specify that either "checked" or "value" must be present
 type InputElementAttributes = {
   name: string,
   id: string;
@@ -94,15 +93,35 @@ type InputElementAttributes = {
  * "label" - label text for input field, 
  * "name" - input element's "name" attribute value,  
  * "type" - input element's "type" attribute value
- * "rule" - validation rule for fields value,
- * for example, three fields are defined as follows - 
+ * "rule" - validation rule for field's value.
  * 
- * [{label: "id", name:"id", type:"hidden"},
- *  {label: "Title", name:"title", type:"text", rule:"required"}, 
- *  {label: "Description", name:"description", type:"textarea", rule:"required"}]
+ * Example of object defining three input fields definition -
+ * 
+ * [
+ *  { label: "id",
+ *    name: "id",
+ *    type: "hidden"
+ *  },
+ *  { label: "Title",
+ *    name: "title",
+ *    type:"text",
+ *    validationRules: [
+ *      {name: "required"},
+ *      ...<possibly other rules: "minLength", "email">
+ *    ]
+ *  }, 
+ *  { label: "Description",
+ *    name:"description",
+ *    type:"textarea"
+ *  }
+ * ]
  *
  * @param submitButtonText - text for submit button, can be empty, if parameter empty, text will be "Submit"
- * @param initialFormData - object with data that will be filled in form input fields on initial display.
+ * @param initialFormData - object with form's input fields initial values. Intended to be used to create form with prefilled fields when
+ * displayed initially or overriding needed field values after a form submit. initialFormData object property with a certain name holds
+ * initial or override value for input field which has same name. The use case of updating field's value on some subsequent form render
+ * after form submit would be login form where form after incorrect login/password is displayed with email field as it was entered by user
+ * and setting password field blank
  * @param initiallyDisplayedErrors - when dispaying form there is possibility to display errors. For case when it is necessarry to 
  * display errors received from REST API endpoint like error that "username is already used". Object key corresponds to field name
  * next to which error should be displayed, the value is error message. Initial error message is displayed until there is an input validation
@@ -127,15 +146,11 @@ export function FormBuilder({
   disableAllFields }: FormBuilderProps
 ) {
 
-  submitButtonText = submitButtonText ?? "Submit";
-  /*
-  TODO finish code for creating radio input, select
-  TODO - currently in case if initial data object contains properties that are not present as form fields they are also
-  submitted (unmodified). Decide is it is needed to eliminate them and submit only object with fields that are 
-  present in form fields definition prop as input fields */
+  submitButtonText = submitButtonText ?? "Submit"
 
-  //will track all input fields values
+  //maintains all form's input fields' values making each form field a React "controlled input field"
   const [inputFieldValues, setInputFieldValues] = useState<SubmittedFormData>({});
+  //contains input validation errors from validation after "submit" button pressed
   const [inputErrors, setInputErrors] = useState<ErrorMessages>({});
   const [initialErrors, setInitialErrors] = useState<ErrorMessages>({});
 
@@ -144,31 +159,34 @@ export function FormBuilder({
   in case current component is re-rendered with different initialFormData value*/
   useEffect(() => {
 
-    /* Create an key/value object that maintains all form's input fields' values in form of {"input field name" => "field value"}. This
-    object contains a corresponding entry for each entry from form definition parameter array, entrie's value will be either empty string ""
-    or boolean "false" if initial data for corresponding field is not set or value from initialFormData parameter if set for corresponding
-    field. The created object is assigned to component's state which is source of values for all controlled input fields, when submit button
-    is pressed this object is passed as submitted data to a callaback function that processes submitted data and contains data from each
-    form field.
-    Initial form data runtime values with types "string", "number", "boolean" and "null" values are converted to "string" or "boolean" runtime
-    type values. Initial value is converted to "string" runtime type for all fields except checkbox input element where type is converted to
-    boolean and used as input's "checked" attribute value when creating input field.
-    */
+    /* Create an key/value object {<input field name> => <field value>} that maintains all form's input fields' values and set it to
+    component's state making each form field a React "controlled input field". The object will be added a corresponding key/value pair from each
+    formFieldsDefinition parameter array element. Each object's entie's value will be set to either empty string "" or boolean "false" if
+    there is no data in initialFormData parameter for corresponding field or value from initialFormData parameter if initial value for
+    curent field exists. Values from initialFormData parameter with runtime types "string", "number", "boolean" are converted to values with
+    "string" or "boolean" runtime type values according to input field's type: any of initial value is converted to "string" runtime type
+    for all html input field types except 'checkbox' type where value is converted to boolean type as it is used as input's 'checked'
+    attribute value.*/
 
-    //Create a copy of param initialFormData object as it might be modified. In some cases passed value might be readonly as with
-    //objects coming from Redux, but we need an object that can be modified for values type correction to string/Boolean
     let initialFormDataCorrectedTypes: SubmittedFormData = {};
 
     formFieldsDefinition.forEach(formElementDef => {
       let fieldName = formElementDef.name
       
-      //prepare initial value, get it from initial data parameter or use default empty string
       type InitialFieldValueType = InitialFormData[string]
-      let initialFieldValue: InitialFieldValueType = "";
-      if(initialFormData && initialFormData[fieldName]){
+      //field's value preparing - either set to default empty value (""), if entry with field name exists in controlled input field's state
+      //variable use that value (keeping value from previous render or user input), and finally it is overriden by value from
+      //initialFormData parameter if initial value is present for field
+      let initialFieldValue: InitialFieldValueType = ""
+      if(inputFieldValues[fieldName] !== undefined){
+        initialFieldValue = inputFieldValues[fieldName]
+      }
+      if(initialFormData &&
+        (initialFormData[fieldName] !== undefined && initialFormData[fieldName] !== null)){
         initialFieldValue = initialFormData[fieldName]
       }
 
+      //convert prepared value to runtime type accdording to html input field type
       if (formElementDef.type === "checkbox") {
         //set boolean type value for checkbox, coercing non boolean value to boolean
         initialFormDataCorrectedTypes[fieldName] = Boolean(initialFieldValue);
@@ -177,6 +195,9 @@ export function FormBuilder({
         //for all other fields convert initial value if set to a string type
         initialFormDataCorrectedTypes[fieldName] = String(initialFieldValue);
       }
+
+      /*TODO add code for creating radio, select input fields*/
+
     })
 
     //finally set corrected data to state
@@ -185,7 +206,7 @@ export function FormBuilder({
   }, [initialFormData]);
 
 
-  /* Setting initially displayed errors to state using useEffect hook with to force populating new param value in case parent
+  /* Setting initially displayed errors to state using useEffect hook to force populating new param value in case parent
   component renders form data with different value*/
   useEffect(() => {
     if (initiallyDisplayedErrors) {
@@ -297,7 +318,7 @@ export function FormBuilder({
     }
 
 
-    //if there are no input errors, call sucessfull submit callback
+    //if there are no input errors, call sucessful submit callback with form field value object
     if (Object.keys(errors).length === 0) {
       successfulSubmitCallback(inputFieldValues);
     }

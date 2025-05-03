@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/reduxHooks';
 import {
   initiateSessionSendLoginCredentials,
@@ -10,8 +10,6 @@ import { FormBuilder, FormFieldsDefinition, SubmittedFormData } from '../utils/F
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
 
 export function LoginForm() {
-  const [submittedEmail, setSubmittedEmail] = useState<string | undefined>();
-  const [submittedPasswd, setSubmittedPasswd] = useState<string | undefined>();
   const dispatch = useAppDispatch();
 
 
@@ -49,7 +47,7 @@ export function LoginForm() {
   ]
 
   /**
-   * sends submitted email, password to login backend; saves entered email to state
+   * sends submitted email, password to login backend
    * 
    * @param submittedData - submitted data from form
    */
@@ -58,45 +56,25 @@ export function LoginForm() {
     //get email and password string values from submitted form data.
     //Submitted form data type is {[index: string]: string | boolean}, both fields were defined as 'text' type input fields in form
     //definition variable, so convert both values to string type to create object that is passed to login endpoint
-
     const credentials = {
       email: String(submittedData.email),
       password: String(submittedData.password)
     }
 
-    //saving email in case credentials are incorrect to display form with previously submitted email
-    setSubmittedEmail(credentials.email)
-    setSubmittedPasswd(credentials.password)
-
-    dispatch(initiateSessionSendLoginCredentials(credentials))
+     dispatch(initiateSessionSendLoginCredentials(credentials))
   }
 
 
+  //If got rejected response from server form will be shown with previously entered e-mail and blank password and error message under the
+  //e-mail field received from API. The primary error expected is about e-mail and password not matching, any other error messages
+  //received from API will be displayed here
+  let initialFormData: { password: "" } | null = null
   const sendLoginRequestStatus = useAppSelector(selectSendLoginRequestStatus);
-
-  //if got rejected response from server form will be shown with previously entered e-mail in e-mail field and blank password and received
-  //error message under the e-mail field. The primary error expected is error message about e-mail (username) and password not matching,
-  //also any other possible error messages received from API will be displayed under e-mail field
-  type FormInitialData = { email: string, password?: string } | null
-  let initialFormData: FormInitialData = null
-  //set email and password as initial form data as soon as the are submitted. This is needed to be display non empty fields while form is
-  //loading (and disabled). We need to set email to initial data as soon form is submited because of how FormBuilder works - if initial data
-  //would not have email field after login is submitted again after previous error (error is removed after re-submitting) the email field
-  //would be bland while loading (form disabled)
-  if (submittedEmail !== undefined && submittedPasswd !== undefined) {
-    initialFormData = {
-      email:  submittedEmail,
-      password:  submittedPasswd
-    }
-
-    //actual error case, setting password to empty, email stays filled with previous imput
-    if(sendLoginRequestStatus === STATUS_REJECTED){
-      delete initialFormData.password
-    }
+  if (sendLoginRequestStatus === STATUS_REJECTED) {
+    initialFormData = { password: "" }
   }
-
-  const sendLoginRequestError = useAppSelector(selectSendLoginRequestError);
   let initiallyDisplayedErrors: { email: string } | null = null
+  const sendLoginRequestError = useAppSelector(selectSendLoginRequestError);
   if (sendLoginRequestError) {
     initiallyDisplayedErrors = { email: sendLoginRequestError }
   }
@@ -120,7 +98,6 @@ export function LoginForm() {
           submitButtonText={submitButtonText}
           disableAllFields={formDisabled} />
       </div>
-
 
       <div className='rounded-[8px] border-[2px] border-[grey] p-[10px] mt-[12px]'>
         <p>
