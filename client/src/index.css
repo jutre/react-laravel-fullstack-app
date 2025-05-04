@@ -149,9 +149,16 @@
     form.form_builder input,
     form.form_builder textarea {
         display: block;
-        padding: 10px;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
+        padding: 5px;
+        border: 1px solid #c6c9ce;
+        border-radius: 5px;
+    }
+
+    @media screen and (min-width: 1024px) {
+        form.form_builder input,
+        form.form_builder textarea {
+            padding: 5px 7px;
+        }
     }
 
     form.form_builder textarea:focus,
@@ -167,6 +174,8 @@
     }
 
     form.form_builder input[type="submit"]{
+        padding: 10px;
+        border-radius: 5px;
         background-color: #46aae9;
         color: white;
         border-width: 0px;
