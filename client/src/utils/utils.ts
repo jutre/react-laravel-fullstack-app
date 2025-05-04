@@ -275,7 +275,7 @@ export function createTargetObjFromSubmittedData<T extends object>(formData: Sub
   //one property by one
   let targetObjCopy: { [key: string]: any } = { ...targetObjTemplate }
 
-  for (let [blueprintObjKey, blueprintObjFieldVal] of Object.entries(targetObjCopy)) {
+  for (const [blueprintObjKey, blueprintObjFieldVal] of Object.entries(targetObjCopy)) {
 
     //get value from submitted data and assign to target object converting it to target object's runtime type
     let formFieldVal = formData[blueprintObjKey]
