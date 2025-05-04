@@ -19,7 +19,7 @@ export const routes = {
 /**
  * book creation form definition
  */
-export const bookCreatingFormFieldsDef: FormFieldsDefinition = [
+export const bookCreatingFormFieldsDef1  = [
     {
         label: "Title",
         name: "title",
@@ -51,11 +51,41 @@ export const bookCreatingFormFieldsDef: FormFieldsDefinition = [
     }
 ];
 
+export const bookCreatingFormFieldsDef: FormFieldsDefinition = {
+    title: {
+        label: "Title",
+        type: "text",
+        validationRules: [
+            {
+                name: "minLength",
+                value: 3,
+                message: "field length must be at least three symbols"
+            }
+        ]
+    },
+    author: {
+        label: "Author",
+        type: "text",
+        validationRules: [
+            {
+                name: "minLength",
+                value: 3,
+                message: "field length must be at least three symbols"
+            }
+        ]
+    },
+    preface: {
+        label: "Preface",
+        type: "textarea"
+    }
+}
+
 /**
  * book creation form definition
  * book editing form has same fields as new book creating form and an extra "id" field
  */
-export const bookEditFormFieldsDef = [
+
+export const bookEditFormFieldsDef: FormFieldsDefinition = {
     ...bookCreatingFormFieldsDef,
-    { label: "id", name: "id", type: "hidden" }
-];
+    id:{ label: "id", type: "hidden" }
+}

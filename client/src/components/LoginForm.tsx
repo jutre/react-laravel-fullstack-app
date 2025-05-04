@@ -18,10 +18,9 @@ export function LoginForm() {
   }, []);
 
 
-  const loginFormFieldsDef: FormFieldsDefinition = [
-    {
+  const loginFormFieldsDef: FormFieldsDefinition = {
+    email: {
       label: "E-mail",
-      name: "email",
       type: "text",
       validationRules: [
         {
@@ -33,9 +32,8 @@ export function LoginForm() {
         }
       ]
     },
-    {
+    password: {
       label: "Password",
-      name: "password",
       type: "password",
       validationRules: [
         {
@@ -44,7 +42,7 @@ export function LoginForm() {
         }
       ]
     }
-  ]
+  }
 
   /**
    * sends submitted email, password to login backend

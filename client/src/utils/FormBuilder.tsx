@@ -28,18 +28,24 @@ export type ValidationRule =
 // 
 
 /**
- * to define a form input field, an object is used to describe usually used elements for form input field: label text associtated with
- * input field, input field's ("input" or "textarea" tag, other not implemented) 'name' attribute, 'type' property value for "input" tag
- * or defines "textarea" tag if value is "textarea"
+ * information for creating an a pair of HTML tags in form: an input element ("input", "textarea", etc.) tags and "label" tag associated
+ * with input element. Object contains 'type' attribute for HTML input text and text for creating 'label' tag that is associated with input
+ * tag.
  */
 export interface FieldDefinition {
   label: string,
-  name: string,
   type: string,
   validationRules?: ValidationRule[],
 }
 
-export type FormFieldsDefinition = FieldDefinition[]
+/**
+ * all form's contained fields definition root object. Object property name serves as a HTML input element's ("input", "textarea", etc.)
+ * 'name' attribute, property value is object containing some other information about form's main structural element which is a pair: HTML
+ * input tag and it's associated 'label' tag
+ */
+export type FormFieldsDefinition = {
+  [index: string]: FieldDefinition
+}
 
 /**
  * if null value is passed as fields initial data the effect is same as there is no initial data passed for field - on initial render field
@@ -170,8 +176,7 @@ export function FormBuilder({
 
     let initialFormDataCorrectedTypes: SubmittedFormData = {};
 
-    formFieldsDefinition.forEach(formElementDef => {
-      let fieldName = formElementDef.name
+    for (const [fieldName, fieldOtherInfo] of Object.entries(formFieldsDefinition)) {
       
       type InitialFieldValueType = InitialFormData[string]
       //field's value preparing - either set to default empty value (""), if entry with field name exists in controlled input field's state
@@ -187,7 +192,7 @@ export function FormBuilder({
       }
 
       //convert prepared value to runtime type accdording to html input field type
-      if (formElementDef.type === "checkbox") {
+      if (fieldOtherInfo.type === "checkbox") {
         //set boolean type value for checkbox, coercing non boolean value to boolean
         initialFormDataCorrectedTypes[fieldName] = Boolean(initialFieldValue);
 
@@ -198,7 +203,7 @@ export function FormBuilder({
 
       /*TODO add code for creating radio, select input fields*/
 
-    })
+    }
 
     //finally set corrected data to state
     setInputFieldValues(initialFormDataCorrectedTypes);
@@ -247,14 +252,13 @@ export function FormBuilder({
     //clear previous errors, as this will be filled with errors from current validation
     let errors = {};
 
-    for (const formElementDef of formFieldsDefinition) {
+    for (const [fieldName, fieldOtherInfo] of Object.entries(formFieldsDefinition)) {
       //if validation rules are absent for this field, go to next field
-      if (!Array.isArray(formElementDef.validationRules)) {
+      if (!Array.isArray(fieldOtherInfo.validationRules)) {
         continue;
       }
 
 
-      const fieldName = formElementDef.name;
       const fieldValue = inputFieldValues[fieldName];
       let errMsgForCurrentField = "";
       //validate field value for every rule that is defined for field
@@ -264,7 +268,7 @@ export function FormBuilder({
       at least <n> symbols" should be snown better while string is too short. Therefore in rules array "minLength" should be the last one
       as it is better to first state about too short string and if string lenght is enough only then display error about invalid email
       format*/
-      formElementDef.validationRules.forEach((validatRulesObj) => {
+      fieldOtherInfo.validationRules.forEach((validatRulesObj) => {
 
         //rule "required" - don't allow empty string
         //fieldValue will be undefined if input field was not assigned default value and was not changed anyway (change 
@@ -329,8 +333,7 @@ export function FormBuilder({
 
   return (
     <form onSubmit={handleSubmit} className="form_builder">
-      {(formFieldsDefinition).map((formElementDef) => {
-        let fieldName = formElementDef.name;
+      {Object.entries(formFieldsDefinition).map(([fieldName, fieldOtherInfo]) => {
         const fieldValue = inputFieldValues[fieldName];
 
 
@@ -350,7 +353,7 @@ export function FormBuilder({
         //for all other input types value goes to "value" attribute.
         //Do not allow 'undefined' value for "value" or "checked" attributes for controlled input element -
         //field's value's initial data might be 'undefined' usually for forms without initial data
-        if (formElementDef.type === "checkbox") {
+        if (fieldOtherInfo.type === "checkbox") {
           inputElemAttributes.checked = Boolean(fieldValue);
           //TODO remove this comment also in JS verson
           // if(inputElemAttributes.checked === undefined){
@@ -364,12 +367,12 @@ export function FormBuilder({
         //create "input", "textarea", etc. html tag corresponding to type of input in form definition object
         //TODO - add code for "select" tag creation, "<input type='radio' />
         let inputTag;
-        if (formElementDef.type === "text" || formElementDef.type === "checkbox" || formElementDef.type === "hidden"
-        || formElementDef.type === "password") {
-          inputElemAttributes.type = formElementDef.type;
+        if (fieldOtherInfo.type === "text" || fieldOtherInfo.type === "checkbox" || fieldOtherInfo.type === "hidden"
+        || fieldOtherInfo.type === "password") {
+          inputElemAttributes.type = fieldOtherInfo.type;
           inputTag = <input {...inputElemAttributes} />;
 
-        } else if (formElementDef.type === "textarea") {
+        } else if (fieldOtherInfo.type === "textarea") {
           inputTag = <textarea {...inputElemAttributes} />;
         }
 
@@ -379,7 +382,7 @@ export function FormBuilder({
          */
 
         //for "hidden" type input return just <input> tag here, no additional wrapping or label
-        if (formElementDef.type === "hidden") {
+        if (fieldOtherInfo.type === "hidden") {
           //recteate tag by adding "key" attribute which is needed for React in list rendering
           return <input {...inputElemAttributes} key={fieldName} />;
         }
@@ -387,15 +390,15 @@ export function FormBuilder({
         /*for all input tags except checkbox, label comes before input field, checkbox also have
         additional markup to have ability to style it as needed*/
         let inputTagWithLabel;
-        let fieldWrapperCssClass = "field " + formElementDef.type;
-        if (formElementDef.type === "checkbox") {
+        let fieldWrapperCssClass = "field " + fieldOtherInfo.type;
+        if (fieldOtherInfo.type === "checkbox") {
           inputTagWithLabel = (
             <>
               <div>{inputTag}</div>
-              <label htmlFor={fieldName}>{formElementDef.label}</label>
+              <label htmlFor={fieldName}>{fieldOtherInfo.label}</label>
             </>);
         } else {
-          inputTagWithLabel = <> <label htmlFor={fieldName}>{formElementDef.label}</label> {inputTag} </>;
+          inputTagWithLabel = <> <label htmlFor={fieldName}>{fieldOtherInfo.label}</label> {inputTag} </>;
         }
         return (
           <div className={fieldWrapperCssClass} key={fieldName}>

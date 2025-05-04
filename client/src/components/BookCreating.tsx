@@ -121,12 +121,12 @@ export function BookCreating() {
           book data object only if it is present on book data object (form definition object can have fields not related to submitted data
           like informative labels, they are not to be outputed as not associated with input field)*/}
           <div className="mb-[15px]">
-            {bookCreatingFormFieldsDef.map((field) =>
-              field.name in createdBook
-              ?<div key={field.name}
+            {Object.entries(bookCreatingFormFieldsDef).map(([fieldName, fieldOtherInfo]) =>
+              fieldName in createdBook
+              ?<div key={fieldName}
                   className="flex">
-                  <div className="grow-0 shrink-0 basis-[100px] pb-[15px] font-bold">{field.label}:</div>
-                  <div>{createdBook[field.name]}</div>
+                  <div className="grow-0 shrink-0 basis-[100px] pb-[15px] font-bold">{fieldOtherInfo.label}:</div>
+                  <div>{createdBook[fieldName]}</div>
                 </div>
               :null
             )}
