@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Book } from '../../types/Book';
-import { useLazyGetFilteredBooksListQuery } from '../../features/api/apiSlice';
+import { useGetFilteredBooksListQuery } from '../../features/api/apiSlice';
 import { routes } from '../../config';
 import { NavLink, useNavigate } from "react-router-dom";
 import { ButtonWithIcon } from '../ui_elements/ButtonWithIcon';
 import { SerializedError } from '@reduxjs/toolkit';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { skipToken } from '@reduxjs/toolkit/query/react'
 
 function SearchBar() {
   //holds value of controlled <input/> element
@@ -19,11 +20,19 @@ function SearchBar() {
   //maximum items to be output in quick result div
   const maxItemsCountForOutput = 5;
 
-  //using {currentData} result variable not {data} as if error occurs, the {currentData} will be empty array and seach bar will be hidden
-  const [trigger,
-    { currentData: searchQueryResult,
+  
+  //invoke endpoint sending request to server if search string length is at least 3 symbols, but skip executing endpoint if string length is
+  //less than 3 symbols
+  //in case of error returned from endpoint seach bar must be hidden. Therefore use {currentData} result variable as {currentData} will be 
+  //undefined in error case which will be converted to empty array.
+  //Disable cache usage using refetchOnMountOrArgChange option, fetch on every new search string also if same is typed again
+  let trimmedSearchString = searchTerm.trim()
+  const { currentData: searchQueryResult,
       isFetching,
-      error: queryError }] = useLazyGetFilteredBooksListQuery();
+      error: queryError } = useGetFilteredBooksListQuery(trimmedSearchString.length < 3
+      ? skipToken
+      : {filterString: trimmedSearchString},
+      {refetchOnMountOrArgChange: true});
 
   //extract book rows from result
   let foundBooks = searchQueryResult ? searchQueryResult.data : []
@@ -147,10 +156,10 @@ function SearchBar() {
 
   /**
    * 1) manage input field value as controlled input - set it's value to state,
-   * 2) trigger filtering endpoint if search string length after trimming is at least three symbols
-   * 3) hide result div if search string length less than three symbols (if length is less than three symbols, search is not performed, hide
+   * 2) hide result div if search string length less than three symbols (if length is less than three symbols, search is not performed, hide
    * any existing results).
-   * 4) add or remove click handler that closes search results on document depending on search string length after trimming
+   * 3) add or remove click handler that closes search results div when user clicks anywhere in document except search bar and clears
+   * search input field if user clicks on any link (link in result div or any other in page)
    * @param {*} event 
    */
 
@@ -160,9 +169,8 @@ function SearchBar() {
     setSearchTerm(searchTermOriginal);
 
     //when user inputs some string in search bar, we need to add an event lister that hides search bar on click anywhere in doc 
-    //(except on search bar) and additionally clears search input field if the element user clicked is an anchor (link)
-    //to make user feel the same as traditional page is navigated to page according to link (we need those actions
-    //as links are react-router managed)
+    //except on search bar and clears search input field if the element user clicked is an anchor to make user feel the same as
+    //traditional page is navigated to page according to link (links are react-router managed)
     if (searchTermOriginal.length === 0) {
       documentRef.current.removeEventListener('click', manageSearchBarOnClickOutsideOfSearchBar);
     } else {
@@ -177,16 +185,11 @@ function SearchBar() {
     //(search bar visiblity state var might be "true" in situations when there were results from previous search input 
     //string when length was three or more symbols)
     //set errorFromEndpoint in state to undefined as search is not perfomed with string too short and endpoint will not change the error
-    //to undefined as it happens then another string is entered and endpoint is triggered again
+    //value to undefined as it happens when another string is entered and endpoint is triggered again
     if (filterText.length < 3) {
       setIsSearchResultBarVisible(false);
       setSearchResult([]);
-
       setErrorFromEndpoint(undefined);
-
-      //send search request, search phrase at least three symbols long. A useEffect hook will process the result
-    } else {
-      trigger({filterString: filterText, limit: maxItemsCountForOutput});
     }
   }
 

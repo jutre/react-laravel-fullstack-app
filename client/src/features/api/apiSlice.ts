@@ -91,8 +91,7 @@ export const apiSlice = createApi({
               { type: 'Book', id: 'LIST' },
               ...result.map(({ id }) => ({ type: 'Book', id }) as const)
             ]
-          : // an error occurred, refetch this query when `{ type: 'Book', id: 'LIST' }` is invalidated f.e. new book is added, refetch books
-            //list
+          : // an error occurred, refetch this query when `{ type: 'Book', id: 'LIST' }` is invalidated f.e. new book is added
           [{ type: 'Book', id: 'LIST' }]
     }),
 
@@ -104,9 +103,18 @@ export const apiSlice = createApi({
     getFilteredBooksList: builder.query<FilterQueryResultJsonFormat, FilterQueryInputParameter>({
       query: (searchStringAndLimit) => `books/search/${searchStringAndLimit.filterString}` +
         (searchStringAndLimit.limit ? `?limit=${searchStringAndLimit.limit}` : ''),
-      /* don't privide tags as endpoint will be launched using trigger() function returned by useLazyQuery. Every time trigger() is invoked
-      endpoint fetches fresh data, no need to provide any tags. If tags are provided then filtering query starts re-fetching and loading
-      indicator is shown when book is deleted from list (this happend after filtering query was used at least one time */
+
+      //privide tags for book filtering list as in filtering result list there is option to delete any of found books and after deletion 
+      //result list must be re-fetched immediatelly
+      providesTags: (result) =>
+        result
+          ? // successful query, create tag for each returned book and a tag to make query invalidated when new book is created 
+            [
+              { type: 'Book', id: 'LIST' },
+              ...result.data?.map(({ id }) => ({ type: 'Book', id }) as const)
+            ]
+          : // an error occurred, refetch this query when `{ type: 'Book', id: 'LIST' }` is invalidated f.e. new book is added
+          [{ type: 'Book', id: 'LIST' }]
 
     }),
 
