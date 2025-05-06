@@ -349,19 +349,14 @@ export function FormBuilder({
           inputElemAttributes.disabled = true;
         }
 
-        //in "checbox" input element assign current field's value to "checked" attribute,
-        //for all other input types value goes to "value" attribute.
-        //Do not allow 'undefined' value for "value" or "checked" attributes for controlled input element -
-        //field's value's initial data might be 'undefined' usually for forms without initial data
+        //assing value from state to current field's input element's 'value' or 'checked' attribute depending on input element being
+        //checbox or other; converting state object's value general type "string | boolean" to runtime type that corresponds to input
+        //element's type - checkbox needs boolean type value, other needs string type value
         if (fieldOtherInfo.type === "checkbox") {
           inputElemAttributes.checked = Boolean(fieldValue);
-          //TODO remove this comment also in JS verson
-          // if(inputElemAttributes.checked === undefined){
-          //   inputElemAttributes.checked = false;
-          // }
 
         } else {
-          inputElemAttributes.value = fieldValue ? String(fieldValue) : "";
+          inputElemAttributes.value = String(fieldValue);
         }
 
         //create "input", "textarea", etc. html tag corresponding to type of input in form definition object
