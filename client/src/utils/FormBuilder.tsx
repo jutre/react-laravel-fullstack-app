@@ -377,28 +377,31 @@ export function FormBuilder({
         }
 
         /**
-         * input tag is created, we must wrap it in div and place label as needed according 
-         * to type of input element
+         * input tag is created, it must be wrapped and label tag placed before or after input depending whether it is checkbox input
+         * or not; hidden input elements are not wrapper and no label attached with it
          */
 
-        //for "hidden" type input return just <input> tag here, no additional wrapping or label
+        //the 'hidden' type input tag is returned here as it has no label tag attached or any wrapping.
+        //Also add 'key' attribute (for other input field and label 'key' attribute is added to wrapper element)
         if (fieldOtherInfo.type === "hidden") {
-          //recteate tag by adding "key" attribute which is needed for React in list rendering
           return <input {...inputElemAttributes} key={fieldName} />;
         }
 
-        /*for all input tags except checkbox, label comes before input field, checkbox also have
-        additional markup to have ability to style it as needed*/
+        //for all input tags except checkbox, label comes before input field, checkbox also have
+        //additional markup to have ability to style it as needed
         let inputTagWithLabel;
         let fieldWrapperCssClass = "field " + fieldOtherInfo.type;
         if (fieldOtherInfo.type === "checkbox") {
-          inputTagWithLabel = (
+          inputTagWithLabel =
             <>
               <div>{inputTag}</div>
               <label htmlFor={fieldName}>{fieldOtherInfo.label}</label>
-            </>);
+            </>;
         } else {
-          inputTagWithLabel = <> <label htmlFor={fieldName}>{fieldOtherInfo.label}</label> {inputTag} </>;
+          inputTagWithLabel =
+            <>
+              <label htmlFor={fieldName}>{fieldOtherInfo.label}</label> {inputTag}
+            </>;
         }
         return (
           <div className={fieldWrapperCssClass} key={fieldName}>
@@ -416,7 +419,7 @@ export function FormBuilder({
       <input type="submit"
         value={submitButtonText}
         disabled={disableAllFields === true} />
-      {/* TODO  add disabled={disableAllFields === true} also to JS version*/}
+
     </form>
-  );
+  )
 }
