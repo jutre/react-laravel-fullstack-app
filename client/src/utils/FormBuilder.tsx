@@ -79,7 +79,9 @@ interface FormBuilderProps {
   initialFormData?: InitialFormData | null,
   initiallyDisplayedErrors?: ErrorMessages | null,
   successfulSubmitCallback: (submittedFormData: SubmittedFormData) => void,
-  disableAllFields?: boolean
+  disableAllFields?: boolean,
+  checkboxCssCls?: string,
+  checkboxFollwingSiblingCssCls?: string
 }
 
 
@@ -90,7 +92,8 @@ type InputElementAttributes = {
   checked?: boolean,
   value?: number | string,
   type?: string,
-  disabled?: boolean
+  disabled?: boolean,
+  className?: string
 }
 
 /**
@@ -137,8 +140,15 @@ type InputElementAttributes = {
  * @param disableAllFields - if set to true, all input fields, also submit button will be disabled using "disabled".
  * Intended to be used in cases when form must be disabled like while data sending is in process after submit but meanwhile page
  * still displays form.
- * 
- * 
+ * @param checkboxCssCls - class name for that is assigned to every checkbox type input element if parameter not empty. Intended to be used
+ * in case Tailwindcss is used for defining CSS style in application to prevent need to make a copy of styles for custom checkbox in regular
+ * CSS stylesheet. Instead needed Tailwindcss classes can be passed to checkbox using current parameter and together with classed passed
+ * using current component's checkboxFollwingSiblingCssCls parameter to an element immediatelly following checkbox input
+ * @param checkboxFollwingSiblingCssCls - class name for that is assigned to an element immediatelly following checkbox input element if
+ * parameter not empty. Intended to be used in case Tailwindcss is used for defining CSS style in application to prevent need to make a copy
+ * of styles for custom checkbox in regular CSS stylesheet. Instead needed Tailwindcss classes can be passed to an element immediatelly
+ * following checkbox input. Those classes together with classed passed to checkbox imput element allow to create custom checkbox style like
+ * it is done with traditional CSS but using Tailwind classes
  * @returns
  */
 
@@ -149,7 +159,9 @@ export function FormBuilder({
   initialFormData,
   initiallyDisplayedErrors,
   successfulSubmitCallback,
-  disableAllFields }: FormBuilderProps
+  disableAllFields,
+  checkboxCssCls,
+  checkboxFollwingSiblingCssCls }: FormBuilderProps
 ) {
 
   submitButtonText = submitButtonText ?? "Submit"
@@ -359,6 +371,11 @@ export function FormBuilder({
           inputElemAttributes.value = String(fieldValue);
         }
 
+
+        if (fieldOtherInfo.type === "checkbox" && checkboxCssCls) {
+            inputElemAttributes.className = checkboxCssCls;
+        }
+
         //create "input", "textarea", etc. html tag corresponding to type of input in form definition object
         //TODO - add code for "select" tag creation, "<input type='radio' />
         let inputTag;
@@ -382,24 +399,30 @@ export function FormBuilder({
           return <input {...inputElemAttributes} key={fieldName} />;
         }
 
-        //for all input tags except checkbox, label comes before input field, checkbox also have
-        //additional markup to have ability to style it as needed
+        //for all input tags except checkbox, label comes before input field. Checkbox input is followed by empty div to have possibility
+        //to create custom checkbox style using css, it always has class name 'checkmark' present and appended class names from component
+        //property if it is not empty
         let inputTagWithLabel;
-        let fieldWrapperCssClass = "field " + fieldOtherInfo.type;
         if (fieldOtherInfo.type === "checkbox") {
           inputTagWithLabel =
             <>
-              <div>{inputTag}</div>
+              <div>
+                {inputTag}
+                {/*an element following*/}
+                <div className={'checkmark ' + (checkboxFollwingSiblingCssCls ? checkboxFollwingSiblingCssCls : '')}></div>
+              </div>
               <label htmlFor={fieldName}>{fieldOtherInfo.label}</label>
             </>;
+
         } else {
           inputTagWithLabel =
             <>
               <label htmlFor={fieldName}>{fieldOtherInfo.label}</label> {inputTag}
             </>;
         }
+
         return (
-          <div className={fieldWrapperCssClass} key={fieldName}>
+          <div className={"field " + fieldOtherInfo.type} key={fieldName}>
             {inputTagWithLabel}
 
             {inputErrors[fieldName] &&

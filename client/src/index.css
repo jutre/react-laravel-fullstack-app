@@ -124,6 +124,23 @@
         content: ":";
     }
 
+    
+    /*for checkbox field label comes after checkbox, label text weight is not bold, remove column from checkbox field label*/
+    form.form_builder .field.checkbox {
+        display: flex;
+        align-items: center;
+    }
+    form.form_builder .field.checkbox label {
+        font-weight: normal;
+        margin-bottom: 0px;
+    }
+    form.form_builder .field.checkbox label::after {
+        content: "";
+    }
+    form.form_builder .field.checkbox > div {
+        padding-right: 10px;
+    }
+
     form.form_builder textarea,
     form.form_builder [type="text"],
     form.form_builder [type="password"] {
