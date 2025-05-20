@@ -125,7 +125,7 @@
     }
 
     
-    /*for checkbox field label comes after checkbox, label text weight is not bold, remove column from checkbox field label*/
+    /*for checkbox field label comes after checkbox, label text is not bold, remove column from checkbox field label*/
     form.form_builder .field.checkbox {
         display: flex;
         align-items: center;
@@ -141,34 +141,13 @@
         padding-right: 10px;
     }
 
-    form.form_builder textarea,
-    form.form_builder [type="text"],
-    form.form_builder [type="password"] {
-        width: 100%;
-    }
-
-    form.form_builder textarea {
-        resize: none;
-    }
-
-    form.form_builder .input_error {
-        padding: 2px 0 0 5px;
-        color: red;
-    }
-
-    @media screen and (min-width: 550px) { 
-        form.form_builder .input_error {
-            /*don't shift elements below when displayed*/
-            position: absolute;
-        }
-    }
-
     form.form_builder input,
     form.form_builder textarea {
         display: block;
         padding: 5px;
         border: 1px solid #c6c9ce;
         border-radius: 5px;
+        width: 100%;
     }
 
     @media screen and (min-width: 1024px) {
@@ -176,18 +155,6 @@
         form.form_builder textarea {
             padding: 5px 7px;
         }
-    }
-
-    form.form_builder textarea:focus,
-    form.form_builder [type="text"]:focus,
-    form.form_builder [type="password"]:focus {
-        border-color: #6b7280;
-        outline: none;
-    }
-
-    form.form_builder input[disabled],
-    form.form_builder textarea[disabled] {
-        color: gray;
     }
 
     form.form_builder input[type="submit"]{
@@ -199,11 +166,38 @@
         width: 120px;
     }
 
+    form.form_builder textarea:focus,
+    form.form_builder input:focus{
+        border-color: #6b7280;
+        outline: none;
+    }
+    /*when disabled gray color for input elements, textarea text, except text on submit button*/
+    form.form_builder input:is([disabled]):not([type="submit"]),
+    form.form_builder textarea[disabled] {
+        color: gray;
+    }
+
     form.form_builder input[type="submit"]:hover{
         background-color:#0076c0;
     }
 
     form.form_builder input[type="submit"]:disabled{
         background-color: gray;
+    }
+
+    form.form_builder textarea {
+        resize: none;
+    }
+
+    form.form_builder .input_error {
+        padding: 2px 0 0 5px;
+        color: red;
+    }
+
+    @media screen and (min-width: 550px) {
+        form.form_builder .input_error {
+            /*don't shift elements below when displayed*/
+            position: absolute;
+        }
     }
 }
