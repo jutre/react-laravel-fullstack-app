@@ -61,12 +61,13 @@ export const initiateUserFetchingOnAppStart = () => (dispatch: AppDispatch) => {
 }
 
 /**
- * function that dispatches two Redux actions: 'userLogged' action and 'resetApiState'. Action userLogged causes setting authState.user
- * field to 'undefined', resets whole Redux state to initial and 'resetApiState' resets state in api slice.
- * Whole Redux state and api slice cache must be removed to prevent any possibility to access
- * previously loggen in user's data - first obvious way to access the cache would be Redux devtools extension if installed.
- * Function invoked in two places: when Redux store middleware function encounters error with HTTP "401 Unauthorized" status 
- * produced by RTKQuery api clice and when user performs "logout" action in user interface
+ * function that dispatches two Redux actions: 'userLoggedOut' action and 'resetApiState'. Action 'userLoggedOut' causes setting
+ * authState.user field to 'undefined', resets whole Redux state to initial (@see store.ts for global reducer performing state resetting)
+ * and 'resetApiState' resets state in api slice.
+ * Resetting state and API slice cache must be performet to prevent possibility to access previously logged in user's data. One way to
+ * access the cache would be Redux devtools extension if installed.
+ * Logout actions are dispatched when user performs "logout" action in UI and when Redux store middleware function encounters error with
+ * HTTP "401 Unauthorized" status  produced by RTKQuery api clice.
  * 
  */
 export const dispatchLogoutActions = (dispatch: AppDispatch) => {
