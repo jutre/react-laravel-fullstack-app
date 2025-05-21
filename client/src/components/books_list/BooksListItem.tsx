@@ -7,6 +7,7 @@ import {
   selectIsBookAddedToSelection,
   selectIsBookAddedToFavoriteBooks } from "../../features/booksSlice";
 import { ButtonWithIconAndBackground, IconNameValues } from '../ui_elements/ButtonWithIconAndBackground';
+import { customCheckboxCheckmarkClasses, chekboxInputClasses } from '../../config'
 import { Book } from '../../types/Book';
 
 type BookListItemProps = {
@@ -71,18 +72,17 @@ export function BookListItem({book, editUrl, deleteUrl, addToFavoritesQueryTrigg
       {/*custom checkbox for list item selecting for deletion*/}
       <div className="flex items-center pr-[15px]">
         <label>
-          {/*make checkbox input invisible and not occupying space, add "peer" class to track checkbox checked/unckecked state in
-          custom checkbox div*/}
+          
           <input  type="checkbox" 
                   checked={isBookAddedToSelection}
                   onChange={handleBookSelectionForDeleting}
-                  className="absolute opacity-0 peer"/>
+                  //make checkbox input invisible and not occupying space, add "peer" class to track checkbox checked/unckecked state in
+                  //custom checkbox div
+                  className={chekboxInputClasses}/>
 
-          {/*create square with custom checkmark which is displayed or not depending on checkbox checked/unckecked state*/}
-          <div className="block relative w-[18px] h-[18px] border-[2px] border-solid border-[#4066a5] rounded-[3px] 
-            bg-white peer-checked:bg-[#ccc] after:hidden peer-checked:after:block peer-focus-visible:[outline-style:auto] 
-            after:absolute after:left-[4px] after:top-0 after:w-[6px] after:h-[11px] after:border after:border-solid 
-            after:border-[#4066a5] after:border-t-0 after:border-r-[2px] after:border-b-[2px] after:border-l-0 after:rotate-45">
+          {/*create square box with checkmark which is displayed or hidden depending on previously located checkbox input element 
+          checked/unckecked state*/}
+          <div className={customCheckboxCheckmarkClasses}>
           </div>
         </label>
       </div>

@@ -6,6 +6,7 @@ import {  bookCollectionAddedToSelection,
           selectIsAnyBookSelected,
           selectBooksInSelection } from "../../features/booksSlice";
 import { ButtonWithIconAndBackground } from '../ui_elements/ButtonWithIconAndBackground';
+import { customCheckboxSquareBoxClasses } from '../../config'
 import { Book } from "../../types/Book";
 
 
@@ -100,7 +101,9 @@ function BooksListItemsSelectionBar({allDisplayedBooks, searchGetParamVal, baseU
       <div className="flex items-center pr-[15px]">
         <button 
           onClick={handleBatchSelectorClick}
-          className={"block relative w-[18px] h-[18px] border-[2px] border-solid border-[#4066a5] rounded-[3px] bg-white " +
+          //using same styles for creating square box as for custom ckeckbox but actually this is button as checked/unchecked state is not
+          //needed, button has click handler
+          className={customCheckboxSquareBoxClasses +
             ( displayDeselectionModeDash
             ? "after:absolute after:w-[9px] after:h-[2px] after:rounder-[3px] after:bg-[#4066a5] after:top-1/2 after:left-1/2 after:[transform:translateX(-50%)_translateY(-50%)]"
             : "")

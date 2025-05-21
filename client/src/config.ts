@@ -89,3 +89,22 @@ export const bookEditFormFieldsDef: FormFieldsDefinition = {
     ...bookCreatingFormFieldsDef,
     id:{ label: "id", type: "hidden" }
 }
+
+/**
+ * custom checkbox are created using Tailwindcss classes, they are present in more than one component
+ */
+
+//classes that create dimensions, border style and background for div that acts like box with checkmark.
+//Same square box is also used for batch selection control (but has it dash instead of checkmark), therefore storing classes in separate
+//variable
+export const customCheckboxSquareBoxClasses = "block relative w-[18px] h-[18px] border-[2px] border-solid border-[#4066a5] rounded-[3px] bg-white "
+
+//classes for div that acts like a checkmark for custom checkbox (located immediatelly after checkbox input element). Add checkmark
+//inside div and add background when checked
+export const customCheckboxCheckmarkClasses = customCheckboxSquareBoxClasses +
+    "peer-checked:bg-[#ccc] peer-checked:after:block after:hidden after:absolute peer-focus-visible:[outline-style:auto] " +
+    "after:left-[4px] after:top-0 after:w-[6px] after:h-[11px] after:border after:border-solid " +
+    "after:border-[#4066a5] after:border-t-0 after:border-r-[2px] after:border-b-[2px] after:border-l-0 after:rotate-45 "
+
+//classes for making checbox invisible, "peer" class for Tailwindcss context
+export const chekboxInputClasses = "absolute opacity-0 peer"
