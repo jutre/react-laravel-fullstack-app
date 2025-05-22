@@ -401,18 +401,19 @@ export function FormBuilder({
 
         //for all input tags except checkbox, label comes before input field. Checkbox input is followed by empty div to have possibility
         //to create custom checkbox style using css, it always has class name 'checkmark' present and appended class names from component
-        //property if it is not empty
+        //property if it is not empty. input tag and "checkmark" div is placed inside label tag to make click on "checkmark" div detectable
+        //in input when clicking on it
         let inputTagWithLabel;
         if (fieldOtherInfo.type === "checkbox") {
           inputTagWithLabel =
-            <>
+            <label htmlFor={fieldName}>
               <div>
                 {inputTag}
                 {/*an element following*/}
                 <div className={'checkmark ' + (checkboxFollwingSiblingCssCls ? checkboxFollwingSiblingCssCls : '')}></div>
               </div>
-              <label htmlFor={fieldName}>{fieldOtherInfo.label}</label>
-            </>;
+              {fieldOtherInfo.label}
+            </label>;
 
         } else {
           inputTagWithLabel =
