@@ -143,7 +143,11 @@ export const apiSlice = createApi({
         method: 'PUT',
         body: updatedBook
       }),
-      invalidatesTags: (result, error, arg) => [{ type: 'Book', id: arg.id }]
+      //on book update invalidate 'Book' tags and 'FavoriteBook' tags as "Added to favorites" state of book also is editable in book edit
+      //form - book possibly might be added/removed from favorite, so also reload favorite books ids list and favorite books list
+      invalidatesTags: (result, error, arg) =>
+        [{ type: 'Book', id: arg.id }, 
+        { type: 'FavoriteBook', id: 'LIST' }]
     }),
 
     //endpoint for deleting single or multiple books. Endpoint argument is array of book identifiers.

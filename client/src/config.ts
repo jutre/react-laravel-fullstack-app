@@ -19,38 +19,6 @@ export const routes = {
 /**
  * book creation form definition
  */
-export const bookCreatingFormFieldsDef1  = [
-    {
-        label: "Title",
-        name: "title",
-        type: "text",
-        validationRules: [
-            {
-                name: "minLength",
-                value: 3,
-                message: "field length must be at least three symbols"
-            } 
-        ]
-    },
-    {
-        label: "Author",
-        name: "author",
-        type: "text",
-        validationRules: [
-            {
-                name: "minLength",
-                value: 3,
-                message: "field length must be at least three symbols"
-            }
-        ]
-    },
-    {
-        label: "Preface",
-        name: "preface",
-        type: "textarea"
-    }
-];
-
 export const bookCreatingFormFieldsDef: FormFieldsDefinition = {
     title: {
         label: "Title",
@@ -77,6 +45,10 @@ export const bookCreatingFormFieldsDef: FormFieldsDefinition = {
     preface: {
         label: "Preface",
         type: "textarea"
+    },
+    added_to_favorites: {
+        label: "add to favorites",
+        type: "checkbox"
     }
 }
 
@@ -89,6 +61,7 @@ export const bookEditFormFieldsDef: FormFieldsDefinition = {
     ...bookCreatingFormFieldsDef,
     id:{ label: "id", type: "hidden" }
 }
+
 
 /**
  * custom checkbox are created using Tailwindcss classes, they are present in more than one component

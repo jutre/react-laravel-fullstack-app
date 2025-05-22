@@ -14,6 +14,7 @@ import { ButtonWithIconAndBackground } from "./ui_elements/ButtonWithIconAndBack
 import { DataFetchingStatusLabel } from "./ui_elements/DataFetchingStatusLabel";
 import { GeneralErrorMessage } from "./ui_elements/GeneralErrorMessage";
 import { NavLinkBack } from "./ui_elements/NavLinkBack";
+import { customCheckboxCheckmarkClasses, chekboxInputClasses } from '../config';
 import { FormBuilder, SubmittedFormData } from '../utils/FormBuilder';
 import DisappearingMessage from './DisappearingMessage';
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
@@ -44,7 +45,8 @@ export function BookEditing() {
       id: 0,
       title: "",
       author: "",
-      preface: ""
+      preface: "",
+      added_to_favorites: false
     }
 
     let submittedBookData: Book = createTargetObjFromSubmittedData<Book>(submittedFormData, templateBookObj)
@@ -236,7 +238,9 @@ export function BookEditing() {
               initialFormData={formInitialData}
               successfulSubmitCallback={saveSubmittedData}
               initiallyDisplayedErrors={validationErrors}
-              disableAllFields={formDisabled} />
+              disableAllFields={formDisabled}
+              checkboxCssCls={chekboxInputClasses}
+              checkboxFollwingSiblingCssCls={customCheckboxCheckmarkClasses}/>
           </>
         }
 
