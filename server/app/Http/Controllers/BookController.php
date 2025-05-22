@@ -71,7 +71,7 @@ class BookController extends Controller
 
         //if book is not found, return error
         if (empty($book)) {
-            return $this->createBookWithIdNotFoundResponseBodyAndCode($id);
+            return $this->bookNotFoundErrorResponse($id);
         }
 
         return $book;
@@ -96,7 +96,7 @@ class BookController extends Controller
 
         //if book is not found, return error
         if (empty($book)) {
-            return $this->createBookWithIdNotFoundResponseBodyAndCode($id);
+            return $this->bookNotFoundErrorResponse($id);
         }
 
         //if user is setting new title for book, check if such title is set for other book
@@ -137,11 +137,10 @@ class BookController extends Controller
     {
         usleep(500000);
 
-        //before deleting book(s) execute delete statement with deletable books identifiers in 'favorite_books' table. Possible deletable
-        //books are added to favorites, records from 'favorite_books' table must be deleted before records from 'books' table as favorites
-        //table contains foreign keys to books table
+        //before deleting from 'books' table delete from 'favorite_books' table as deletable books might be added to favorites. Records
+        //from 'favorite_books' table must be deleted before deleting from 'books' table as 'favorites_books' table contains foreign keys to
+        //'books' table
         $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
-        //start building query with 'favorite_books' table to delete from 'favorite_books' table (and only from this table)
         DB::table('favorite_books')
             ->join('books', 'favorite_books.book_id', '=', 'books.id')
             //belongs to current user
@@ -260,7 +259,7 @@ class BookController extends Controller
     /**
      * Adds a book specified by identifier to favorite book list.
      *
-     * @param @param \Illuminate\Http\Request $request $request
+     * @param \Illuminate\Http\Request $request $request
      * @param integer $id - value of 'book' table 'id' column specifying book identifier which must be added to favorite book list
      * @return if book specified by id is successfully added to favorites list returns HTTP 204 response code (no content). If book is not
      * found, returns json with error description with HTTP 404 response code (not found); if book is already added to favorites, returns
@@ -273,11 +272,11 @@ class BookController extends Controller
         //before adding to favorites, check 1)if book with such id exists in 'books' table (can not add to favorites a book that does not
         //exist among user's books), 2) if book already is added to favorites (trying to add a book already added to favorites must be
         //responded with error)
-        $bookTableAndFavoriteTableRecord = $this->getBookTableRecordLeftJoinedWIthFavoriteBooksTable($request, $id);
+        $bookTableAndFavoriteTableRecord = $this->getBookTableRecordLeftJoinedWithFavoriteBooksTable($request, $id);
 
         //if query result is empty, book with suplied id is not found, return error
         if (empty($bookTableAndFavoriteTableRecord)) {
-            return $this->createBookWithIdNotFoundResponseBodyAndCode($id);
+            return $this->bookNotFoundErrorResponse($id);
         }
 
         //if 'book_id' column (comes from 'favorite_books') from query result is not null book is adready added to favorites, return error
@@ -305,11 +304,11 @@ class BookController extends Controller
         //before removing from favorites, check 1)if book with such id exists in 'books' table (can not remove from favorites a book that
         //does not exist among user's books), 2) if book is not added to favorites (trying to remove a book not added added to favorites
         //will be respond with error)
-        $bookTableAndFavoriteTableRecord = $this->getBookTableRecordLeftJoinedWIthFavoriteBooksTable($request, $id);
+        $bookTableAndFavoriteTableRecord = $this->getBookTableRecordLeftJoinedWithFavoriteBooksTable($request, $id);
 
         //if query result is empty, book with suplied id is not found, return error
         if (empty($bookTableAndFavoriteTableRecord)) {
-            return $this->createBookWithIdNotFoundResponseBodyAndCode($id);
+            return $this->bookNotFoundErrorResponse($id);
         }
 
         //if 'book_id' column (comes from 'favorite_books') from query result is not null book is added to favorites, remove record from
@@ -330,16 +329,22 @@ class BookController extends Controller
     }
 
     /**
-     * Returns object which is result of executed Eloquent query builder created SQL query. Query is select from 'books' table by book's id
-     * and currently logged in user's id left joined with 'favorite_books' table. The result will be used to check record existance before
-     * performing adding or removing record in 'favorite_books' table
+     * Returns object representing result of SQL query selecting from 'books' table left joined with 'favorite_books' table constraining
+     * 'books' table 'id' column to be equal to $bookId method parameter and to belong to currently logged in user.
+     * Intended to be used to check if book is added to 'favorite_books' table before adding or removing record from 'favorite_books' table
      *
-     * @param @param \Illuminate\Http\Request $request $request
-     * @param integer $id - value of 'book' table 'id' column specifying book identifier which must be added to favorite book list
-     * @return object - result of Eloquent query builder generated query. Null will be returned if record with specified book id does not
-     * exist in 'books' table
+     * @param \Illuminate\Http\Request $request $request
+     * @param integer $bookId - identifier of book that we are selecting info about ('books' table 'id' column value)
+     * @return object - result of Eloquent query builder generated query. NULL value will be returned if record with primary key specified
+     * $bookId param value does not exist in 'books' table among books belonging to currently logged in user. If book exists among user's
+     * books then object with two propeties is returned -
+     * {
+     *  <id - specified bookId>,
+     *  <book_id - NULL or specified bookId>
+     * }
+     * and 'book_id' will be NULL if record with specified $bookId is not added to 'favorite_books' table
      */
-    private function getBookTableRecordLeftJoinedWIthFavoriteBooksTable(Request $request, int $bookId){
+    private function getBookTableRecordLeftJoinedWithFavoriteBooksTable(Request $request, int $bookId){
         return $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->leftJoin('favorite_books', 'books.id', '=', 'favorite_books.book_id')
             ->where('books.id', $bookId)
@@ -348,15 +353,12 @@ class BookController extends Controller
     }
 
     /**
-     * Adds a book specified by identifier to favorite book list.
+     * generates error response (json as content and HTTP code 404) for case that book is not found
      *
-     * @param @param \Illuminate\Http\Request $request $request
-     * @param integer $id - value of 'book' table 'id' column specifying book identifier which must be added to favorite book list
-     * @return if book specified by id is successfully added to favorites list returns HTTP 204 response code (no content). If book is not
-     * found, returns json with error description with HTTP 404 response code (not found); if book is already added to favorites, returns
-     * json with error description with HTTP 409 response code (conflict)
+     * @param integer $bookId - book identifier which must be added to favorite book list value of 'books' table 'id' column specifying
+     * @return json with message that book does not exist and HTTP code 404
      */
-    private function createBookWithIdNotFoundResponseBodyAndCode($bookId){
+    private function bookNotFoundErrorResponse($bookId){
         return response()->json(['message' => "Book with id $bookId not found"], 404);
     }
 
