@@ -143,8 +143,9 @@ export const apiSlice = createApi({
         method: 'PUT',
         body: updatedBook
       }),
-      //on book update invalidate 'Book' tags and 'FavoriteBook' tags as "Added to favorites" state of book also is editable in book edit
-      //form - book possibly might be added/removed from favorite, so also reload favorite books ids list and favorite books list
+      //on book update invalidate {'Book', id: <updatable bookId>} tag and {'FavoriteBook': 'LIST'} tag as book edit screen has a field for
+      //adding or removing book from Favorites list, so after book saving also reload whole favorite books ids list and favorite books list
+      //as book possibly might be added/remove from favorites
       invalidatesTags: (result, error, arg) =>
         [{ type: 'Book', id: arg.id }, 
         { type: 'FavoriteBook', id: 'LIST' }]
@@ -171,7 +172,7 @@ export const apiSlice = createApi({
 
         }
       },
-      // Invalidates all queries that provides tags which includes "id" property of each delatable Book
+      // Invalidates all queries that provides {'Book', "id" <each deletable bookId>} tags
       //and favorite books list fetching query provided tags (if book is deleted it must invalidate also 'FavoriteBook' tag with book's
       //identifer as if deletable book(s) was added to favorites list then new favorites list must be refetched - without that book included)
       invalidatesTags: (result, error, arg) =>
@@ -260,8 +261,12 @@ export const apiSlice = createApi({
         }
       },
       //invalidates query that fetches list of favorite books providing the 'LIST' id - refetch favorite book list after
-      //adding favorite book book
-      invalidatesTags: [{ type: 'FavoriteBook', id: 'LIST' }],
+      //adding favorite book book and also invalidate 'Book' tags with id of book that was added to favorites - possible cached editable
+      //book data with suplied id must be reloaded as edit form has 'Added to favorites' field which is changed now
+      invalidatesTags: (result, error, arg) => [
+        { type: 'FavoriteBook', id: 'LIST' },
+        { type: 'Book', id: arg }
+      ],
     }),
 
     removeBookFromFavorites: builder.mutation<void, number>({
@@ -273,8 +278,12 @@ export const apiSlice = createApi({
       },
 
       //invalidates query that fetches list of favorite books providing the 'LIST' id - refetch favorite book list after
-      //removing book from favorites
-      invalidatesTags: [{ type: 'FavoriteBook', id: 'LIST' }],
+      //removing book from favorites also invalidate 'Book' tags with id of book that was added to favorites - possible cached editable
+      //book data with suplied id must be reloaded as edit form has 'Added to favorites' field which is changed now
+      invalidatesTags: (result, error, arg) => [
+        { type: 'FavoriteBook', id: 'LIST' },
+        { type: 'Book', id: arg }
+      ]
     }),
 
 
