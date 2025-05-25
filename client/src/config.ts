@@ -25,7 +25,7 @@ export const bookCreatingFormFieldsDef: FormFieldsDefinition = {
         type: "text",
         validationRules: [
             {
-                name: "minLength",
+                rule: "minLength",
                 value: 3,
                 message: "field length must be at least three symbols"
             }
@@ -36,7 +36,7 @@ export const bookCreatingFormFieldsDef: FormFieldsDefinition = {
         type: "text",
         validationRules: [
             {
-                name: "minLength",
+                rule: "minLength",
                 value: 3,
                 message: "field length must be at least three symbols"
             }

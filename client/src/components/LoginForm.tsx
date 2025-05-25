@@ -24,10 +24,10 @@ export function LoginForm() {
       type: "text",
       validationRules: [
         {
-          name: "email"
+          rule: "email"
         },
         {
-          name: "minLength",
+          rule: "minLength",
           value: 3
         }
       ]
@@ -37,7 +37,7 @@ export function LoginForm() {
       type: "password",
       validationRules: [
         {
-          name: "minLength",
+          rule: "minLength",
           value: 8
         }
       ]

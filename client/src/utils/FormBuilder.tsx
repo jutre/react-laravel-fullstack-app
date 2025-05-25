@@ -4,14 +4,14 @@ export type ValidationRule =
 
   //rule for non empty value
   {
-    name: "required",
+    rule: "required",
     //overrides default error message "this field must not be empty"
     message?: string
   } |
 
   //rule for non value's minimal length
   {
-    name: "minLength",
+    rule: "minLength",
     value: number,
     //overrides default error message "field's length must be at least (n) symbols"
     message?: string
@@ -19,7 +19,7 @@ export type ValidationRule =
 
   //rule for field where value should be valid email string
   {
-    name: "email",
+    rule: "email",
     //overrides default error message "invalid email format"
     message?: string
   }
@@ -104,26 +104,42 @@ type InputElementAttributes = {
  * "type" - input element's "type" attribute value
  * "rule" - validation rule for field's value.
  * 
- * Example of object defining three input fields definition -
- * 
- * [
- *  { label: "id",
- *    name: "id",
- *    type: "hidden"
- *  },
- *  { label: "Title",
- *    name: "title",
- *    type:"text",
- *    validationRules: [
- *      {name: "required"},
- *      ...<possibly other rules: "minLength", "email">
- *    ]
- *  }, 
- *  { label: "Description",
- *    name:"description",
- *    type:"textarea"
- *  }
- * ]
+ * Example of object defining three input fields definition - 
+ * {
+ *    id: {
+ *      label: "id",
+ *      type: "hidden"
+ *    },
+ *    title: {
+ *      label: "Title",
+ *      type: "text",
+ *      validationRules: [
+ *        //rule defining that field must not be empty
+ *        {
+ *          rule: "required"
+ *        },
+ *        //rule defining minimal string length that must be input in field to be valid;
+ *        //"value" property - minimal lenght value
+ *        //"message" property - optional error message that overrides default for generated error message about minimal string length
+ *        {
+ *          rule: "minLength",
+ *          value: 3,
+ *          message: "field length must be at least three symbols"
+ *        },
+ *        //rule defining that field value must be valid email format string
+ *        //"message" property - optional error message that overrides default for generated error message with requirement an input value
+ *        //to conform to valid email format
+ *        {
+ *          rule: "email",
+ *          message: "please provide valid email!"
+ *          }
+ *      ]
+ *    },
+ *    description: {
+ *      label: "Description",
+ *      type:"textarea"
+ *    }
+ * }
  *
  * @param submitButtonText - text for submit button, can be empty, if parameter empty, text will be "Submit"
  * @param initialFormData - object with form's input fields initial values. Intended to be used to create form with prefilled fields when
@@ -285,7 +301,7 @@ export function FormBuilder({
         //rule "required" - don't allow empty string
         //fieldValue will be undefined if input field was not assigned default value and was not changed anyway (change 
         //handler did not mofify appropriate prop in inputFieldValues object). 
-        if (validatRulesObj.name === "required" &&  (fieldValue === undefined || String(fieldValue).trim() === "")) {
+        if (validatRulesObj.rule === "required" &&  (fieldValue === undefined || String(fieldValue).trim() === "")) {
           const defaultErrMsg = "this field must not be empty";
 
           //use error message from form definition if it is set
@@ -296,7 +312,7 @@ export function FormBuilder({
           //If field is empty string, create error message that field must not be empty and minimal length that 
           //string should be, if string is not empty and too short, create error message that field value's length
           //should not be shorter than specified in rule
-        } else if (validatRulesObj.name === "minLength") {
+        } else if (validatRulesObj.rule === "minLength") {
           let fieldValueMinLength = parseInt(String(validatRulesObj.value));
 
           if (fieldValue === undefined || String(fieldValue).trim().length < fieldValueMinLength) {
@@ -309,7 +325,7 @@ export function FormBuilder({
           }
 
           //rule "email" - must be valid email format string
-        }else if(validatRulesObj.name === "email"){
+        }else if(validatRulesObj.rule === "email"){
           let inputTrimmedLoverCase = String(fieldValue).trim().toLowerCase();
           if(!inputTrimmedLoverCase.match(
             /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
