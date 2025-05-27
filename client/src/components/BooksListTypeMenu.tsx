@@ -12,7 +12,7 @@ import { ButtonWithIcon } from './ui_elements/ButtonWithIcon';
 
 export function BooksListTypeMenu () {
 
-  let menuEntries = [
+  const menuEntries = [
     {linkText: "All books", url: routes.bookListPath},
     {linkText: "Favorite books", url: routes.favoriteBooksListPath},
     {linkText: "Demo data reset", url: routes.demoDataResetPath}

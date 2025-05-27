@@ -60,7 +60,7 @@ function AboutInfoPopupMenu(){
   }
 
   //for applying same classes to multiple <li> elements store them in variable this way preventing code dublication
-  let listItemClasses = "relative before:block before:absolute before:left-[-23px] before:top-[9px] before:bg-[#5f9ea0] before:w-[10px] before:h-[10px]";
+  const listItemClasses = "relative before:block before:absolute before:left-[-23px] before:top-[9px] before:bg-[#5f9ea0] before:w-[10px] before:h-[10px]";
   return (
     <div ref={beginningOfMenuRef}>
 
@@ -81,7 +81,8 @@ function AboutInfoPopupMenu(){
             //disapper with delay that was needed while hiding active popupdiv */
             ( isMenuOpened
             ? "border-b-transparent transition-none" 
-            : "[transition:border-color_0.1s_step-end]")}>
+            : "[transition:border-color_0.1s_step-end]")}
+          type='button'>
         About this app {/* this comment is for creating space between text and <span>*/}
         <span className={"inline-block w-[20px] h-[10px] relative after:absolute after:left-0 after:border-solid after:border-t-[10px] " +
                         "after:border-r-[10px] after:border-b-0 after:border-l-[10px] after:border-transparent after:border-t-neutral-600 " +
@@ -103,7 +104,7 @@ function AboutInfoPopupMenu(){
             <li className={listItemClasses}>CSS used to create typical UI elements: popup menu, modal dialog, autocomplete search box,
               styled checkboxes, responsive design
             </li>
-            <li className={listItemClasses}>a function created that lets easily generate HTML form by defining it's structure using
+            <li className={listItemClasses}>a function created that lets easily generate HTML form by defining it&apos;s structure using
               array of objects</li>
           </ul>
         </div>

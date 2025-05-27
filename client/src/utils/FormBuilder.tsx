@@ -202,7 +202,7 @@ export function FormBuilder({
     for all html input field types except 'checkbox' type where value is converted to boolean type as it is used as input's 'checked'
     attribute value.*/
 
-    let initialFormDataCorrectedTypes: SubmittedFormData = {};
+    const initialFormDataCorrectedTypes: SubmittedFormData = {};
 
     for (const [fieldName, fieldOtherInfo] of Object.entries(formFieldsDefinition)) {
       
@@ -257,7 +257,7 @@ export function FormBuilder({
    * @param event 
    */
   const onInputFieldsChange = (event: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
-    let name = event.target.name;
+    const name = event.target.name;
 
     //input field value type for all fields except checkbox comes from 'value' attribute.
     //for checkbox type input field use boolean type value as for checbox input "cheched" attribute value is keeped in state.
@@ -313,7 +313,7 @@ export function FormBuilder({
           //string should be, if string is not empty and too short, create error message that field value's length
           //should not be shorter than specified in rule
         } else if (validatRulesObj.rule === "minLength") {
-          let fieldValueMinLength = parseInt(String(validatRulesObj.value));
+          const fieldValueMinLength = parseInt(String(validatRulesObj.value));
 
           if (fieldValue === undefined || String(fieldValue).trim().length < fieldValueMinLength) {
             const defaultErrorMsg = `field's length must be at least ${fieldValueMinLength} 
@@ -326,7 +326,7 @@ export function FormBuilder({
 
           //rule "email" - must be valid email format string
         }else if(validatRulesObj.rule === "email"){
-          let inputTrimmedLoverCase = String(fieldValue).trim().toLowerCase();
+          const inputTrimmedLoverCase = String(fieldValue).trim().toLowerCase();
           if(!inputTrimmedLoverCase.match(
             /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
           )){
@@ -367,7 +367,7 @@ export function FormBuilder({
 
         //Adding attributes present in all input elements.
         //All input elements also have change handler as they are controlled input fields
-        let inputElemAttributes: InputElementAttributes = {
+        const inputElemAttributes: InputElementAttributes = {
           name: fieldName,
           id: fieldName,
           onChange: onInputFieldsChange

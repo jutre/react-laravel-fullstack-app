@@ -35,8 +35,8 @@ function BooksListItemsSelectionBar({allDisplayedBooks, searchGetParamVal, baseU
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  let isAnyBookSelected = useAppSelector(state => selectIsAnyBookSelected(state));
-  let selectedBooks = useAppSelector(state => selectBooksInSelection(state));
+  const isAnyBookSelected = useAppSelector(state => selectIsAnyBookSelected(state));
+  const selectedBooks = useAppSelector(state => selectBooksInSelection(state));
 
   /**
    * process logic when user click batch selection checkbox control. 
@@ -108,7 +108,8 @@ function BooksListItemsSelectionBar({allDisplayedBooks, searchGetParamVal, baseU
             ? "after:absolute after:w-[9px] after:h-[2px] after:rounder-[3px] after:bg-[#4066a5] after:top-1/2 after:left-1/2 after:[transform:translateX(-50%)_translateY(-50%)]"
             : "")
           }
-          title={batchSelectorModeTitle}>
+          title={batchSelectorModeTitle}
+          type="button">
         </button>
       </div>
 

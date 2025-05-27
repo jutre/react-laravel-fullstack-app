@@ -26,7 +26,7 @@ export const apiSlice = createApi({
       
       //send "X-XSRF-TOKEN" header which is needed provides CSRF protection working with Laravel Sanctum authentication
       //library. Create header value from "XSRF-TOKEN" cookie's value URL decoded
-      let csrfToken = getCookie("XSRF-TOKEN");
+      const csrfToken = getCookie("XSRF-TOKEN");
       if (csrfToken) {
         headers.set("X-XSRF-TOKEN", decodeURIComponent(csrfToken))
       }
@@ -107,11 +107,11 @@ export const apiSlice = createApi({
       //privide tags for book filtering list as in filtering result list there is option to delete any of found books and after deletion 
       //result list must be re-fetched immediatelly
       providesTags: (result) =>
-        result
+        (result && result.data)
           ? // successful query, create tag for each returned book and a tag to make query invalidated when new book is created 
             [
               { type: 'Book', id: 'LIST' },
-              ...result.data?.map(({ id }) => ({ type: 'Book', id }) as const)
+              ...result.data.map(({ id }) => ({ type: 'Book', id }) as const)
             ]
           : // an error occurred, refetch this query when `{ type: 'Book', id: 'LIST' }` is invalidated f.e. new book is added
           [{ type: 'Book', id: 'LIST' }]
@@ -155,7 +155,7 @@ export const apiSlice = createApi({
     //In case of single book argument must be array with one element, the identifier of deletable book
     deleteBook: builder.mutation<void, number[]>({
       query(deletableBooksIdsArray) {
-        let requestBody = JSON.stringify({ids: deletableBooksIdsArray})
+        const requestBody = JSON.stringify({ids: deletableBooksIdsArray})
         return {
           url: 'books',
           method: 'DELETE',
@@ -168,8 +168,9 @@ export const apiSlice = createApi({
         try {
           await queryFulfilled
           dispatch(booksCollectionRemovedFromSelection(deletableBooksIdsArray))
-        } catch (err) {
-
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (e) {
+          //in case of error not modifying selected items state
         }
       },
       // Invalidates all queries that provides {'Book', "id" <each deletable bookId>} tags

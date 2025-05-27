@@ -55,7 +55,7 @@ export function closeDivOnClickOutsideOfDiv(
  */
 export function getQueryParamValue(paramName: string) {
   const queryParamsString = window.location.search;
-  let paramValue = (new URLSearchParams(queryParamsString)).get(paramName);
+  const paramValue = (new URLSearchParams(queryParamsString)).get(paramName);
   return paramValue;
 }
 
@@ -80,7 +80,7 @@ export function getBookListBaseUrl(listMode: BooksListModes) {
  * @returns 
  */
 export function getCookie(key: string) {
-  var b = document.cookie.match("(^|;)\\s*" + key + "\\s*=\\s*([^;]+)");
+  const b = document.cookie.match("(^|;)\\s*" + key + "\\s*=\\s*([^;]+)");
   if (b === null) {
     return undefined;
   }
@@ -160,7 +160,7 @@ type StringOrIndexedObject = string | { [index:string]: string };
 export function extractMessageOrMessagesObjFromQueryError(queryError: FetchBaseQueryError | SerializedError): StringOrIndexedObject {
 
   if ('status' in queryError) {
-    /*FetchBaseQueryError type object. 
+    /*FetchBaseQueryError type object;
     look for 'errors' property as Laravel backend returns validation errors per field in json's field 'errors' property. The example of json
     send by Laravel - 
     {
@@ -174,32 +174,31 @@ export function extractMessageOrMessagesObjFromQueryError(queryError: FetchBaseQ
         ]
       }
     }
-    The json representing object resices in 'data' property of FetchBaseQueryError type object
     */
 
+    //The json representing object resides in 'data' property of FetchBaseQueryError type object
     if (typeof queryError.data === 'object' && queryError.data !== null &&
       'errors' in queryError.data && typeof queryError.data.errors === 'object' && queryError.data.errors !== null) {
 
-      //resulting object which will be returned by function where key is object's that was sent to backend field's key and value is
-      //error message for that field in string format. Laravel sends json where for each field an array of error messages are returned
-      //they are all joined as single string; runtime type analysis is done
-      const errMessages: {[index:string]: string} = {};
+      //transform response errors object. Originally error information for each field is in form of an array of string values (array of
+      //error messages for each field), all array items will be joined into single string
+      const flatErrorsObject: {[index:string]: string} = {};
       
-      const errorsObj:{[index:string]: any} = queryError.data.errors;
-      for(let fieldTitle in errorsObj) {
-        let fieldsErrMessage:string;
+      const responseErrorsIndexedObj: {[index:string]: unknown} = {...queryError.data.errors};
+      for(const fieldTitle in responseErrorsIndexedObj) {
+        let transformedErrMessage:string;
         
-        if(Array.isArray(errorsObj[fieldTitle])){
-          fieldsErrMessage = errorsObj[fieldTitle].join(',');
+        if(Array.isArray(responseErrorsIndexedObj[fieldTitle])){
+          transformedErrMessage = responseErrorsIndexedObj[fieldTitle].join(',');
         }else{
-          //error messages for field should be in array format, but assume case that is might be of other type
-          fieldsErrMessage = JSON.stringify(errorsObj[fieldTitle]);
+          //error messages for field should be in array format, but assume there may be returned other format, just convert it to string
+          transformedErrMessage = JSON.stringify(responseErrorsIndexedObj[fieldTitle]);
         }
 
-        errMessages[fieldTitle] = fieldsErrMessage
+        flatErrorsObject[fieldTitle] = transformedErrMessage
       }
 
-      return errMessages;
+      return flatErrorsObject;
 
 
     } else {
@@ -248,7 +247,7 @@ export function findNonEmptyErrorFromList(...errors: [FetchBaseErrorTypes, Fetch
 
 /**
  * Returns object of type which is specified in funtion's generic argument assigning to returned object's properties values taken from
- * submitted data object. Intended for converting submitted data received from form builder to create object with certain type which will be
+ * submitted data object. Intended for converting submitted data received from form builder to object with certain type which will be
  * passed as argument to RTK Query endpoint.
  * 
  * Function copies property values from submitted data object whos type are either string or boolean to a target object which properties may
@@ -258,8 +257,8 @@ export function findNonEmptyErrorFromList(...errors: [FetchBaseErrorTypes, Fetch
  * in runtime about type of function returned object's each property.
  * 
  * @param formData - submitted data which is key value object, value types are either string or boolean
- * @param targetObjTemplate - object conforming to function's return type. The property values do not matter as they will be overwritten
- * by data from submitted data object.
+ * @param targetObjTemplate - object conforming to function's return type. The actual property values do not matter as they will be
+ * overwritten by data from submitted data object the runtime type matters as it.
  * 
  * @returns object of type is specified in function type generic argument filled with values from submitted data argument
  * 
@@ -268,17 +267,17 @@ export function findNonEmptyErrorFromList(...errors: [FetchBaseErrorTypes, Fetch
  * boolean false or number zero value to be noticed on time that possibly a field is missing in web form that must be present in object
  * sent to backend
  */
-export function createTargetObjFromSubmittedData<T extends object>(formData: SubmittedFormData, targetObjTemplate: T): T {
+export function createTargetObjFromSubmittedData<T extends { [key: string]: unknown }>(formData: SubmittedFormData, targetObjTemplate: T): T {
 
   //the targetObjTemplate can be accessed as literal object (like obj.propName) not using indexed syntacs as it 'extends object'.
   //Create copy of targetObjTemplate which is of indexed type because indexed object access syntacs will be used in loop to assign
   //one property by one
-  let targetObjCopy: { [key: string]: any } = { ...targetObjTemplate }
+  const targetObjCopy: { [key: string]: unknown } = { ...targetObjTemplate }
 
   for (const [blueprintObjKey, blueprintObjFieldVal] of Object.entries(targetObjCopy)) {
 
     //get value from submitted data and assign to target object converting it to target object's runtime type
-    let formFieldVal = formData[blueprintObjKey]
+    const formFieldVal = formData[blueprintObjKey]
     if(formFieldVal === undefined){
       throw new Error(`field name "${blueprintObjKey}" was not found in submitted form data, possibly not present in form`);
 

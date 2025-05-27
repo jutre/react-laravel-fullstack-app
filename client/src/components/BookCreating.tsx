@@ -32,7 +32,7 @@ export function BookCreating() {
     error,
     isLoading }] = useAddBookMutation()
 
-  let formDisabled = isLoading === true;
+  const formDisabled = isLoading === true;
 
   //two types of error can be returned from endpoint. One type results in error where a string error message can be obtained like 
   //"500 Internal Server Error". Other type is validation error which contains error related to field, error extractor function returns it
@@ -52,17 +52,17 @@ export function BookCreating() {
 
   async function saveSubmittedData(submittedFormData: SubmittedFormData) {
 
-    let templateNewBookObj: NewBook = {
+    const templateNewBookObj: NewBook = {
       title: "",
       author: "",
       preface: ""
     }
 
-    let newBokData: NewBook = createTargetObjFromSubmittedData<NewBook>(submittedFormData, templateNewBookObj)
+    const newBokData: NewBook = createTargetObjFromSubmittedData<NewBook>(submittedFormData, templateNewBookObj)
 
     //saving to state data from mutation response to display created book data after book successfully saved
     try {
-      let bookDataFromBookAddingResponse: Book = await triggerAddBookMutation(newBokData).unwrap();
+      const bookDataFromBookAddingResponse: Book = await triggerAddBookMutation(newBokData).unwrap();
 
       //Converting object returned from mutation which is of Book type to SubmittedFormData type as SubmittedFormData
       //is easy to access using indexed signature (objVar[keyVar]), but it is not possible to access Book type object values using index
@@ -81,6 +81,8 @@ export function BookCreating() {
       }
 
       setCreatedBook(createdBookData)
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       //not processing error here, it is assigned to variable in book creating mutation hook returned object
     }
@@ -104,8 +106,8 @@ export function BookCreating() {
     pageHeading = "Created book"
 
     //display screen with book infor that just has been created
-    let editUrl = routes.bookEditPath.replace(":bookId", String(createdBook.id))
-    let addBookButtonContent = <><span className="mr-[7px]">+</span>Add another book</>
+    const editUrl = routes.bookEditPath.replace(":bookId", String(createdBook.id))
+    const addBookButtonContent = <><span className="mr-[7px]">+</span>Add another book</>
 
     mainContent = (
       <>

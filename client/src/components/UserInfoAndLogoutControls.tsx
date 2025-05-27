@@ -33,7 +33,7 @@ export function UserInfoAndLogoutControls(){
   useEffect(() => {
     if(isLoading === true){
       //as soon a  
-      let timer = setTimeout(() => {
+      const timer = setTimeout(() => {
         setIsUserLoggingOut(true);
       }, 500);
 
@@ -53,7 +53,8 @@ export function UserInfoAndLogoutControls(){
       dispatchLogoutActions(dispatch)
       navigate(routes.bookListPath)
 
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
       //not processing error here, it is assigned to variable in userLogout mutation hook returned object
     }
       

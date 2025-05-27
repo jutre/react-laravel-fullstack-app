@@ -26,7 +26,7 @@ function SearchBar() {
   //in case of error returned from endpoint seach bar must be hidden. Therefore use {currentData} result variable as {currentData} will be 
   //undefined in error case which will be converted to empty array.
   //Disable cache usage using refetchOnMountOrArgChange option, fetch on every new search string also if same is typed again
-  let trimmedSearchString = searchTerm.trim()
+  const trimmedSearchString = searchTerm.trim()
   const { currentData: searchQueryResult,
       isFetching,
       error: queryError } = useGetFilteredBooksListQuery(trimmedSearchString.length < 3
@@ -35,10 +35,10 @@ function SearchBar() {
       {refetchOnMountOrArgChange: true});
 
   //extract book rows from result
-  let foundBooks = searchQueryResult ? searchQueryResult.data : []
+  const foundBooks = searchQueryResult ? searchQueryResult.data : []
 
   useEffect(() => {
-    let filterText = searchTerm.trim();
+    const filterText = searchTerm.trim();
 
     //hook runs when isFetching changes from true to false and false to true; the case when isFetching is false means books filter endpoint
     //was fetching and finished fetching, the {currentData} contains fetched result, set it to result state variable, show result bar.
@@ -90,7 +90,7 @@ function SearchBar() {
   const [searchResult, setSearchResult] = useState<Book[]>([]);
 
 
-  let bookListWithSearchResultUrl = routes.bookListPath + "?search=" + searchTerm;
+  const bookListWithSearchResultUrl = routes.bookListPath + "?search=" + searchTerm;
 
   //needed for detecting that user clicked outside of search bar div
   const beginningOfSearchBarRef = useRef(null);
@@ -164,7 +164,7 @@ function SearchBar() {
    */
 
   function handleSearchTermInputChange(event: React.ChangeEvent<HTMLInputElement>) {
-    let searchTermOriginal = event.target.value;
+    const searchTermOriginal = event.target.value;
     //original text goes to state (controller input in React)
     setSearchTerm(searchTermOriginal);
 
@@ -178,7 +178,7 @@ function SearchBar() {
     }
 
     //for performing searching use trimmed input string
-    let filterText = searchTermOriginal.trim();
+    const filterText = searchTermOriginal.trim();
 
     //search phrase length is less than three symbols - searching is not performed in such case.
     //If search results div is currently displayed, hide it, remove any results from results state 
@@ -284,7 +284,7 @@ function SearchBar() {
     navigate(bookListWithSearchResultUrl);
   }
 
-  let searchResultWrapperClasses = "absolute w-full mt-[-15px] pt-[15px] border border-[gray] bg-white rounded-b-[8px]";
+  const searchResultWrapperClasses = "absolute w-full mt-[-15px] pt-[15px] border border-[gray] bg-white rounded-b-[8px]";
 
 
   //items count displayed in result bar must not contain more than defined maximum items count. If there are more items in result then add
@@ -352,7 +352,7 @@ function SearchBar() {
             {searchResultArrForOutput.map((book) => {
               //display result list as book titles with link to their edit page.
               //replace bookId segment in book edit route pattern
-              let editUrl = routes.bookEditPath.replace(":bookId", String(book.id));
+              const editUrl = routes.bookEditPath.replace(":bookId", String(book.id));
               return (
                 <div key={book.id}
                   className="relative before:block before:absolute before:left-1/2 before:translate-x-[-50%] before:top-0 

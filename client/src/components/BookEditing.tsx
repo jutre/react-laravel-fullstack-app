@@ -8,13 +8,14 @@ import { useGetBookQuery, useUpdateBookMutation } from "../features/api/apiSlice
 import { skipToken } from '@reduxjs/toolkit/query/react'
 import {
   routes,
-  bookEditFormFieldsDef } from "../config";
+  bookEditFormFieldsDef,
+  customCheckboxCheckmarkClasses,
+  chekboxInputClasses } from "../config";
 import { H1Heading } from "./ui_elements/H1Heading";
 import { ButtonWithIconAndBackground } from "./ui_elements/ButtonWithIconAndBackground";
 import { DataFetchingStatusLabel } from "./ui_elements/DataFetchingStatusLabel";
 import { GeneralErrorMessage } from "./ui_elements/GeneralErrorMessage";
 import { NavLinkBack } from "./ui_elements/NavLinkBack";
-import { customCheckboxCheckmarkClasses, chekboxInputClasses } from '../config';
 import { FormBuilder, SubmittedFormData } from '../utils/FormBuilder';
 import DisappearingMessage from './DisappearingMessage';
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
@@ -41,7 +42,7 @@ export function BookEditing() {
    */
   async function saveSubmittedData(submittedFormData: SubmittedFormData) {
 
-    let templateBookObj: Book = {
+    const templateBookObj: Book = {
       id: 0,
       title: "",
       author: "",
@@ -49,13 +50,15 @@ export function BookEditing() {
       added_to_favorites: false
     }
 
-    let submittedBookData: Book = createTargetObjFromSubmittedData<Book>(submittedFormData, templateBookObj)
+    const submittedBookData: Book = createTargetObjFromSubmittedData<Book>(submittedFormData, templateBookObj)
 
     //saving to state data from mutation response to be snown in form
     try {
-      let bookDataFromUpdateResponse = await triggerBookUpdateMutation(submittedBookData).unwrap();
+      const bookDataFromUpdateResponse = await triggerBookUpdateMutation(submittedBookData).unwrap();
       setFormInitialData(bookDataFromUpdateResponse)
-    } catch (error) {
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
       //not processing error here, it is assigned to variable in book update mutation hook returned object
     }
   }
@@ -88,7 +91,7 @@ export function BookEditing() {
 
   //renaming and assigning default value which makes value always to be string type which correctly fits to be used as argument in
   //functions where undefined values are invalid
-  let { bookId: bookIdUrlPathParam = "" } = useParams();
+  const { bookId: bookIdUrlPathParam = "" } = useParams();
 
   let bookIdParamFormatErrorMsg: string | null = null;
 
@@ -126,9 +129,9 @@ export function BookEditing() {
 
   const [displaySuccessMsg] = useTrackEndpointSuccessfulFinishing(isUpdatingBook, bookUpdatingError);
 
-  let formDisabled = isUpdatingBook === true;
+  const formDisabled = isUpdatingBook === true;
 
-  let parentListUrl = getQueryParamValue("parentListUrl");
+  const parentListUrl = getQueryParamValue("parentListUrl");
 
   //link url for returning to list must point to list user came from to current edit page (all books list or 
   //favorites list), same is with redirecting after deleting a book from edit screen

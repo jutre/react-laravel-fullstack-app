@@ -19,7 +19,7 @@ type ButtonWithIconAndBackgroundProps = {
   iconName: IconNameValues
   clickHandler?: () => void,
   buttonDisabled?: boolean,
-  buttonTypeAttrValue?: 'button' | 'submit' | 'reset'
+  buttonTypeAttrValue?: 'button' | 'submit'
 }
 export function ButtonWithIconAndBackground({iconName,
   clickHandler,

@@ -55,8 +55,8 @@ function BooksListParamProcessor({ listMode }: BooksListModeParams) {
   //
   //process book deletion get parameter in url 
   //
-  let deletableBooksIdsArr: number[] = [];
-  let deleteBookIdParamVal = getQueryParamValue("deleteId");
+  const deletableBooksIdsArr: number[] = [];
+  const deleteBookIdParamVal = getQueryParamValue("deleteId");
   //used for showing error messages
   let errorMessage;
   let displayDeletionConfirmationDialog = false;
@@ -66,7 +66,7 @@ function BooksListParamProcessor({ listMode }: BooksListModeParams) {
   //current search string)
   let currentBookListUrl = getBookListBaseUrl(listMode);
   if (searchStringParamVal) {
-    let searchGetParam = "?search=" + searchStringParamVal;
+    const searchGetParam = "?search=" + searchStringParamVal;
     currentBookListUrl += searchGetParam
   }
 
@@ -82,7 +82,7 @@ function BooksListParamProcessor({ listMode }: BooksListModeParams) {
       displayDeletionConfirmationDialog = true;
 
       //deleteId parameter consists only of positive integers according to regexpr test, create array of integers from string 
-      let bookIdsStrValues = deleteBookIdParamVal.split(",");
+      const bookIdsStrValues = deleteBookIdParamVal.split(",");
       bookIdsStrValues.forEach((bookIdStrVal) => {
         deletableBooksIdsArr.push(parseInt(bookIdStrVal));
       })

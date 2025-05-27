@@ -15,9 +15,9 @@ export function BooksList({ listMode }: BooksListModeParams) {
   
   const navigate = useNavigate();
 
-  let addBookButtonContent = <><span className="mr-[7px]">+</span>Add book</>
+  const addBookButtonContent = <><span className="mr-[7px]">+</span>Add book</>
 
-  let redirectToBookCreatingPage = () => {navigate(routes.createBookPath)}
+  const redirectToBookCreatingPage = () => {navigate(routes.createBookPath)}
 
   return  (
     <div className="relative">

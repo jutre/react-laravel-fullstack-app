@@ -23,7 +23,7 @@ interface BooksState {
   bookDeletingEndpointLoadingStatus: "idle" | "pending"
 }
 
-let initialState: BooksState = {
+const initialState: BooksState = {
   searchString: null,
   booksSelectedInList: {},
   bookDeletingEndpointLoadingStatus: "idle"
@@ -45,7 +45,7 @@ const booksSlice = createSlice({
     //In case of selecting all books from displayed list, action.payload array must contain all displayed books array - it is
     //available in parent component containing batch selection control bar
     bookCollectionAddedToSelection(state, action: PayloadAction<Book[]>) {
-      let bookArr = action.payload;
+      const bookArr = action.payload;
       bookArr.forEach((bookId) => {
         state.booksSelectedInList[bookId.id] = true;
       })
@@ -55,7 +55,7 @@ const booksSlice = createSlice({
     //removes a single book from current selection. action.payload value must be book object which should be removed from currently
     //selected books. Single book removing use case is when user chooses to remove checkmark in checkbox for a book in book list
     singleBookRemovedFromSelection(state, action: PayloadAction<Book>) {
-      let book = action.payload;
+      const book = action.payload;
       delete state.booksSelectedInList[book.id];
     },
 
@@ -73,7 +73,7 @@ const booksSlice = createSlice({
     //reducer is dispatched from RTK Query endpoint, payload is array of books 'id' attribute. Each key in state.booksSelectedInList object
     //conforms to book id
     booksCollectionRemovedFromSelection(state, action: PayloadAction<number[]>) {
-      let bookIdsArr = action.payload;
+      const bookIdsArr = action.payload;
       bookIdsArr.forEach((bookId) => {
         if (state.booksSelectedInList[bookId] === true) {
           delete state.booksSelectedInList[bookId];
@@ -138,8 +138,8 @@ export const selectSearchString = (state: RootState) => state.booksState.searchS
  * @returns boolean
  */
 export const selectIsAnyBookSelected = (state: RootState) => {
-  let selectedBookObj = state.booksState.booksSelectedInList;
-  var selectedBooksCount = Object.keys(selectedBookObj).length;
+  const selectedBookObj = state.booksState.booksSelectedInList;
+  const selectedBooksCount = Object.keys(selectedBookObj).length;
   return selectedBooksCount > 0
 }
 

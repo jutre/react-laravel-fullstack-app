@@ -26,7 +26,7 @@ function DisappearingMessage({messageText, initialDisplayDuration=700}: Disappea
 
   useEffect(() => {
     //after speficified timeout elapses add another html class which would create transitions for message hiding  
-    let timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       setHidden(true);
     }, initialDisplayDuration);
 

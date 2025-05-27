@@ -104,14 +104,17 @@ export function ModalDialog({ content, confirmFunction, cancelFunction }: ModalD
             This solution is better than if "Confirm" option button would be focused when modal is displayed because outline style 
             is default and would not pay users attention as good as if focus outline appears on "Confirm" button after user presses 
             TAB key after modal appears */}
-            <button style={{opacity:0, position:"absolute"}} 
-                    ref={initialFocusElement}></button>
+            <button style={{ opacity: 0, position: "absolute" }}
+              ref={initialFocusElement}
+              type='button'></button>
 
             <div className='options'>
-              <button className='button_confirm' 
-                      onClick={ _confirm}>Yes</button>
-              <button className='button_cancel' 
-                      onClick={_cancel}>No</button>
+              <button className='button_confirm'
+                onClick={_confirm}
+                type='button'>Yes</button>
+              <button className='button_cancel'
+                onClick={_cancel}
+                type='button'>No</button>
             </div>
           </div>
         </div>

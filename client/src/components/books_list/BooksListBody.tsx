@@ -85,10 +85,10 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
 
 
   //book deleting endpoint is invoked in other component, getting it's execution status
-  let bookDeletingEndpointLoadingStatus = useAppSelector(state => selectBookDeletingEndpointLoadingStatus(state));
+  const bookDeletingEndpointLoadingStatus = useAppSelector(state => selectBookDeletingEndpointLoadingStatus(state));
 
   //create url for returning to unfiltered list link that will be shown when search string is filtered by search string
-  let allBooksListUrl = routes.bookListPath;
+  const allBooksListUrl = routes.bookListPath;
 
   //current search string is obtained from state (is being set to state in BooksListParamsProcessor). Convert null value to empty string
   //to be able to conveniently call string functions (length, trim()) and to build condition that satisfies Typescript when passing to 
@@ -189,7 +189,7 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
 
   //capture error from any endpoint in variable for later output
   let errorMsgFromAnyEndpoint: string | undefined;
-  let currentErrorFromEndpoint = findNonEmptyErrorFromList(booksListQueryError, 
+  const currentErrorFromEndpoint = findNonEmptyErrorFromList(booksListQueryError,
     booksFilteringQueryError,
     favoriteBooksIdentifiersQueryError,
     favoriteBooksQueryError,
@@ -216,7 +216,7 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
 
   //capture fetching progress  while all books or filtered books list or favorite books list are being fetched, adding/removing from
   //favorites mutations are executed
-  let currentlyFetching = isFetchingBooksList || isFetchingBooksFiltering || isFetchingFavoriteBooksIdentifiers || isFetchingFavoriteBooks
+  const currentlyFetching = isFetchingBooksList || isFetchingBooksFiltering || isFetchingFavoriteBooksIdentifiers || isFetchingFavoriteBooks
     || isAddingToFavorites || isRemovingFromFavorites
 
   //one of conditions to create message about empty all books, filtered, favorites books list or found books count is absence of
@@ -251,7 +251,7 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
 
   //while some action is pending (adding to favorites, deleting, loading list after deleting, adding/removing from favorites)
   //all buttons next to each book (editing, deleting, adding/removing from favorites) must be disabled
-  let disableListButtons = currentlyFetching || bookDeletingEndpointLoadingStatus === STATUS_PENDING
+  const disableListButtons = currentlyFetching || bookDeletingEndpointLoadingStatus === STATUS_PENDING
 
   return (
     <>
@@ -288,9 +288,9 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
         {//if books array is empty and no searching is done (it might be the case nothing is found), offer adding some books 
           (showEmptyListMessage) &&
           <p><strong>Books list is empty.</strong> <br/><br/>
-           Books can be added manually using form on <Link to={routes.createBookPath}>"Add book"</Link> page
-           or created automatically on <Link to={routes.demoDataResetPath}>"Demo data reset"</Link> page. "Demo data reset" page lets create
-           demo data with ten book records.
+           Books can be added manually using form on <Link to={routes.createBookPath}>&quot;Add book&quot;</Link> page or created 
+           automatically on <Link to={routes.demoDataResetPath}>&quot;Demo data reset&quot;</Link> page. 
+           &quot;Demo data reset&quot; page lets create demo data with ten book records.
           </p>
         }
 

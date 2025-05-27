@@ -16,7 +16,7 @@ type SquareButtonProps = {
  */
 export function SquareButton({buttonContent, clickHandler, additionalTwcssClasses, disabled}: SquareButtonProps) {
   //add optional click handler using JS object that contains "onClick" property only in case if clickHandler prop is not empty
-  let clickHandlerAttributeContainer: {onClick?: () => void} = {}
+  const clickHandlerAttributeContainer: {onClick?: () => void} = {}
   if (clickHandler) {
     clickHandlerAttributeContainer["onClick"] = clickHandler
   }

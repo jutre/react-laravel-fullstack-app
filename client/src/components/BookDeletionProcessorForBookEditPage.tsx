@@ -56,7 +56,7 @@ export function BookDeletionProcessorForBookEditPage({
   const [isDeletionConfirmed, setIsDeletionConfirmed] = useState(false);
 
 
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [triggerDeleteBookMutation, {
     error: bookDeletingError,
@@ -77,10 +77,10 @@ export function BookDeletionProcessorForBookEditPage({
   //again while error message is displayed. The click on Delete button redirects page to original deletion URL without "error" query
   //parameter which causes current component to re-render, the "error" parameter value change is detected by other userEffect hook and
   //deletion component state is reset to display confirmation dialog. If there is no other way to force
-  let { pathname, search: queryParamsString } = useLocation();
+  const { pathname, search: queryParamsString } = useLocation();
   useEffect(() => {
     if (bookDeletingError !== undefined) {
-      let pageUrlOnDeletionError = pathname + queryParamsString + '&error=true'
+      const pageUrlOnDeletionError = pathname + queryParamsString + '&error=true'
       navigate(pageUrlOnDeletionError)
     }
   }, [bookDeletingError]);
@@ -88,7 +88,7 @@ export function BookDeletionProcessorForBookEditPage({
   //detect "error=true" query parameter removal from page URL and reset isDeletionConfirmed state variable to force displaying confirmation
   //dialog again. Parameter value change to null value from non-null means user clicked on Delete button in book edit component attempting
   //to delete once more while error message from previous deletion was displayed
-  let errorQueryParameter = getQueryParamValue('error')
+  const errorQueryParameter = getQueryParamValue('error')
   useEffect(() => {
     if (errorQueryParameter === null && isDeletionConfirmed === true) {
       setIsDeletionConfirmed(false)
@@ -98,7 +98,7 @@ export function BookDeletionProcessorForBookEditPage({
 
   //if user has not clicked "Confirm" or "Cancel" option yet display confirmation modal dialog
   if (isDeletionConfirmed === false) {
-    let modalDialogMessage = `Are you sure you want to delete "${deletableBook.title}"?`
+    const modalDialogMessage = `Are you sure you want to delete "${deletableBook.title}"?`
 
     return <ModalDialog content={modalDialogMessage}
       confirmFunction={() => deleteBook(deletableBook)}
@@ -109,7 +109,7 @@ export function BookDeletionProcessorForBookEditPage({
     //or no markup if deleted successfully. 
   } else {
     if (bookDeletingError) {
-      let errorMessage = extractMessageFromQueryErrorObj(bookDeletingError)
+      const errorMessage = extractMessageFromQueryErrorObj(bookDeletingError)
       return <GeneralErrorMessage msgText={errorMessage} />
 
     } else if (isDeletingBook) {

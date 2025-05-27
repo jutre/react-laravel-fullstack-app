@@ -34,14 +34,14 @@ export function DemoDataReset() {
   //detect "success=true" query parameter removal from page URL and reset useResetDemoDataMutation state variable to remove success message.
   //Parameter value change to null value from non-null means user clicked "Demo data reset" menu item after previous successfull data
   //deleting, message neededs to removed 
-  let successQueryParameter = getQueryParamValue('success')
+  const successQueryParameter = getQueryParamValue('success')
   useEffect(() => {
     if (successQueryParameter === null && isSuccess) {
       reset()
     }
   }, [successQueryParameter]);
 
-  let buttonDisabled = isLoading === true;
+  const buttonDisabled = isLoading === true;
 
   //two types of error can be returned from endpoint. One type results in error where a string error message can be obtained like 
   //"500 Internal Server Error". Other type is validation error which contains error related to field, error extractor function returns it
@@ -58,6 +58,8 @@ export function DemoDataReset() {
     //saving to state data from mutation response to display created book data after book successfully saved
     try {
       await triggerResetDemoDataMutation().unwrap();
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       //not processing error here, it is assigned to variable in mutation hook returned object
     }
@@ -81,7 +83,7 @@ export function DemoDataReset() {
       <div>
         <div className="mb-[15px]">
           <p>
-            After "Reset demo data" is clicked the books data that is shown in books list will be reset to initial state.
+            After &quot;Reset demo data&quot; is clicked the books data that is shown in books list will be reset to initial state.
             There will be ten books displayed in books list.
           </p>
         </div>

@@ -36,7 +36,7 @@ export function BookListItem({book, editUrl, deleteUrl, addToFavoritesQueryTrigg
    * @param {change event object} event 
    */
   function handleBookSelectionForDeleting(event: React.ChangeEvent<HTMLInputElement>){
-    let isCheckboxChecked = event.target.checked;
+    const isCheckboxChecked = event.target.checked;
     if(isCheckboxChecked){
       //a general function for adding a collection of books is used to add single book to selection, action.payload value must be 
       //an array consisting of single element which value is book.id 

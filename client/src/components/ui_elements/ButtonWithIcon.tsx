@@ -1,10 +1,15 @@
+/*
+ buttonTypeAttrValue two possible values 'button' and 'submit' in type are enough for all use cases and makes possible <button> tag 
+ implementantation to comply with ESLint rule "react/button-has-type - The button type attribute must be specified by a static string or a
+ trivial ternary expression"
+*/
 type ButtonWithIconProps = {
-  clickHandler?: () => void,
   beforeElemMaskImgUrlTwCssClass: string,
   beforeElemMaskSizeTwCssClass: string,
   beforeElemBackgndColorTwCssClass?: string,
   otherClasses: string,
-  buttonTypeAttrValue?: 'button' | 'submit' | 'reset'
+  buttonTypeAttrValue?: 'button' | 'submit',
+  clickHandler?: () => void,
 }
 
 /**
@@ -12,27 +17,28 @@ type ButtonWithIconProps = {
  * an icon in the center of a button. Is is achieved by creating ::before css pseudo element and placing it on the top of 
  * button element and placing svg image in the center using mask-* properties common of them are specified in component. When using
  * this component it is neccesary to pass additional Tailwind css classes using component properties which specify additional
- * css properties for ::before element: 
- * - svg file url (like beforeElemMaskImgUrlTwCssClass = "before:[mask-image:url(assets/svg_file.svg)]" )
- * - svg image size (like beforeElemMaskSizeTwCssClass = "before:[mask-size:20px]" )
- * - background color for svg element (like beforeElemBackgndColorTwCssClass = "before:bg-white" )
- * - any other needed Tailwind css classes which would add styling to <button> element itself or to ::before pseudo element,
- * like otherClasses = "bg-white hover:bg-red before:bg-[gray] before:hover:bg-[blue]" /> 
+ * css properties for ::before element.
  * 
- * Other attributes are:
- * - click hander for button click event; if it's value is empty then function that does not perform anything is added as click handler.
- *  Intended for case when submit type button is required to be created, click handler is not usually needed in such case.
- * - value for specifying html <button> type attribute, if it's value is empty then attribute value is "button". Intended for case when
- * a submit type button is required to be created
+ * @param beforeElemMaskImgUrlTwCssClass - svg file url 
+ * (like beforeElemMaskImgUrlTwCssClass = "before:[mask-image:url(assets/svg_file.svg)]")
+ * @param beforeElemMaskSizeTwCssClass - svg image size like beforeElemMaskSizeTwCssClass = "before:[mask-size:20px]"
+ * @param beforeElemBackgndColorTwCssClass - background color for svg element like beforeElemBackgndColorTwCssClass = "before:bg-white"
+ * @param otherClasses - any other needed Tailwind css classes which would add styling to <button> element itself or to ::before pseudo
+ * element, like otherClasses = "bg-white hover:bg-red before:bg-[gray] before:hover:bg-[blue]" />
+ * @param buttonTypeAttrValue - lets set <button> type attribute to 'button' or 'submit. Parameter values can be whether 'button' or
+ * 'submit', defaults to 'button' if property value is not provided. Two allowed values are enough for all use cases and makes possible
+ * <button> tag implementantation to comply with ESLint rule "react/button-has-type - The button type attribute must be specified by a
+ * static string or a trivial ternary expression"
+ * @param clickHandler - optional click handler for <button>
  * 
  */
 export function ButtonWithIcon({
-  clickHandler,
   beforeElemMaskImgUrlTwCssClass,
   beforeElemMaskSizeTwCssClass,
   beforeElemBackgndColorTwCssClass,
   otherClasses,
-  buttonTypeAttrValue
+  buttonTypeAttrValue,
+  clickHandler
 }: ButtonWithIconProps) {
 
   let buttonTwCssClasses =
@@ -60,7 +66,7 @@ export function ButtonWithIcon({
   //attached, also there may be situations when click handler is not attached (click event might be attached to parent element of
   //button). Therefore add click handler to button only when it is not empty, it is achieved using JS object that contains "onClick"
   //property only in case if handler is not empty
-  let clickHandlerAttributeContainer: {onClick?:  () => void} = {}
+  const clickHandlerAttributeContainer: {onClick?:  () => void} = {}
   if (clickHandler) {
     clickHandlerAttributeContainer["onClick"] = clickHandler
   }
@@ -70,7 +76,7 @@ export function ButtonWithIcon({
   }
 
   return (
-    <button type={buttonTypeAttrValue}
+    <button type={(buttonTypeAttrValue === 'submit') ? 'submit' : "button"}
       className={buttonTwCssClasses}
       {...clickHandlerAttributeContainer}></button>
   )

@@ -1,11 +1,11 @@
-import { configureStore, combineReducers, UnknownAction } from '@reduxjs/toolkit'
+import { configureStore,
+    combineReducers,
+    UnknownAction } from '@reduxjs/toolkit'
 import booksReducer from '../features/booksSlice';
-import authReducer from '../features/authSlice';
+import authReducer, { userLoggedOut, unauthenticatedResponseListener } from '../features/authSlice';
 import { apiSlice } from '../features/api/apiSlice'
-import { userLoggedOut } from '../features/authSlice';
 
 
-import { unauthenticatedResponseListener } from '../features/authSlice';
 
 const combinedReducer = combineReducers({
         authState: authReducer,

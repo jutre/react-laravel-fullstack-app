@@ -1,11 +1,10 @@
 import { apiSlice } from "./api/apiSlice";
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { SerializedError } from '@reduxjs/toolkit';
+import { SerializedError , createAsyncThunk, isRejectedWithValue, Middleware, MiddlewareAPI  } from '@reduxjs/toolkit';
 
 import { User, UserCredentials } from '../types/User';
 import { AppDispatch, RootState } from "../store/store";
 import { createAppSlice } from '../store/createAppSlice'
-import { createAsyncThunk, isRejectedWithValue, Middleware, MiddlewareAPI  } from '@reduxjs/toolkit';
 import { extractMessageFromQueryErrorObj } from "../utils/utils";
 import { STATUS_IDLE,
   STATUS_PENDING,
@@ -25,7 +24,7 @@ interface AuthState {
   sendingLoginCredentialsError?: string,
 }
 
-let initialState: AuthState = {
+const initialState: AuthState = {
   user: undefined,
   userFetchingStatus: STATUS_IDLE,
   sendingLoginCredentialsStatus: STATUS_IDLE,
@@ -40,7 +39,7 @@ export const initiateSessionSendLoginCredentials = createAsyncThunk(
         //disabled cache forcing making request to server in case user tries to login again after possible previous unsuccessful login
         await thunkApi.dispatch(apiSlice.endpoints.getCsrfCookie.initiate(undefined, { forceRefetch: true })).unwrap()
         //after previous request succeeds, the CSRF cookie is obtained for sending with login credentials
-        let loggedInUserData = await thunkApi.dispatch(apiSlice.endpoints.sendLoginCredentials.initiate(loginCredentils)).unwrap()
+        const loggedInUserData = await thunkApi.dispatch(apiSlice.endpoints.sendLoginCredentials.initiate(loginCredentils)).unwrap()
         return loggedInUserData;
 
       } catch (error) {
@@ -166,11 +165,13 @@ export const selectSendLoginRequestError = (state: RootState) => state.authState
  * When session on Laravel backend expires, it sends "HTTP 401 unauthorized" code in response to reading HTTP methods (GET) and "419 unknown
  * status" response code in response to modifying methods (POST, PUT, DELETE). 
  */
-export const unauthenticatedResponseListener: Middleware = (api: MiddlewareAPI) => (next) => (action: any) => {
+export const unauthenticatedResponseListener: Middleware = (api: MiddlewareAPI) => (next) => (action) => {
   
-  if (isRejectedWithValue(action)) {
-    //HTTP status code resides in action's payload object's 'status' property,
-    let payloadStatus: any = action?.payload?.status
+  //look for thunk action's 'status' property in case this is rejected action with value; value contain HTTP status code
+  if (isRejectedWithValue(action) && typeof action.payload  === 'object' && action.payload !== null && 'status' in action.payload) {
+    
+    //HTTP status code resides in action's payload object's 'status' property
+    const payloadStatus: unknown = action.payload.status
     
     if (payloadStatus === 401 || payloadStatus === 419) {
       //if user is logged in, dispatch action that will clear user data. 

@@ -79,7 +79,7 @@ export function LoginForm() {
 
 
   //disable form while request pending
-  let formDisabled = sendLoginRequestStatus === STATUS_PENDING ? true : false;
+  const formDisabled = sendLoginRequestStatus === STATUS_PENDING ? true : false;
 
   let submitButtonText = "Login"
   if(sendLoginRequestStatus === STATUS_PENDING){

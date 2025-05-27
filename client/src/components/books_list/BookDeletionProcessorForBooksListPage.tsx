@@ -71,7 +71,7 @@ export function BookDeletionProcessorForBooksListPage({
   const [isDeletionConfirmed, setIsDeletionConfirmed] = useState(false);
 
 
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [triggerDeleteBookMutation, {
     error: bookDeletingError,
@@ -92,10 +92,10 @@ export function BookDeletionProcessorForBooksListPage({
   //again while error message is displayed. The click on Delete button redirects page to original deletion URL without "error" query
   //parameter which causes current component to re-render, the "error" parameter value change is detected by other userEffect hook and
   //deletion component state is reset to display confirmation dialog. If there is no other way to force
-  let { pathname, search: queryParamsString } = useLocation();
+  const { pathname, search: queryParamsString } = useLocation();
   useEffect(() => {
     if (bookDeletingError !== undefined) {
-      let pageUrlOnDeletionError = pathname + queryParamsString + '&error=true'
+      const pageUrlOnDeletionError = pathname + queryParamsString + '&error=true'
       navigate(pageUrlOnDeletionError)
     }
   }, [bookDeletingError]);
@@ -103,15 +103,15 @@ export function BookDeletionProcessorForBooksListPage({
   //detect "error=true" query parameter removal from page URL and reset isDeletionConfirmed state variable to force displaying confirmation
   //dialog again. Parameter value change to null value from non-null means user clicked on Delete button in book edit component attempting
   //to delete once more while error message from previous deletion was displayed
-  let errorQueryParameter = getQueryParamValue('error')
+  const errorQueryParameter = getQueryParamValue('error')
   useEffect(() => {
     if (errorQueryParameter === null && isDeletionConfirmed === true) {
       setIsDeletionConfirmed(false)
     }
   }, [errorQueryParameter]);
 
-  let currentlyDisplayedList = getCurrentListMode(listMode, currentSearchString)
-  let executableEndpoint = getExecutableEndpoint(currentlyDisplayedList, currentSearchString)
+  const currentlyDisplayedList = getCurrentListMode(listMode, currentSearchString)
+  const executableEndpoint = getExecutableEndpoint(currentlyDisplayedList, currentSearchString)
   //current component depends on data (fetching status, returned data or error) fetched by getBooksList endpoint which is launched in books
   //list component. That data is accessed in this component using getBooksList.useQueryState. Not being descendant of books list component,
   //using useQueryState hook is the most convenient way to get getBooksList endpoint returned data and state
@@ -165,7 +165,7 @@ export function BookDeletionProcessorForBooksListPage({
       if(deletableBookInfo){
         messageAboutBooks = '"' + deletableBookInfo.title + '"';
       }else{
-        let errorMessage = `Book with id="${bookId}" not found`
+        const errorMessage = `Book with id="${bookId}" not found`
         return <GeneralErrorMessage msgText={errorMessage} />
       }
 
@@ -173,7 +173,7 @@ export function BookDeletionProcessorForBooksListPage({
     }else{
       messageAboutBooks = deletableBooksIds.length + ' books';
     }
-    let modalDialogMessage = `Are you sure you want to delete ${messageAboutBooks}?`
+    const modalDialogMessage = `Are you sure you want to delete ${messageAboutBooks}?`
 
     return <ModalDialog content={modalDialogMessage}
       confirmFunction={() => deleteBooks(deletableBooksIds)}
@@ -184,7 +184,7 @@ export function BookDeletionProcessorForBooksListPage({
     //or no markup if deleted successfully. 
   } else {
     if (bookDeletingError) {
-      let errorMessage = extractMessageFromQueryErrorObj(bookDeletingError)
+      const errorMessage = extractMessageFromQueryErrorObj(bookDeletingError)
       return <GeneralErrorMessage msgText={errorMessage} />
 
     } else if (isDeletingBook) {
