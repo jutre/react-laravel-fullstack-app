@@ -29,7 +29,7 @@ class BookController extends Controller
     }
 
     /**
-     * Store a submitted book.
+     * Create a new book record together with record in favorite books table if book is marked as added to favorites.
      */
     public function store(Request $request)
     {
@@ -51,9 +51,15 @@ class BookController extends Controller
         $book = new Book($request->all());
         $savedBookRecord = $user->books()->save($book);
 
-        //select created book's data using new query specifying needed columns used in response JSON. The save() method does not
-        //fit as it returns all fields from books table including created_at, update_at columns which are not needed
-        return Book::find($savedBookRecord->id, ['id', 'title', 'author', 'preface']);
+        $isAddedToFavoritesInForm = !empty($request->input('added_to_favorites'));
+        if ($isAddedToFavoritesInForm) {
+            $this->insertBookIntoFavoritesTable($savedBookRecord->id);
+        }
+
+        $bookAndFavoriteBooksTableRecord = $this->getBookTableRecordLeftJoinedWithFavoriteBooksTable($request, $savedBookRecord->id);
+
+        //return created book data in response as succesfull POST request response
+        return $this->convertJoinedFavoriteBooksColumnToAddedToFavoritesColumn($bookAndFavoriteBooksTableRecord); 
     }
 
     /**
@@ -66,8 +72,7 @@ class BookController extends Controller
     public function show(Request $request, int $id)
     {
         usleep(100000);
-        $bookAndFavoriteBooksTableRecord =
-            $this->getBookTableRecordLeftJoinedWithFavoriteBooksTable($request, $id, ['id', 'title', 'author', 'preface']);
+        $bookAndFavoriteBooksTableRecord = $this->getBookTableRecordLeftJoinedWithFavoriteBooksTable($request, $id);
 
         //if book is not found, return error
         if (empty($bookAndFavoriteBooksTableRecord)) {
@@ -85,7 +90,7 @@ class BookController extends Controller
         $request->validate($this->bookDataValidationRules);
         usleep(500000);
 
-        $bookAndFavoriteBooksTableRecord = $this->getBookTableRecordLeftJoinedWithFavoriteBooksTable($request, $id, ['books.title']);
+        $bookAndFavoriteBooksTableRecord = $this->getBookTableRecordLeftJoinedWithFavoriteBooksTable($request, $id);
 
         //if book is not found, return error
         if (empty($bookAndFavoriteBooksTableRecord)) {
@@ -106,21 +111,19 @@ class BookController extends Controller
         //query builer result object updates only table from 'select from' clause ('books') not joined table which will be updated further
         $bookAndFavoriteBooksTableRecord->update($request->all());
 
-        // add or remove record from 'favorite_books' table if state of data in table differs from form 'added_to_favorites' field state
+
         $isAddedToFavoritesInForm = !empty($request->input('added_to_favorites'));
-        //book is added to favorites in database if 'book_id' column from joined table is not null
+
+        //book is added to favorites in database if 'book_id' column from joined 'favorite_books' table is not null
         $isAddedToFavoritesInDatabase = !empty($bookAndFavoriteBooksTableRecord->book_id);
+
+        // add or remove record from 'favorite_books' table if data in table differs from'added_to_favorites' form  field state
         if ($isAddedToFavoritesInForm && !$isAddedToFavoritesInDatabase) {
-            DB::table('favorite_books')->insert([
-                'book_id' => $id
-            ]);
+            $this->insertBookIntoFavoritesTable($id);
 
         }else if (!$isAddedToFavoritesInForm && $isAddedToFavoritesInDatabase) {
-            DB::table('favorite_books')
-                ->where('book_id', '=', $id)
-                ->delete();
+            $this->deleteBookFromFavoritesTable($id);
         }
-
 
 
         //select updated book's data using new query specifying needed columns used in response JSON. The
@@ -128,8 +131,7 @@ class BookController extends Controller
         //update_at columns which are not needed.
         //books.user_id field is not added to where clause as current code is not reached if first query with 'user_id' field constraint did
         //not return book belonging to current user
-        $bookAndFavoriteBooksTableRecord =
-            $this->getBookTableRecordLeftJoinedWithFavoriteBooksTable($request, $id, ['id', 'title', 'author', 'preface']);
+        $bookAndFavoriteBooksTableRecord = $this->getBookTableRecordLeftJoinedWithFavoriteBooksTable($request, $id);
 
         //convert 'book_id' field in result object to 'added_to_favorites' field and add it to returned JSON and remove 'book_id' field from
         //result object to not be included in returned JSON and return
@@ -297,46 +299,50 @@ class BookController extends Controller
     }
 
     /**
-     * Adds a book specified by identifier to favorite book list.
+     * Adds a book specified by ID to user's favorite book list.
      *
      * @param \Illuminate\Http\Request $request $request
      * @param integer $id - value of 'book' table 'id' column specifying book identifier which must be added to favorite book list
+     * 
      * @return if book specified by id is successfully added to favorites list returns HTTP 204 response code (no content). If book is not
-     * found, returns json with error description with HTTP 404 response code (not found); if book is already added to favorites, returns
+     * found, returns json with error description and HTTP 404 response code (not found); if book is already added to favorites, returns
      * json with error description with HTTP 409 response code (conflict)
      */
     public function addBookToFavorites(Request $request, int $id)
     {
         usleep(100000);
 
-        //before adding to favorites, check 1)if book with such id exists in 'books' table (can not add to favorites a book that does not
-        //exist among user's books), 2) if book already is added to favorites (trying to add a book already added to favorites must be
-        //responded with error)
         $bookAndFavoriteBooksTableRecord = $this->getBookTableRecordLeftJoinedWithFavoriteBooksTable($request, $id);
 
-        //if query result is empty, book with suplied id is not found, return error
+        //book with suplied id is not found among user's books, return error
         if (empty($bookAndFavoriteBooksTableRecord)) {
             return $this->bookNotFoundErrorResponse($id);
         }
 
-        //if 'book_id' column (comes from 'favorite_books') from query result is not null book is adready added to favorites, return error
+        //'book_id' column from 'favorite_books' table is not null - book is adready added to favorites, return error
         if (!empty($bookAndFavoriteBooksTableRecord->book_id)) {
             $error = [
                 'message' => "Book with id $id is already added to favorites"
             ];
             return response()->json($error, 409);
-
-        //record in joined 'favorite_books' table doesn't exists, book is not added to favorites. Add it by inserting record into
-        //'favorite_books' table
-        }else{
-            DB::table('favorite_books')->insert([
-                'book_id' => $id
-            ]);
-            return response()->noContent();
         }
+
+        //record in joined 'favorite_books' table doesn't exist, inserting record into table
+        $this->insertBookIntoFavoritesTable($id);
+        return response()->noContent();
     }
 
 
+    /**
+     * Remove a book specified by ID from user's favorite book list.
+     *
+     * @param \Illuminate\Http\Request $request $request
+     * @param integer $id - value of 'book' table 'id' column specifying book identifier which must be removed from favorite books list
+     * 
+     * @return if book specified by id is successfully removed from favorites list returns HTTP 204 response code (no content). If book is
+     * not found, returns json with error description and HTTP 404 response code (not found); if book is not currently added to favorites,
+     * returns json with HTTP 404 response code (not found)
+     */
     public function removeBookFromFavorites(Request $request, int $id)
     {
         usleep(100000);
@@ -346,51 +352,75 @@ class BookController extends Controller
         //will be respond with error)
         $bookAndFavoriteBooksTableRecord = $this->getBookTableRecordLeftJoinedWithFavoriteBooksTable($request, $id);
 
-        //if query result is empty, book with suplied id is not found, return error
+        //if query result is empty, book with passed ID is not found among user's books, return error
         if (empty($bookAndFavoriteBooksTableRecord)) {
             return $this->bookNotFoundErrorResponse($id);
         }
 
-        //if 'book_id' column (comes from 'favorite_books') from query result is not null book is added to favorites, remove record from
-        //favorites table
-        if (!empty($bookAndFavoriteBooksTableRecord->book_id)) {
-            DB::table('favorite_books')
-                ->where('book_id', '=', $id)
-                ->delete();
-            return response()->noContent();
-
-        //record in joined 'favorite_books' table doesn't exists, book is not added to favorites, return 404 error
-        }else{
+        //'favorite_books.book_id' column is null, book is not added to favorites, return 404 error
+        if (empty($bookAndFavoriteBooksTableRecord->book_id)) {
             $error = [
                 'message' => "Book with id $id is is not added to favorites"
             ];
             return response()->json($error, 404);
         }
+        
+        $this->deleteBookFromFavoritesTable($id);
+
+        return response()->noContent();
+    }
+
+
+    /**
+     * Inserts record into 'favorite_books' table that references a record from 'books' table. Does not check a record existance of suplied
+     * bookId argument value.
+     * After insertion book is added to favorites list for a user. 'user_id' column is not present in 'favorite_books' table as user can
+     * add to favorites only books he has created himself
+     * 
+     * @param $bookId - 'books' table record primary key value
+     */
+    private function insertBookIntoFavoritesTable(int $bookId){
+        DB::table('favorite_books')->insert([
+            'book_id' => $bookId
+        ]);
+    }
+
+
+    /**
+     * Deletes record from 'favorite_books' table that references a record from 'books' table.
+     * 
+     * After delettion book is removed from favorites list for a user. 'user_id' column is not present in 'favorite_books' table as user can
+     * add to favorites only books he has created himself
+     * 
+     * @param $bookId - 'books' table record primary key value
+     */
+    private function deleteBookFromFavoritesTable(int $bookId){
+        DB::table('favorite_books')
+            ->where('book_id', '=', $bookId)
+            ->delete();
     }
 
     /**
-     * Returns object representing result of SQL query selecting from 'books' table left joined with 'favorite_books' table constraining
-     * 'books' table 'id' column to be equal to $bookId method parameter and to belong to currently logged in user.
+     * Returns object representing result of SQL query selecting from 'books' table left joined with 'favorite_books' table with added
+     * constraint on 'books.id' column to be equal to passed $bookId parameter and 'books.user_id' to be equal to currently logged in user.
      * Intended to be used to check if book is added to 'favorite_books' table before adding or removing book related record to
      * 'favorite_books' table, selecting single book with favorite books information
      *
      * @param \Illuminate\Http\Request $request $request
-     * @param integer $bookId - identifier of book that we are selecting info about ('books' table 'id' column value)
-     * @param array $additionalColumnsToReturn - additional columns to return in result object which are added to default returned
-     * 'books.id' and 'favorite_books.book_id', column names must passed using indexed array where element values are column names, the
-     * array structure is same as array passed to Eloquent query builder 'select()' method; additional columns may may come from 'books'
-     * table as the the only one existing column from 'favorite_books' table 'book_id' is already included
+     * @param integer $bookId - identifier of 'books' table record
+     * 
      * @return object - Eloquent query builder generated query result object. NULL value will be returned if record with primary key
-     * specified in $bookId param value does not exist in 'books' table among books belonging to currently logged in user. If book exists
-     * among user's books then object containing columns from 'books' and 'favorite_books' are returned. By default result object has two
-     * properties representing 'books.id' and 'favorite_books.book_id' columns, but may contain additional columns if specified in
-     * $additionalColumnsToReturn parameter. Result objects property 'book_id' which represents 'favorite_books.book_id' column will be NULL
-     * if record with specified $bookId is not added to 'favorite_books' table as 'favorite_books.book_id' is column from left joined table
+     * passed in $bookId param does not exist in 'books' table among books belonging to currently logged in user. If book exists
+     * returns object containing all displayable columns from 'books' table and 'favorite_books.book_id' column.
+     * Result objects 'book_id' property which represents 'favorite_books.book_id' column will not be NULL if book with passed $bookId is
+     * added to user's favorite books and will be NULL if book is not added to user's favorites list.
+     * Actually 'favorite_books' table would be a real many-to-many pivot table if user could also other users' books to favorites list but
+     * as application only gives access to user's own books 'favorite_books' does not contain 'user_id' column, just 'book_id' column.
+     * 
      */
-    private function getBookTableRecordLeftJoinedWithFavoriteBooksTable(Request $request, int $bookId, 
-        array $additionalColumnsToReturn = []){
+    private function getBookTableRecordLeftJoinedWithFavoriteBooksTable(Request $request, int $bookId){
 
-        $returnedColumns = [...$additionalColumnsToReturn, 'books.id', 'favorite_books.book_id'];
+        $returnedColumns = ['books.id', 'books.title', 'books.author', 'books.preface', 'favorite_books.book_id'];
 
         return $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->leftJoin('favorite_books', 'books.id', '=', 'favorite_books.book_id')
