@@ -20,7 +20,10 @@ import { extractMessageOrMessagesObjFromQueryError,
 
 export function BookCreating() {
 
-  const [createdBook, setCreatedBook] = useState<SubmittedFormData | null>(null);
+  //type for convenient outputing of created book data
+  type CreatedBookRepresentingObject = { [key: string]: string }
+
+  const [createdBook, setCreatedBook] = useState<CreatedBookRepresentingObject | null>(null);
 
   const navigate = useNavigate();
 
@@ -55,7 +58,8 @@ export function BookCreating() {
     const templateNewBookObj: NewBook = {
       title: "",
       author: "",
-      preface: ""
+      preface: "",
+      added_to_favorites: false
     }
 
     const newBokData: NewBook = createTargetObjFromSubmittedData<NewBook>(submittedFormData, templateNewBookObj)
@@ -64,20 +68,29 @@ export function BookCreating() {
     try {
       const bookDataFromBookAddingResponse: Book = await triggerAddBookMutation(newBokData).unwrap();
 
-      //Converting object returned from mutation which is of Book type to SubmittedFormData type as SubmittedFormData
-      //is easy to access using indexed signature (objVar[keyVar]), but it is not possible to access Book type object values using index
-      //access syntacs in TS in valid way without creating type guards which makes code more complex
-      const createdBookData: SubmittedFormData = {}
+      //Converting object returned from mutation which is of Book type to CreatedBookRepresentingObject type to be able to access created
+      //data using indexed signature when outputting created book data
+      const createdBookData: CreatedBookRepresentingObject = {}
 
       let createdBookObjKey: keyof Book;
       for(createdBookObjKey in bookDataFromBookAddingResponse) {
         let fieldValue = bookDataFromBookAddingResponse[createdBookObjKey];
-        //some fields in book form be empty, they are returned by API as as null, convert null to empty string to display submitted book
-        //screen same value as submitted by user
+
+        //some fields in book form can be empty strings, after submitting to backend they are returned by API as as null. 
+        //Convert null to empty string to display submitted book screen same value as submitted by user
         if(fieldValue === null){
           fieldValue = '';
+        
+        //convert boolean true/false to string 'yes'/'no'
+        }else if (typeof fieldValue === 'boolean') {
+          fieldValue = fieldValue === true ? 'yes' : 'no';
+
+        //string and number type values are converted to string type
+        }else{
+          fieldValue = String(fieldValue);
         }
-        createdBookData[createdBookObjKey] = String(fieldValue);
+
+        createdBookData[createdBookObjKey] = fieldValue
       }
 
       setCreatedBook(createdBookData)
@@ -105,6 +118,7 @@ export function BookCreating() {
   if (createdBook !== null) {
     pageHeading = "Created book"
 
+
     //display screen with book infor that just has been created
     const editUrl = routes.bookEditPath.replace(":bookId", String(createdBook.id))
     const addBookButtonContent = <><span className="mr-[7px]">+</span>Add another book</>
@@ -125,12 +139,12 @@ export function BookCreating() {
           <div className="mb-[15px]">
             {Object.entries(bookCreatingFormFieldsDef).map(([fieldName, fieldOtherInfo]) =>
               fieldName in createdBook
-              ?<div key={fieldName}
+              ? <div key={fieldName}
                   className="flex">
-                  <div className="grow-0 shrink-0 basis-[100px] pb-[15px] font-bold">{fieldOtherInfo.label}:</div>
-                  <div>{createdBook[fieldName]}</div>
+                  <div className="grow-0 shrink-0 basis-[110px] pb-[15px] font-bold capitalize">{fieldOtherInfo.label}:</div>
+                  <div className="flex items-center pb-[15px]">{createdBook[fieldName]}</div>
                 </div>
-              :null
+              : null
             )}
           </div>
 

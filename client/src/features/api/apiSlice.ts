@@ -132,8 +132,11 @@ export const apiSlice = createApi({
           body: newBook,
         }
       },
-      //refetch list to include also newly created book
-      invalidatesTags: [{ type: 'Book', id: 'LIST' }],
+      //refetch books list to include also newly created book and also favorite books ids list as book edit screen has a field for
+      //adding or removing book from Favorites list
+      invalidatesTags: 
+        [{ type: 'Book', id: 'LIST' }, 
+        { type: 'FavoriteBook', id: 'LIST' }],
     }),
 
 
@@ -144,8 +147,7 @@ export const apiSlice = createApi({
         body: updatedBook
       }),
       //on book update invalidate {'Book', id: <updatable bookId>} tag and {'FavoriteBook': 'LIST'} tag as book edit screen has a field for
-      //adding or removing book from Favorites list, so after book saving also reload whole favorite books ids list and favorite books list
-      //as book possibly might be added/remove from favorites
+      //adding or removing book from Favorites list, so after book saving also reload also favorite books ids list
       invalidatesTags: (result, error, arg) =>
         [{ type: 'Book', id: arg.id }, 
         { type: 'FavoriteBook', id: 'LIST' }]
