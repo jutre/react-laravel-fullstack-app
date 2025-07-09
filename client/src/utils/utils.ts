@@ -246,42 +246,54 @@ export function findNonEmptyErrorFromList(...errors: [FetchBaseErrorTypes, Fetch
 }
 
 /**
- * Returns object of type which is specified in funtion's generic argument assigning to returned object's properties values taken from
- * submitted data object. Intended for converting submitted data received from form builder to object with certain type which will be
- * passed as argument to RTK Query endpoint.
- * 
- * Function copies property values from submitted data object whos type are either string or boolean to a target object which properties may
- * be one of three primitive types: string, number or boolean, other types are not copied to object returned by function. Function return
- * type is specified in function type generic argument which allows use returned value type safely. Function accepts a template object as
- * it's second argument, it also must be of type specified in function type generic argument, this object acts as a source of information
- * in runtime about type of function returned object's each property.
- * 
- * @param formData - submitted data which is key value object, value types are either string or boolean
- * @param targetObjTemplate - object conforming to function's return type. The actual property values do not matter as they will be
- * overwritten by data from submitted data object the runtime type matters as it.
- * 
- * @returns object of type is specified in function type generic argument filled with values from submitted data argument
- * 
- * @throws error if property from target template object is not found in submitted data object which means logic error where form data
- * lacks a property with same name as property name in target object. Error is thrown instead of silently convering an 'undefined' value to
- * boolean false or number zero value to be noticed on time that possibly a field is missing in web form that must be present in object
- * sent to backend
+ * target object type is object with string type key and property value type string, number or boolean; null is included to accept objects
+ * who's property types can also be null alogn with mentioned primitive types as union type like 'string | null'
  */
-export function createTargetObjFromSubmittedData<T extends { [key: string]: unknown }>(formData: SubmittedFormData, targetObjTemplate: T): T {
+type TargetFlatObject = { [key: string]: string | number | boolean | null }
 
-  //the targetObjTemplate can be accessed as literal object (like obj.propName) not using indexed syntacs as it 'extends object'.
-  //Create copy of targetObjTemplate which is of indexed type because indexed object access syntacs will be used in loop to assign
-  //one property by one
+/**
+ * Creates object of specified type assigning values to it's properties obtained from submitted form data object equal named properties.
+ * Intended for converting submitted data received from form builder to object with certain type which will be passed as argument to RTK
+ * Query endpoint.
+ * 
+ * Function assigns property values to target object obtaining values from equal named properties of submitted data object. Target object
+ * properties runtime type is keeped same as they were when target object was passed as argument to function, that is runtime types 
+ * `string | boolean` from form data object is converted target object property's current type runtime `string | number | boolean`.
+ * Function returned object type is specified in function type generic argument which allows use returned value type predictably. Function
+ * accepts a template object as it's second argument which type must be same as function's return type, this object is used as a source of
+ * information about function's returned object's properties types by analysing template object's properties runtime type.
+ * 
+ * @param formData - form submitted data object which is key-value object, value types may be either string or boolean
+ * @param targetObjTemplate - object conforming to function's return type, conforms to funtion's generic type argument. The actual property
+ * values matters only from perspective of their runtime type, they will be overwritten by data from submitted data object converting data
+ * to runtime type of template object.
+ * 
+ * @returns object of type which is specified in function type generic argument filled with values from submitted form data argument
+ * 
+ * @throws error if property's value in template object is null and property is present in submitted data object because it is intended that
+ * target type of primitive `string | number | boolean` target runtime types the value from submitted data object should be
+ * converted to
+ */
+export function createTargetObjFromSubmittedData<T extends TargetFlatObject>(formData: SubmittedFormData, targetObjTemplate: T): T {
+
+  //create copy of blueprint object not modifying object passed as argument. TS does not allow copied object variable to have inferred type
+  //'T' from original object and to be simultaniously being modified later - "Type 'T' is generic and can only be indexed for reading",
+  //therefore copied object type properties have wider property type 'unknown'. It is all right as we will analyse actual runtime type of
+  //properties
   const targetObjCopy: { [key: string]: unknown } = { ...targetObjTemplate }
 
-  for (const [blueprintObjKey, blueprintObjFieldVal] of Object.entries(targetObjCopy)) {
+  for (const [blueprintObjKey, blueprintObjFieldVal] of Object.entries(targetObjTemplate)) {
 
-    //get value from submitted data and assign to target object converting it to target object's runtime type
+    
     const formFieldVal = formData[blueprintObjKey]
-    if(formFieldVal === undefined){
-      throw new Error(`field name "${blueprintObjKey}" was not found in submitted form data, possibly not present in form`);
 
+    //if form does not have field with blueprint object property name, skip and leave prop value in blueprint object as is, possibly it
+    //exists for other porpuses than carring value from form
+    if(formFieldVal === undefined){
+      continue;
     }
+
+    //assign value from submitted data to target object converting it to target object's runtime type
     if (typeof blueprintObjFieldVal === 'string') {
       targetObjCopy[blueprintObjKey] = String(formFieldVal)
 
@@ -290,6 +302,10 @@ export function createTargetObjFromSubmittedData<T extends { [key: string]: unkn
 
     } else if (typeof blueprintObjFieldVal === 'boolean') {
       targetObjCopy[blueprintObjKey] = Boolean(formFieldVal)
+
+    } else if (blueprintObjFieldVal === null) {
+      throw new Error(`blueprint object property with name "${blueprintObjKey}" value is null, must have value other than null to figure ` +
+        "out prop's target runtime type")
     }
   }
 
