@@ -20,7 +20,7 @@ import { PageNotFound } from "./PageNotFound";
 /**
  * returns markup that creates layout structure (three columns beginning with larget tablet devices, one column on smaller tablet devices,
  * phones) and outputs menu, header and content parts. If user is authenticated displays all sections, if user is not logged in the
- * menu, search bar in header is hidden, login form is snown in content section
+ * menu, search bar in header is hidden, login form is shown in content section
  * @returns
  */
 const Layout = () => {
@@ -30,37 +30,42 @@ const Layout = () => {
 
   let content: React.ReactNode;
 
-  //acquiring user info to find out whether a logged in user session exists
+  //waiting response of initial request to REST API on UI app initial display to find out whether a HTTP session of logged in user exists.
+  //Displaying text message about pending status, not displaying login form yet as we don't know yet whether user is or not authenticated
   if (userDataInitialLoadStatus === "pending") {
     content = <div>User session check...</div>
 
-  //got response from server. If user is authenticated display decicated component according to URL path; if user is not authenticated for
-  //each dedicated authenticated mode path show login form;
+
+    //got response from API, now we know whether user is authenticated or not
   } else {
+
+    //user is authenticated display component corresponding to current URL
     if (isUserLoggenIn) {
       content =
-      <Routes>
-        <Route path={routes.bookListPath} element={<BooksList/>} />
-        <Route path={routes.favoriteBooksListPath} element={<BooksList listMode={FAVORITE_BOOKS_LIST}/>} />
-        <Route path={routes.bookEditPath} element={<BookEditing/>} />
-        <Route path={routes.createBookPath} element={<BookCreating/>} />
-        <Route path={routes.demoDataResetPath} element={<DemoDataReset/>} />
-        <Route path="*" element={<PageNotFound/>} />
-      </Routes>
+        <Routes>
+          <Route path={routes.bookListPath} element={<BooksList />} />
+          <Route path={routes.favoriteBooksListPath} element={<BooksList listMode={FAVORITE_BOOKS_LIST} />} />
+          <Route path={routes.bookEditPath} element={<BookEditing />} />
+          <Route path={routes.createBookPath} element={<BookCreating />} />
+          <Route path={routes.demoDataResetPath} element={<DemoDataReset />} />
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
 
+      //NOT authenticated. For each URL that in authenticated state have a corresponding component display login form, for unrecognized
+      //paths display "Page not found" component
     } else {
       content =
-      <Routes>
-        {//for all routes that in authrorized state have a decicated component in unauthenticated state display login form
-          [routes.bookListPath,
-          routes.favoriteBooksListPath,
-          routes.bookEditPath,
-          routes.createBookPath,
-          routes.demoDataResetPath].map((path, index) =>
-          <Route path={path} element={<LoginForm/>} key={index}/>
-        )}
-        <Route path="*" element={<PageNotFound/>} />
-      </Routes>
+        <Routes>
+          {
+            [routes.bookListPath,
+            routes.favoriteBooksListPath,
+            routes.bookEditPath,
+            routes.createBookPath,
+            routes.demoDataResetPath].map((path, index) =>
+              <Route path={path} element={<LoginForm />} key={index} />
+            )}
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
     }
   }
   
