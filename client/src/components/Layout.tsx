@@ -68,15 +68,19 @@ const Layout = () => {
     <div className="bg-[#eeeeee] flex min-h-screen">
       <Router>
 
-        {/*menu if user is logged in: on larger devices on left side, on smaller at page bottom*/}
+        {/*menu visible only when user is logged in.
+        Located at page bottom on mobile devices, beginning with wider tablet screens on left side of content.
+        On wider tablets fixed bottom position is cancelled in menu component but following div aligns menu in center and then on right
+        side on itself depending of whole screen width*/}
         <div className="lg:grow lg:flex lg:justify-center xl:justify-end xl:shrink-0 xl:basis-0">
           {isUserLoggenIn === true &&
             <BooksListTypeMenu/>
           }
         </div>
 
-        {/*main content section, on largest devices in center between two equal width side columns, on medium between two different width
-        columns, on smaller occupies whole screen width*/}
+        {/*main content section.
+        On largest devices in center between two equal width side columns, on medium devices
+        between two different width columns, on smaller occupies whole screen width*/}
         <div className="grow lg:grow-0 lg:shrink-0 lg:basis-[840px] xl:basis-[950px] flex flex-col relative">
           <PageHeader isUserLoggenIn={isUserLoggenIn}/>
 
@@ -92,8 +96,9 @@ const Layout = () => {
             {content}
           </div>
 
-          {/*beginning with largest devices display footer, has background*/}
-          <div className="bg-gray-300 h-[0px] xl:h-[35px]"></div>
+          {/*starting with wider tablet screens the footer is assigned non zero height,
+          it becomes visible as menu is not located at page bottom any more*/}
+          <div className="bg-gray-300 h-[0px] lg:h-[35px]"></div>
         </div>
 
         {/*left column visible on larger devices, has background*/}
