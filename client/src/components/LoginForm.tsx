@@ -8,6 +8,7 @@ import {
 import { STATUS_PENDING, STATUS_REJECTED } from'../constants/asyncThunkExecutionStatus'
 import { FormBuilder, FormFieldsDefinition, SubmittedFormData } from '../utils/FormBuilder';
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
+import { H1Heading } from './ui_elements/H1Heading';
 
 export function LoginForm() {
   const dispatch = useAppDispatch();
@@ -27,8 +28,7 @@ export function LoginForm() {
           rule: "email"
         },
         {
-          rule: "minLength",
-          value: 3
+          rule: "required"
         }
       ]
     },
@@ -37,8 +37,7 @@ export function LoginForm() {
       type: "password",
       validationRules: [
         {
-          rule: "minLength",
-          value: 8
+          rule: "required"
         }
       ]
     }
@@ -63,14 +62,19 @@ export function LoginForm() {
   }
 
 
-  //If got rejected response from server form will be shown with previously entered e-mail and blank password and error message under the
-  //e-mail field received from API. The primary error expected is about e-mail and password not matching, any other error messages
-  //received from API will be displayed here
-  let initialFormData: { password: "" } | null = null
+  type LoginCredentials = {
+    password?: string
+  }
+
+  //If got rejected response from server (incorrect e-mail/password with 401 HTTP code) then form will be displayed with previously entered
+  //e-mail and blank password, actual error message about incorrect e-mail/password received from API will be displayed under the
+  //e-mail field, also any other technical errors will also be displayed here
+  let initialFormData: LoginCredentials  = {}
   const sendLoginRequestStatus = useAppSelector(selectSendLoginRequestStatus);
   if (sendLoginRequestStatus === STATUS_REJECTED) {
     initialFormData = { password: "" }
   }
+
   let initiallyDisplayedErrors: { email: string } | null = null
   const sendLoginRequestError = useAppSelector(selectSendLoginRequestError);
   if (sendLoginRequestError) {
@@ -86,8 +90,10 @@ export function LoginForm() {
     submitButtonText = "Logging in..."
   }
   return (
-    <div className='max-w-[700px]'>
-      <div className='pb-[20px]'>
+    <div>
+      <H1Heading headingText="Log in" />
+
+      <div className='pb-[20px] max-w-[360px]'>
         <FormBuilder
           formFieldsDefinition={loginFormFieldsDef}
           initialFormData={initialFormData}
@@ -99,7 +105,7 @@ export function LoginForm() {
 
       <div className='rounded-[8px] border-[2px] border-[grey] p-[10px] mt-[12px]'>
         <p>
-        To access authencicated part of application enter following data in form fields:<br/>
+        To access authenticated part of application enter following data in form fields:<br/>
         <span className='inline-block mt-[12px]'>
           E-mail - john.doe@example.com<br/>
           Password - password
