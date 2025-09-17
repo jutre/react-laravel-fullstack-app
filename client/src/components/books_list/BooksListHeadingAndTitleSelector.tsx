@@ -7,15 +7,9 @@ import { setPageTitleTagValue } from "../../utils/setPageTitleTagValue";
 import { H1Heading } from "../ui_elements/H1Heading";
 
 /**
- * Calcurates books list heading depending on books list mode and search string value in Redux store: for all books list, filtered books
- * list or favorite books list; calculated heading is returned as HTML markup wrapped in heading tag and set to page's <title> tag.
+ * Outputs the title of books list depending on current books list mode in heading (<h1>) tag and sets title to page's <title> tag. 
  * 
- * Title calculation is done in separate component is part of optimisation preventing unnecessary re-renders (see comments of
- * BooksListParamProcessor.tsx component). Current component is re-rendered in all books list mode changes to filtering list mode depending
- * if search string value is set to Redux store by other separate component (see
- *  that processed URL query parameters. to prevent;
- * 
- * @param listMode - used to determines list data type and select appripriate heading
+ * @param listMode - determines primary books list type
  * 
  */
 export function BooksListHeadingAndTitleSelector({ listMode }: BooksListModeParams) {

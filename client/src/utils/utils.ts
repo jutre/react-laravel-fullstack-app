@@ -48,7 +48,8 @@ export function closeDivOnClickOutsideOfDiv(
 
 
 /**
- * returns value of get parameter from window current location string. If parameter is not present in window.location string, returs null
+ * returns value of URL query parameter of window current location query string. If parameter is not present in URL, returs null.
+ * For convenient usage instead of using react-router useSearchParams() hook (make sure component is re-rendered some way if necessary)
  *
  * @param {string} paramName - name of parameter
  * @returns {string | null}

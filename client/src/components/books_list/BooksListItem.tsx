@@ -30,6 +30,7 @@ export function BookListItem({book, editUrl, deleteUrl, addToFavoritesQueryTrigg
 
   const isBookAddedToFavoriteBooks = useAppSelector((state) => selectIsBookAddedToFavoriteBooks(state, book.id));
 
+  
   /**
    * handles checbox checking/unchecking event for a single book by adding or removing that book to selection for deleting.
    * Adds to deletable books selection when checkbox is checked and removes from selection if checbox is unchecked
@@ -38,12 +39,9 @@ export function BookListItem({book, editUrl, deleteUrl, addToFavoritesQueryTrigg
   function handleBookSelectionForDeleting(event: React.ChangeEvent<HTMLInputElement>){
     const isCheckboxChecked = event.target.checked;
     if(isCheckboxChecked){
-      //a general function for adding a collection of books is used to add single book to selection, action.payload value must be 
-      //an array consisting of single element which value is book.id 
       dispatch(bookCollectionAddedToSelection([book]));
 
     }else{
-      //to remove a book from selection, action.payload value must be integer - book.id to be removed from selection
       dispatch(singleBookRemovedFromSelection(book));
     }
   }
@@ -69,10 +67,9 @@ export function BookListItem({book, editUrl, deleteUrl, addToFavoritesQueryTrigg
   return  (
     <div className="flex border-b-[1px] border-[grey] last:border-b-0">
       
-      {/*custom checkbox for list item selecting for deletion*/}
+      {/*custom checkbox for list item selecting for deletion using Tailwindcss approach*/}
       <div className="flex items-center pr-[15px]">
         <label>
-          
           <input  type="checkbox" 
                   checked={isBookAddedToSelection}
                   onChange={handleBookSelectionForDeleting}
@@ -80,8 +77,7 @@ export function BookListItem({book, editUrl, deleteUrl, addToFavoritesQueryTrigg
                   //custom checkbox div
                   className={chekboxInputClasses}/>
 
-          {/*create square box with checkmark which is displayed or hidden depending on previously located checkbox input element 
-          checked/unckecked state*/}
+          {/*custom checkbox checked/unckecked state*/}
           <div className={customCheckboxCheckmarkClasses}>
           </div>
         </label>

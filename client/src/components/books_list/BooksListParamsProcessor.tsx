@@ -8,26 +8,28 @@ import { BookDeletionProcessorForBooksListPage } from "./BookDeletionProcessorFo
 import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
 
 /**
- * This component is dedicated for processing get parameters for book list component: search string param and book delete id params.
- * Search param value is assigned to redux store (and as a result search string consuming components re-renders);
- * in response to URL delete query param presence the delete processing component is displayed which in turn displays confirmation modal
- * dialog and performs deleting or cancelation.
+ * This component processes page's URL "search" and "deleteId" query parameters (GET params):
+ * if "search" param is present in URL, it's value is set to Redux store; if "deleteId" param is present in URL the delete processing
+ * component is displayed which in turn displays confirmation modal dialog and performs deleting.
  * 
- * Parameter processing is done in separate component because in response to url change component that uses react-router api
- * for url processing is re-rendering, it would not be optimal to process parameters where book list is displayed because the whole
- * book list would re-render in vain also on an url with deleting param when deletion confirm dialog is displayed; also if then user 
- * cancels deleting then list would re-render again as delete id param is removed from url
+ * The "search" param value is set to Redux store if it contains at least one symbol. 
+ * If "deleteId" param is not empty, it is validated to contain only comma separated integers, in case of invalid input error message is
+ * output, on valid output deleting processing component is rendered
  * 
- * @param listMode - indicates current mode books list is currently working in - all books list or favorites books list, value is used
+ * Pages URL query params processing is done in separate component or optimisation purpose. Every param change, appearance or removal
+ * from URL triggers component's re-render because of react-router api and it is not desired to re-render other parts or APP like book list
+ * on every query param change.
+ * 
+ * @param listMode - indicates current mode books list is currently working in - all books list or favorites books list. Value is used
  * to calculate base URL when creating links for deletion confirmation dialog. If page displays favorite books list, after deleting page
- * must be redirected to favorites books list
+ * must be redirected to favorites books list for which an appropriate URL query param is added
  */
 
 function BooksListParamProcessor({ listMode }: BooksListModeParams) {
   const dispatch = useAppDispatch();
 
-  //it is needed to call a hook from react-router to cause this component to re-render when react-router generated 
-  //links are changed. The changing part or link for current page is adding, removing deleteId parameter
+  //as we are not using useSearchParams() hook from react-router to get URL query params it is needed to call a hook from react-router
+  //that causes current component to re-render when react-router generated links are changed
   useLocation();
 
   let searchStringParamVal = getQueryParamValue("search");
