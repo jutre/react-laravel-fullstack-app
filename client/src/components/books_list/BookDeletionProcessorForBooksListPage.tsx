@@ -19,22 +19,24 @@ type BookDeletionProcessorProps = {
 }
 
 /**
- * Displays deletion confirmation modal dialog before deleting single or multiple books and performs deleting if user confirmed deletion. 
- * For use with book list component. After deleting page is redirected to book list page url (books list of favorites list) speficified in
- * properties. If user cancels deleting, deletion is not performed and page is redirected to book list page url specified in properties.
- * In case one book is selected for deleting, confirmation dialog displays also deletable book title in it's message. When deleting single
- * book, a check for book existing among all list's books is performed and if book is not found, an error message is displayed
- * which prevents passing non existing book id in case book deletion URL is entered in browser's address bar. In case if multiple books are
- * passed in deletable books parameter then confirmation dialog displays message about deleting of passed amount of books not checking their
- * presence in all books list
+ * Displays deletion confirmation modal dialog before deleting single or multiple books and performs deleting if user confirms deletion.
+ * For use with book list component. After confirming or canceling deleting page is redirected to book list user initiated deletion from:
+ * (all books, filtered or favorite books list).
+ * In case a single book is selected for deleting confirmation message displays deletable book title, in case of multiple books selection
+ * confirmation message displays an amount of selected books.
+ * When deleting a single book a check for book existing among all list's books is performed, if book is not found an error is displayed
+ * instead of deletion confirmation message (it's possible to input deletion URL directly in browser's address bar). Technically the check
+ * is done amoung already fetched books for the current list using apiSlice.endpoints.<endpoint name>.useQueryState() hook as deletion
+ * processor component is not descendant of books list component. Deletion processor for single book works technically in different context
+ * this is the reason code for deletion processor for list and single book can not be reused for each other and single book deletion has a
+ * dedicated component.In case deleting multiple book their their presence in all books list is not checked.
  * 
  * @param deletableBooksIds - list of deletable books. In case of deleting single book, array contains only one element
  * @param booksListPageUrl - a book list page url where page should be redirected after book(s) are deleted or deletion is cancelled by
  * user. An URL value will be used with react-router useNavigate hook. URL may be books list or favorite books list url depending on parent
  * list where a book editing page was navitated from
  * @param searchString - current search string. Used to determine whether books list works in filtering mode to choose a corresponding
- * endpoint (all books of filtered list) where to look for book title when single book is choosen for deleting
- * too look for book title books filte
+ * RTK Query endpoint (all books of filtered list) where to look for book title when single book is choosen for deleting
  */
 
 export function BookDeletionProcessorForBooksListPage({

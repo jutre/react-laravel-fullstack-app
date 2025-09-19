@@ -15,12 +15,12 @@ type BookDeletionProcessorProps = {
 }
 
 /**
- * displays deletion confirmation modal dialog before deleting book and performs deleting if user confirmed deletion. For use with book edit
- * component. After deleting page is redirected to url speficied in properties. If user cancels deleting, deleting is not performed and page
- * is redirected to url specified in properties.
+ * Displays deletion confirmation modal dialog before deleting book and performs deleting if user confirmed deletion. For use with single
+ * book edit component.
+ * After deleting page is redirected to speficied URL. If user cancels deleting then page is redirected to specified URL without deleting.
  * 
  * @param deletableBook - object representing deletable book. 'title' property is used to display deletable book title in deleting
- * confirmation dialog, argument itself is passed to API endpoint that performs book deletion as argument
+ * confirmation dialog
  * @param afterDeletingRedirectUrl - a book list page url where page should be redirected after book is deleted. An URL value will be
  * used with react-router useNavigate hook. URL may be books list or favorite books list url depending on parent list where a book editing
  * page was navitated from
@@ -36,7 +36,7 @@ export function BookDeletionProcessorForBookEditPage({
 
   /**
    * deletes book in redux store and redirects to book list url.
-   * Intended to invoke when in modal confirmation dialog user clicks button "Confirm"
+   * Intended to invoke when user clicks button "Confirm" in confirmation dialog
    */
   function deleteBook(deletableBook: Book) {
     setIsDeletionConfirmed(true);
