@@ -4,7 +4,7 @@ import { ButtonWithIcon } from '../ui_elements/ButtonWithIcon';
  * book edit, delete and adding/removing from favorites look same, differs only in icon file, such buttons are used in several screens.
  * To minimize code dublication current component is created.
  * 
- * @param {string} iconName - one of string values "is-added-to-favorites", "add-to-favorites", "delete", "edit", appropriate icon
+ * @param {string} iconName - one of string values "remove-from-favourites", "add-to-favorites", "delete", "edit", appropriate icon
  * file will be displayed 
  * @param {function} clickHandler - pointer to button click handler function
  * @param {boolean} buttonDisabled - if value is true then button visual appearance is disable elements appearance - color set similar to
@@ -14,7 +14,7 @@ import { ButtonWithIcon } from '../ui_elements/ButtonWithIcon';
  * @param {string} buttonTypeAttrValue -
  */
 
-export type IconNameValues = 'is-added-to-favorites' | 'add-to-favorites' | 'delete' | 'edit'
+export type IconNameValues = 'remove-from-favourites' | 'add-to-favorites' | 'delete' | 'edit'
 type ButtonWithIconAndBackgroundProps = {
   iconName: IconNameValues
   clickHandler?: () => void,
@@ -31,8 +31,8 @@ export function ButtonWithIconAndBackground({iconName,
 
   let beforeElemMaskImgUrlTwCssClass:string;
   switch (iconName) {
-    case 'is-added-to-favorites':
-      beforeElemMaskImgUrlTwCssClass = "before:[mask-image:url(assets/is-added-to-favorites-flag.svg)]";
+    case 'remove-from-favourites':
+      beforeElemMaskImgUrlTwCssClass = "before:[mask-image:url(assets/remove-from-favourites-flag.svg)]";
       beforeElemBackgndColorTwCssClass = "before:bg-black";
       break;
     case 'add-to-favorites':

@@ -11,6 +11,3 @@ export type Book = {
 }
 
 export type NewBook = Omit<Book, 'id'>
-
-//favorite book will contain only list of book identifiers of books that are added to favorite list
-export type FavoriteBook = Pick<Book, 'id'>

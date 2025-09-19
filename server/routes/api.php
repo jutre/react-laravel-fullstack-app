@@ -33,9 +33,9 @@ Route::delete('/books', [BookController::class, 'destroy'])->middleware('auth:sa
 //books - search
 Route::get('/books/search/{title}', [BookController::class, 'search'])->middleware('auth:sanctum');
 
-//favorite books list - read list, add or remove book from favorite book list
+//favorite books list - read list, remove book from favorite book list (book can be added to favorites in book edit form, no dedicated 
+//endpoint for adding to favorites)
 Route::get('/favorite-books', [BookController::class, 'getFavoriteBooks'])->middleware('auth:sanctum');
-Route::post('/favorite-books/{id}', [BookController::class, 'addBookToFavorites'])->middleware('auth:sanctum');
 Route::delete('/favorite-books/{id}', [BookController::class, 'removeBookFromFavorites'])->middleware('auth:sanctum');
 
 //reseting demo data

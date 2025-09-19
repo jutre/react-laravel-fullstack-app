@@ -4,9 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { 
   bookCollectionAddedToSelection, 
   singleBookRemovedFromSelection,
-  selectIsBookAddedToSelection,
-  selectIsBookAddedToFavoriteBooks } from "../../features/booksSlice";
-import { ButtonWithIconAndBackground, IconNameValues } from '../ui_elements/ButtonWithIconAndBackground';
+  selectIsBookAddedToSelection } from "../../features/booksSlice";
+import { ButtonWithIconAndBackground } from '../ui_elements/ButtonWithIconAndBackground';
 import { customCheckboxCheckmarkClasses, chekboxInputClasses } from '../../config'
 import { Book } from '../../types/Book';
 
@@ -14,21 +13,21 @@ type BookListItemProps = {
   book: Book,
   editUrl: string,
   deleteUrl: string,
-  addToFavoritesQueryTrigger: (bookId: number) => void,
-  removeFromFavoritesQueryTrigger: (bookId: number) => void
+  removeFromFavoritesQueryTrigger: (bookId: number) => void,
+  displayRemoveFromFavoritesButton: boolean
 }
 
-export function BookListItem({book, editUrl, deleteUrl, addToFavoritesQueryTrigger, removeFromFavoritesQueryTrigger}: BookListItemProps) {
-  //TODO maybe remove comment
-  //button with redirection will be used instead of react router <Link/> element to have uniform styling - 
-  //most of elements on page are html <button> elements, only couple of anchor <a/> elements might be needed on page
-  //use <ButtonWithIcon/> component which generates <button> with click handler that redirects to needed url
+export function BookListItem({
+  book,
+  editUrl,
+  deleteUrl,
+  removeFromFavoritesQueryTrigger,
+  displayRemoveFromFavoritesButton }: BookListItemProps) {
+
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   const isBookAddedToSelection = useAppSelector((state) => selectIsBookAddedToSelection(state, book.id));
-
-  const isBookAddedToFavoriteBooks = useAppSelector((state) => selectIsBookAddedToFavoriteBooks(state, book.id));
 
   
   /**
@@ -47,22 +46,12 @@ export function BookListItem({book, editUrl, deleteUrl, addToFavoritesQueryTrigg
   }
 
   /**
-   * when cliking on favourites icon, add or remove from favourites depending on whether book currently is added to favorites
+   * when clicking on favourites icon, add or remove from favourites depending on whether book currently is added to favorites
    */
-  function handleAddRemoveFromFavoritesClick(bookId: number, isCurrentlyAddedToFavorites: boolean){
-    if(isCurrentlyAddedToFavorites){
-      removeFromFavoritesQueryTrigger(bookId)
-
-    }else{
-      addToFavoritesQueryTrigger(bookId)
-    }
+  function handleFavoritesIconClick(bookId: number){
+    removeFromFavoritesQueryTrigger(bookId)
   }
 
-  
-  let addToFavoritesButtonIconName: IconNameValues = "add-to-favorites";
-  if(isBookAddedToFavoriteBooks){
-    addToFavoritesButtonIconName = "is-added-to-favorites";
-  }
 
   return  (
     <div className="flex border-b-[1px] border-[grey] last:border-b-0">
@@ -70,16 +59,16 @@ export function BookListItem({book, editUrl, deleteUrl, addToFavoritesQueryTrigg
       {/*custom checkbox for list item selecting for deletion using Tailwindcss approach*/}
       <div className="flex items-center pr-[15px]">
         <label>
-          <input  type="checkbox" 
-                  checked={isBookAddedToSelection}
-                  onChange={handleBookSelectionForDeleting}
-                  //make checkbox input invisible and not occupying space, add "peer" class to track checkbox checked/unckecked state in
-                  //custom checkbox div
-                  className={chekboxInputClasses}/>
+          <input 
+            type="checkbox"
+            checked={isBookAddedToSelection}
+            onChange={handleBookSelectionForDeleting}
+            //make checkbox input invisible and not occupying space, add "peer" class to track checkbox checked/unckecked state in
+            //custom checkbox div
+            className={chekboxInputClasses} />
 
-          {/*custom checkbox checked/unckecked state*/}
-          <div className={customCheckboxCheckmarkClasses}>
-          </div>
+          {/*custom checkbox representing div*/}
+          <div className={customCheckboxCheckmarkClasses}></div>
         </label>
       </div>
 
@@ -91,10 +80,12 @@ export function BookListItem({book, editUrl, deleteUrl, addToFavoritesQueryTrigg
       
       <div className="grow-0 shrink-0 flex items-center gap-[10px] ml-[15px]">
         
-        {/*add to favorites button*/}
-        <ButtonWithIconAndBackground
-          iconName = {addToFavoritesButtonIconName}
-          clickHandler={()=>{handleAddRemoveFromFavoritesClick(book.id, isBookAddedToFavoriteBooks)}}/>
+        {/*remove from favorites button is displayed only if component param set to 'true'*/
+        displayRemoveFromFavoritesButton &&
+          <ButtonWithIconAndBackground
+            iconName = "remove-from-favourites"
+            clickHandler={()=>{handleFavoritesIconClick(book.id)}}/>
+        }
 
         {/*edit button*/}
         <ButtonWithIconAndBackground

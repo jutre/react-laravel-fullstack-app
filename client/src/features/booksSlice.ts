@@ -1,7 +1,6 @@
-import { createSlice, createSelector } from '@reduxjs/toolkit';
+import { createSlice, createSelector, PayloadAction } from '@reduxjs/toolkit';
 import { apiSlice } from './api/apiSlice';
-import type { PayloadAction } from '@reduxjs/toolkit'
-import { Book, FavoriteBook } from '../types/Book.ts';
+import { Book } from '../types/Book.ts';
 import { RootState } from "../store/store";
 import { STATUS_IDLE, STATUS_PENDING } from '../constants/asyncThunkExecutionStatus.ts';
 
@@ -167,31 +166,7 @@ export const selectBooksInSelection = createSelector(
 
 export const selectBookDeletingEndpointLoadingStatus = (state: RootState) => state.booksState.bookDeletingEndpointLoadingStatus;
 
-/**
- * creating selector that checks if book is added to favorites. Favorite books is obtained from server as list of books that are added to 
- * favorites, there must be done some logic to find out if specified book is added to books list, this logic is placed in chain of 
- * selectors. 
- * The final selector returns true if book specified by id is added to favorite books, false otherwise 
- */
-const emptyFavoriteBooks: FavoriteBook[] = []
-//accessing favorite books list data fetched by RTQ Query endpoint
-const selectFavorBooksResult = apiSlice.endpoints.getFavoriteBooksIdentifiers.select()
 
-//memorize data from endpoint or empty array in endpoint returns undefined
-const selectFavorBooks = createSelector(
-  selectFavorBooksResult,
-  favorBooksResult => favorBooksResult?.data ?? emptyFavoriteBooks
-)
-
-//final selector - returns true if book specified by id is added to favorite books, false otherwise
-export const selectIsBookAddedToFavoriteBooks = createSelector(
-  selectFavorBooks,
-  (state: RootState, bookId: number) => bookId,
-  (favoriteBooks, bookId) => {
-    const bookInFavorBooksList = favoriteBooks.find(book => book.id === bookId)
-    return bookInFavorBooksList !== undefined
-  }
-)
 
 
 export const { searchStringUpdated,

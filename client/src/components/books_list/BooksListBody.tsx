@@ -7,12 +7,11 @@ import { BooksListLoadingSketeton } from './BooksListLoadingSketeton.tsx';
 import { FAVORITE_BOOKS_LIST } from "../../constants/bookListModes";
 import { NavLinkBack } from "../ui_elements/NavLinkBack";
 import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
+import { DataFetchingStatusLabel } from '../ui_elements/DataFetchingStatusLabel.tsx';
 import { selectSearchString, selectBookDeletingEndpointLoadingStatus } from "../../features/booksSlice";
 import { STATUS_PENDING } from'../../constants/asyncThunkExecutionStatus.ts'
 import { useGetBooksListQuery,
   useGetFilteredBooksListQuery,
-  useGetFavoriteBooksIdentifiersQuery,
-  useAddBookToFavoritesMutation,
   useRemoveBookFromFavoritesMutation,
   useGetFavoriteBooksQuery } from '../../features/api/apiSlice';
 import { extractMessageFromQueryErrorObj,
@@ -69,6 +68,11 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
     }
     return deleteUrl;
   }
+
+
+  //a button for removing book from favorites next to each book is visible only while displaying favorite books list. Favorite book
+  //list view allows only to remove book from favorites, book can be marked as favorite in book edit form
+  const displayRemoveFromFavoritesButton = listMode === FAVORITE_BOOKS_LIST
 
 
   /* if current component is being rendered for first time (f.e. user navigated from book editing page to book list page or entered book 
@@ -129,20 +133,10 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
     isFetching: isFetchingFavoriteBooks } =
     useGetFavoriteBooksQuery(executableEndpoint !== 'favorites_list_query' ? skipToken : undefined)
 
-  //favorite books identifiers list fetching endpoints loading, fetching states and returned error are used in current component along with
-  //other endpoints' similar variables but returned data is accessed single book item component using selector 
-  const { error: favoriteBooksIdentifiersQueryError,
-    isFetching: isFetchingFavoriteBooksIdentifiers,
-    isLoading: isLoadingFavoriteBooksIdentifiers } =
-    useGetFavoriteBooksIdentifiersQuery()
 
-
-  //loading state, error variables returned by mutations adding and removing book from favorites will be displayed on top of books list
+  //loading state, error variables returned by removing book from favorites mutation will be displayed on top of books list
   //where same purpose variables from book list, favorite books fetching queries are displayed. Mutation trigger will be passed to child
   //book list item components
-  const [triggerAddToFavoritesMutation, {
-    error: addToFavoritesError,
-    isLoading: isAddingToFavorites }] = useAddBookToFavoritesMutation()
 
   const [triggerRemoveFromFavoritesMutation, {
     error: removeFromFavoritesError,
@@ -165,17 +159,11 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
     booksToDisplay = booksListQueryData
   }
 
-  //There are cases when already fetched books data must not be displayed in books list. In those cases assign books list containing
-  //variable empty array:
-  //1)while favorite books identifiers endpoint is loading (fetching data for very first time), 2) on favorite books identifiers fetching
-  //endpoint error. In those cases books list must not be displayed as it is not known which books are to be displayed as favorite books
-  if (isLoadingFavoriteBooksIdentifiers || favoriteBooksIdentifiersQueryError) {
-    booksToDisplay = []
 
-  //if non empty search string is too short, make currently displayable books variable empty as there may be returned non empty result
+  //Ff non empty search string is too short, make currently displayable books variable empty as there may be returned non empty result
   //from previous filtering endpoint invocation, it is still assigned to booksFilteringQueryData result variable as endpoint result is
   //not reset any way
-  }else if (currentlyDisplayedList === 'filtered_list' && currentSearchString.length < 3) {
+  if (currentlyDisplayedList === 'filtered_list' && currentSearchString.length < 3) {
     booksToDisplay = []
   }
 
@@ -191,9 +179,7 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
   let errorMsgFromAnyEndpoint: string | undefined;
   const currentErrorFromEndpoint = findNonEmptyErrorFromList(booksListQueryError,
     booksFilteringQueryError,
-    favoriteBooksIdentifiersQueryError,
     favoriteBooksQueryError,
-    addToFavoritesError,
     removeFromFavoritesError)
 
   if (currentErrorFromEndpoint) {
@@ -214,21 +200,23 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
   let showEmptyFavoritesListMessage = false;
   let showEmptyListMessage = false;
 
-  //capture fetching progress  while all books or filtered books list or favorite books list are being fetched, adding/removing from
-  //favorites mutations are executed
-  const currentlyFetching = isFetchingBooksList || isFetchingBooksFiltering || isFetchingFavoriteBooksIdentifiers || isFetchingFavoriteBooks
-    || isAddingToFavorites || isRemovingFromFavorites
+  //currently fetching data means execution of GET request in terms of REST API request. Variable captures active fetching process of any
+  //endpoint that gets data (all, filtered or favorite books) not caring about RTKQuery mutations
+  const isCurrentlyFetchingData = isFetchingBooksList || isFetchingBooksFiltering || isFetchingFavoriteBooks
+
+  //while mutation endpoints (deleting, removing from favorites) are pending all action buttons next to each book in list and batch
+  //selection control must be inactive while still showing the list
+  const areListButtonsDisabled = isRemovingFromFavorites || bookDeletingEndpointLoadingStatus === STATUS_PENDING
 
   //one of conditions to create message about empty all books, filtered, favorites books list or found books count is absence of
   //fetching errors from corresponding endpoint or filter string too short error. Create a single variable that is assigned a non undefined
   //value if any of error is defined
   const hasAnyFetchingOrSearchStrLengthError =
-    booksListQueryError || booksFilteringQueryError || favoriteBooksIdentifiersQueryError || favoriteBooksQueryError
-    || searchStrTooShortErrorMessage
+    booksListQueryError || booksFilteringQueryError || favoriteBooksQueryError || searchStrTooShortErrorMessage
 
   //if fetching process is done and book list is empty a message about this fact will be shown if there are no fetching or search string  
   //length error. Custom message depending on list type 
-  if (booksToDisplay.length === 0 && !currentlyFetching && !hasAnyFetchingOrSearchStrLengthError) {
+  if (booksToDisplay.length === 0 && !isCurrentlyFetchingData && !hasAnyFetchingOrSearchStrLengthError) {
 
     if (currentlyDisplayedList === 'filtered_list') {
       searchResultsInfoMessage += " No books were found."
@@ -244,14 +232,10 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
   //info message about number of found books
   if (currentlyDisplayedList === 'filtered_list' &&
     booksToDisplay.length > 0 &&
-    !(currentlyFetching || hasAnyFetchingOrSearchStrLengthError)) {
+    !(isCurrentlyFetchingData || hasAnyFetchingOrSearchStrLengthError)) {
 
     searchResultsInfoMessage += ` Number of records found is ${booksToDisplay.length}.`;
   }
-
-  //while some action is pending (adding to favorites, deleting, loading list after deleting, adding/removing from favorites)
-  //all buttons next to each book (editing, deleting, adding/removing from favorites) must be disabled
-  const disableListButtons = currentlyFetching || bookDeletingEndpointLoadingStatus === STATUS_PENDING
 
   return (
     <>
@@ -281,32 +265,43 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
 
 
         {showEmptyFavoritesListMessage &&
-          <div>There are no books added to favorite books list.</div>
+          <p>
+            <strong>There are no books added to favorite books list.</strong> <br/><br/>
+            Book can be added to favorites in book edit form.
+          </p>
         }
 
 
         {//if books array is empty and no searching is done (it might be the case nothing is found), offer adding some books 
           (showEmptyListMessage) &&
-          <p><strong>Books list is empty.</strong> <br/><br/>
-           Books can be added manually using form on <Link to={routes.createBookPath}>&quot;Add book&quot;</Link> page or created 
-           automatically on <Link to={routes.demoDataResetPath}>&quot;Demo data reset&quot;</Link> page. 
-           &quot;Demo data reset&quot; page lets create demo data with ten book records.
+          <p>
+            <strong>Books list is empty.</strong> <br/><br/>
+            Books can be added manually using form on <Link to={routes.createBookPath}>&quot;Add book&quot;</Link> page or created
+            automatically on <Link to={routes.demoDataResetPath}>&quot;Demo data reset&quot;</Link> page.
+            &quot;Demo data reset&quot; page lets create demo data with ten book records.
           </p>
         }
 
-        {//skeleton as loading indicator when book list is empty. Book list is empty on initial app start and when books are deleted in one
-        //list type and page is navigated to other. This is RTK Query behaviour when cache is invalidated, usually deleting from one list
-        //other type lists is invalidated
-        (currentlyFetching && booksToDisplay.length === 0) &&
-            <BooksListLoadingSketeton/>
-        }
+        {isRemovingFromFavorites && 
+          <DataFetchingStatusLabel labelText="removing from favorites..." />}
 
-        {booksToDisplay.length > 0 &&
-          //using <fieldset> as parent element to make all contained child button elements disabled by adding disabled attribute
-          <fieldset disabled={disableListButtons}
-            //classes to gray out list which acts as loading indicator
-            className={'relative after:absolute disabled:after:inset-0 disabled:after:bg-[gray] disabled:after:opacity-30 ' +
-            'disabled:opacity-50 disabled:after:rounded-[8px] disabled:after:z-[2000]'}>
+        {//snow skeleton as loading indicator when fetching data
+        //OR
+        //output item when data fetching is done and obtained list is not empty
+        isCurrentlyFetchingData
+        ?
+        <BooksListLoadingSketeton/>
+        :
+        booksToDisplay.length > 0 &&
+          //using <fieldset> as parent element to make all contained child button elements disabled by adding "disabled" attribute.
+          //Additionally visually gray out the list and make grey background transparency changing using animation
+          <fieldset disabled={areListButtonsDisabled}
+            //part of classes to gray out <fieldset> children while it is disabled
+            className="relative disabled:opacity-50">
+
+            {//display <div> that has changing intensity gray background when list is disabled over parent <fieldset>
+            areListButtonsDisabled &&
+              <div className="absolute inset-0 bg-[gray] opacity-30 disabled:opacity-50 rounded-[8px] animate-pulse z-[2000]"></div>}
 
             {<BooksListItemsSelectionBar
               allDisplayedBooks={booksToDisplay}
@@ -314,12 +309,13 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
               baseUrl={getBookListBaseUrl(listMode)} />}
 
             {(booksToDisplay).map(book =>
-              <BookListItem key={book.id}
+              <BookListItem
+                key={book.id}
                 book={book}
                 editUrl={getBookEditUrl(book.id, listMode)}
                 deleteUrl={getBookDeletionUrl(book.id, currentSearchString, listMode)}
-                addToFavoritesQueryTrigger={triggerAddToFavoritesMutation}
-                removeFromFavoritesQueryTrigger={triggerRemoveFromFavoritesMutation} />
+                removeFromFavoritesQueryTrigger={triggerRemoveFromFavoritesMutation}
+                displayRemoveFromFavoritesButton={displayRemoveFromFavoritesButton} />
             )}
           </fieldset>
         }

@@ -266,70 +266,14 @@ class BookController extends Controller
 
     /**
      * returns JSON which is list containing book objects of books that are added to favorites by user currently logged in. 
-     * Two distinct formats of JSON is returned depending on resource's URL query parameter's 'include_only_book_identifiers' value. If
-     * parameters value is 'true' like 'https://path?include_only_book_identifiers=true' then book objects in JSON contains only 'id'
-     * attritube,  JSON format is following -
-     * [
-     *   {"id":"<bookId1>"},
-     *   {"id":"<bookId2>"},
-     *   ...
-     * ]
-     * If 'include_only_book_identifiers' value is any other then "true" then book objects in JSON contain 'id', 'author', 'title',
-     * 'preface' attribute, JSON format is following -
-     * [
-     *   {"id":"<bookId1>", "author":"<author>", "title":"<title>", "preface":"<preface>"},
-     *   {"id":"<bookId2>", "author":"<author>", "title":"<title>", "preface":"<preface>"},
-     *   ...
-     * ]
      */
     public function getFavoriteBooks(Request $request)
     {
         usleep(100000);
-        $selectedBookColumns = ['books.id', 'books.author', 'books.title', 'books.preface'];
-
-        $includeOnlyBookIdentifiers = $request->string('include_only_book_identifiers')->trim()->toString();
-        if($includeOnlyBookIdentifiers === 'true'){
-            $selectedBookColumns = ['books.id'];
-        }
-
         return $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->join('favorite_books', 'books.id', '=', 'favorite_books.book_id')
-            ->select($selectedBookColumns)
+            ->select(['books.id', 'books.author', 'books.title'])
             ->get();
-    }
-
-    /**
-     * Adds a book specified by ID to user's favorite book list.
-     *
-     * @param \Illuminate\Http\Request $request $request
-     * @param integer $id - value of 'book' table 'id' column specifying book identifier which must be added to favorite book list
-     * 
-     * @return if book specified by id is successfully added to favorites list returns HTTP 204 response code (no content). If book is not
-     * found, returns json with error description and HTTP 404 response code (not found); if book is already added to favorites, returns
-     * json with error description with HTTP 409 response code (conflict)
-     */
-    public function addBookToFavorites(Request $request, int $id)
-    {
-        usleep(100000);
-
-        $bookAndFavoriteBooksTableRecord = $this->getBookTableRecordLeftJoinedWithFavoriteBooksTable($request, $id);
-
-        //book with suplied id is not found among user's books, return error
-        if (empty($bookAndFavoriteBooksTableRecord)) {
-            return $this->bookNotFoundErrorResponse($id);
-        }
-
-        //'book_id' column from 'favorite_books' table is not null - book is adready added to favorites, return error
-        if (!empty($bookAndFavoriteBooksTableRecord->book_id)) {
-            $error = [
-                'message' => "Book with id $id is already added to favorites"
-            ];
-            return response()->json($error, 409);
-        }
-
-        //record in joined 'favorite_books' table doesn't exist, inserting record into table
-        $this->insertBookIntoFavoritesTable($id);
-        return response()->noContent();
     }
 
 
