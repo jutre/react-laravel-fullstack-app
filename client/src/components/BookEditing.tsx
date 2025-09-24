@@ -47,7 +47,7 @@ export function BookEditing() {
       title: "",
       author: "",
       preface: "",
-      added_to_favorites: false
+      is_favorite: false
     }
 
     const submittedBookData: Book = createTargetObjFromSubmittedData<Book>(submittedFormData, templateBookObj)

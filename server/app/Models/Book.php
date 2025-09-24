@@ -12,6 +12,12 @@ class Book extends Model
     protected $fillable = [
         'title',
         'author',
-        'preface'
+        'preface',
+        'is_favorite'
+    ];
+
+    //'is_favorite' is to be included as boolean type literal in serialized JSON instead of returned by default int literals 0 or 1
+    protected $casts = [
+        'is_favorite' => 'boolean',
     ];
 }

@@ -46,7 +46,7 @@ export const bookCreatingFormFieldsDef: FormFieldsDefinition = {
         label: "Preface",
         type: "textarea"
     },
-    added_to_favorites: {
+    is_favorite: {
         label: "add to favorites",
         type: "checkbox"
     }
