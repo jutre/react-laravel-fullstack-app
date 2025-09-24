@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   routes,
-  bookCreatingFormFieldsDef
-} from "../config";
+  bookCreatingFormFieldsDef,
+  customCheckboxCheckmarkClasses,
+  chekboxInputClasses } from "../config";
 import { H1Heading } from "./ui_elements/H1Heading";
 import { NavLinkBack } from "./ui_elements/NavLinkBack";
 import { SquareButton } from './ui_elements/SquareButton';
@@ -163,9 +164,12 @@ export function BookCreating() {
 
     mainContent =
       <FormBuilder formFieldsDefinition={bookCreatingFormFieldsDef}
+        submitButtonText="Save"
         successfulSubmitCallback={saveSubmittedData}
         disableAllFields={formDisabled} 
-        initiallyDisplayedErrors={validationErrors}/>;
+        initiallyDisplayedErrors={validationErrors}
+        checkboxCssCls={chekboxInputClasses}
+        checkboxFollwingSiblingCssCls={customCheckboxCheckmarkClasses}/>;
   }
 
   return (

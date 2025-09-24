@@ -110,6 +110,9 @@
     /*forms and text input fields in content section*/
     /*form builder is used as external library, it's code is not changed, using traditional CSS, not Tailwind CSS*/
 
+    form.form_builder {
+        padding-bottom: 15px;
+    }
     form.form_builder .field {
         margin-bottom: 25px;
     }
