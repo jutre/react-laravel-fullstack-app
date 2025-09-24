@@ -15,8 +15,11 @@ php artisan make:controller BooksController --api
 ===create  migration
 php artisan make:migration create_flights_table
 
-===delete all tables, run  migrations and seed
+===roll back all of migrations and then execute the migrate command and seed
 php artisan migrate:refresh --seed
+
+===drop all tables, run  migrations and seed
+php artisan migrate:fresh --seed
 
 
 
