@@ -111,20 +111,16 @@ export function BookEditing() {
   const isBookDataQueryToBeExecuted: boolean =
     (bookId !== 0 && formInitialData === undefined)
 
-  const { data: bookData, error: getBookQueryError, isFetching: isGetBookQueryFetching } =
+  const { data: bookQueryData, error: getBookQueryError, isFetching: isGetBookQueryFetching } =
     useGetBookQuery(isBookDataQueryToBeExecuted ? bookId : skipToken);
 
 
   useEffect(() => {
-    if(bookData !== undefined){
-      setFormInitialData(bookData)
+    if(bookQueryData !== undefined){
+      setFormInitialData(bookQueryData)
     }
-  }, [bookData]);
+  }, [bookQueryData]);
   
-  //console.log(' isUpdatingBook, bookUpdatingError, bookDataFromUpdateResponse', isUpdatingBook, bookUpdatingError, bookDataFromUpdateResponse);
-
-
-
   const bookEditUrlWithoutQueryParams = routes.bookEditPath.replace(":bookId", String(bookId));
 
   const [displaySuccessMsg] = useTrackEndpointSuccessfulFinishing(isUpdatingBook, bookUpdatingError);
@@ -226,7 +222,7 @@ export function BookEditing() {
 
 
         {//book edit form and delete button when book data is loaded
-          bookData &&
+          formInitialData &&
           <>
             {/*delete button placed on the right top corner of container*/}
             <div className="absolute right-0 top-0">
