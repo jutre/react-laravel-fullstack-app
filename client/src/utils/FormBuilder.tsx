@@ -32,10 +32,27 @@ export type ValidationRule =
  * with input element. Object contains 'type' attribute for HTML input text and text for creating 'label' tag that is associated with input
  * tag.
  */
-export interface FieldDefinition {
+export type FieldDefinition = {
+  type: "text" | "checkbox" | "hidden" | "password" | "textarea",
   label: string,
-  type: string,
   validationRules?: ValidationRule[],
+} |
+
+{
+  type: "select",
+  label: string,
+  options: { optionValue: string | number, optionLabel: string | number }[],
+  //lets override default prompt label ("Select...") displayed as first option if 'promptText' set to non empty string or hide first option
+  //with empty string as value displayed by default if 'promptText' is set to false
+  promptText?: false | string,
+  validationRules?: ValidationRule[]
+} |
+
+{
+  label: string,
+  type: "radio",
+  options: { optionValue: string | number, optionLabel: string | number }[],
+  validationRules?: ValidationRule[]
 }
 
 /**
@@ -84,11 +101,14 @@ interface FormBuilderProps {
   checkboxFollwingSiblingCssCls?: string
 }
 
+type InputChangeEventTypes = React.ChangeEvent<HTMLInputElement> |
+  React.ChangeEvent<HTMLTextAreaElement> |
+  React.ChangeEvent<HTMLSelectElement>
 
 type InputElementAttributes = {
   name: string,
   id: string;
-  onChange: (event: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => void,
+  onChange: (event: InputChangeEventTypes) => void,
   checked?: boolean,
   value?: number | string,
   type?: string,
@@ -204,7 +224,7 @@ export function FormBuilder({
 
     const initialFormDataCorrectedTypes: SubmittedFormData = {};
 
-    for (const [fieldName, fieldOtherInfo] of Object.entries(formFieldsDefinition)) {
+    for (const [fieldName, fieldDefinition] of Object.entries(formFieldsDefinition)) {
       
       type InitialFieldValueType = InitialFormData[string]
       //field's value preparing - either set to default empty value (""), if entry with field name exists in controlled input field's state
@@ -219,8 +239,8 @@ export function FormBuilder({
         initialFieldValue = initialFormData[fieldName]
       }
 
-      //convert prepared value to runtime type accdording to html input field type
-      if (fieldOtherInfo.type === "checkbox") {
+      //convert prepared value to runtime type according to html input field type
+      if (fieldDefinition.type === "checkbox") {
         //set boolean type value for checkbox, coercing non boolean value to boolean
         initialFormDataCorrectedTypes[fieldName] = Boolean(initialFieldValue);
 
@@ -229,14 +249,57 @@ export function FormBuilder({
         initialFormDataCorrectedTypes[fieldName] = String(initialFieldValue);
       }
 
-      /*TODO add code for creating radio, select input fields*/
-
     }
 
     //finally set corrected data to state
     setInputFieldValues(initialFormDataCorrectedTypes);
 
+
   }, [initialFormData]);
+
+
+  /*if default prompt option of select input element is disabled and initial value for this field is not provided in initial form data then
+  state variable that contains controlled input fields values has empty string value for this field but in the mean time select box displays
+  as it's selected option an option (label and value) taken from first element of current field's definition 'options' array with possibly
+  non empty value. Displayed option and appropriate state variable field values will not match if user does not change select field's
+  value and form is submitted as empty value instead of actually selected will be passed to submitted data callback, also non empty
+  validation rule if present for current field won't pass. In described situation take initial value from field's definition first option
+  and set it to stata variable that maintains controlled input fields values*/
+  useEffect(() => {
+    const initialFormDataForSelectFields: SubmittedFormData = {};
+
+    for (const [fieldName, fieldDefinition] of Object.entries(formFieldsDefinition)) {
+
+      if (fieldDefinition.type === "select" &&
+        fieldDefinition.promptText === false) {
+
+        //in case hook executes after first display then inputFieldValues state var is not populated with value yet by previous hook, must
+        //check if initial value for field is provided in 'initialFormData' property - it must be present and not be null.
+        //This hook can execute also after any subsequent render as form definition can be changed f.e. for adding or disabling field
+        let isInitialDataSet: boolean = false
+        if (initialFormData &&
+          initialFormData[fieldName] !== undefined &&
+          initialFormData[fieldName] !== null) {
+          isInitialDataSet = true
+        }
+
+        //initial data is not set when 'initialFormData' property has no value in for appropriate field and state variable for appropriate
+        //field is undefined. Because form definition can be changed, a field could be added, removed and then again added and in case of
+        //adding field again state variable will have value from time it was displayed before
+        if (isInitialDataSet === false &&
+          inputFieldValues[fieldName] === undefined) {
+
+          //get value from first option's array element and add to initial data
+          const [firstOptionData] = fieldDefinition.options
+          initialFormDataForSelectFields[fieldName] = String(firstOptionData.optionValue)
+        }
+      }
+    }
+
+    //merge current field values with corrected select input field values object
+    setInputFieldValues(prevState => ({...prevState, ...initialFormDataForSelectFields}))
+
+  }, [formFieldsDefinition]);
 
 
   /* Setting initially displayed errors to state using useEffect hook to force populating new param value in case parent
@@ -256,7 +319,7 @@ export function FormBuilder({
    * 
    * @param event 
    */
-  const onInputFieldsChange = (event: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
+  const onInputFieldsChange = (event: InputChangeEventTypes) => {
     const name = event.target.name;
 
     //input field value type for all fields except checkbox comes from 'value' attribute.
@@ -280,9 +343,9 @@ export function FormBuilder({
     //clear previous errors, as this will be filled with errors from current validation
     let errors = {};
 
-    for (const [fieldName, fieldOtherInfo] of Object.entries(formFieldsDefinition)) {
+    for (const [fieldName, fieldDefinition] of Object.entries(formFieldsDefinition)) {
       //if validation rules are absent for this field, go to next field
-      if (!Array.isArray(fieldOtherInfo.validationRules)) {
+      if (!Array.isArray(fieldDefinition.validationRules)) {
         continue;
       }
 
@@ -296,7 +359,7 @@ export function FormBuilder({
       at least <n> symbols" should be snown better while string is too short. Therefore in rules array "minLength" should be the last one
       as it is better to first state about too short string and if string lenght is enough only then display error about invalid email
       format*/
-      fieldOtherInfo.validationRules.forEach((validatRulesObj) => {
+      fieldDefinition.validationRules.forEach((validatRulesObj) => {
 
         //rule "required" - don't allow empty string
         //fieldValue will be undefined if input field was not assigned default value and was not changed anyway (change 
@@ -361,7 +424,7 @@ export function FormBuilder({
 
   return (
     <form onSubmit={handleSubmit} className="form_builder">
-      {Object.entries(formFieldsDefinition).map(([fieldName, fieldOtherInfo]) => {
+      {Object.entries(formFieldsDefinition).map(([fieldName, fieldDefinition]) => {
         const fieldValue = inputFieldValues[fieldName];
 
 
@@ -380,7 +443,7 @@ export function FormBuilder({
         //assing value from state to current field's input element's 'value' or 'checked' attribute depending on input element being
         //checbox or other; converting state object's value general type "string | boolean" to runtime type that corresponds to input
         //element's type - checkbox needs boolean type value, other needs string type value
-        if (fieldOtherInfo.type === "checkbox") {
+        if (fieldDefinition.type === "checkbox") {
           inputElemAttributes.checked = Boolean(fieldValue);
 
         } else {
@@ -388,21 +451,60 @@ export function FormBuilder({
         }
 
 
-        if (fieldOtherInfo.type === "checkbox" && checkboxCssCls) {
+        if (fieldDefinition.type === "checkbox" && checkboxCssCls) {
             inputElemAttributes.className = checkboxCssCls;
         }
 
-        //create "input", "textarea", etc. html tag corresponding to type of input in form definition object
-        //TODO - add code for "select" tag creation, "<input type='radio' />
+        //TODO - add code for "<input type='number'/>, possibly it has requires more options than currently for other <input> "type" attributes
         let inputTag;
-        if (fieldOtherInfo.type === "text" || fieldOtherInfo.type === "checkbox" || fieldOtherInfo.type === "hidden"
-        || fieldOtherInfo.type === "password") {
-          inputElemAttributes.type = fieldOtherInfo.type;
+        if (fieldDefinition.type === "text" ||
+          fieldDefinition.type === "checkbox" ||
+          fieldDefinition.type === "hidden" ||
+          fieldDefinition.type === "password") {
+          inputElemAttributes.type = fieldDefinition.type;
           inputTag = <input {...inputElemAttributes} />;
 
-        } else if (fieldOtherInfo.type === "textarea") {
+
+        } else if (fieldDefinition.type === "textarea") {
           inputTag = <textarea {...inputElemAttributes} />;
-        }
+
+
+        } else if(fieldDefinition.type === "select"){
+          //if 'promptText' property is not false and empty string use it as first option text, otherwise displays default "Select..."
+          const promptTextForFirstOption = fieldDefinition.promptText ? fieldDefinition.promptText : "Select..."
+          inputTag = <select {...inputElemAttributes}>
+
+            { //first option with empty value which acts as prompt and by default is added to <select> element. If 'promptText' field
+              //definition property equals to false then prompt option is not added to select, only options provided in 'options' array 
+              fieldDefinition.promptText === false
+                ?
+                null
+                :
+                <option value="">{promptTextForFirstOption}</option>
+            }
+
+            {fieldDefinition.options.map(({ optionValue, optionLabel }, index) =>
+              <option
+                key={index}
+                value={optionValue}>{optionLabel}</option>
+            )}
+          </select>
+
+
+      } else if(fieldDefinition.type === "radio"){
+
+        inputTag = fieldDefinition.options.map(({optionValue, optionLabel}, index) =>
+          <label key={index}>
+            <input
+              type="radio"
+              name={fieldName}
+              value={optionValue}
+              checked={optionValue === fieldValue}
+              onChange={onInputFieldsChange}
+              disabled={disableAllFields === true}/>{optionLabel}
+          </label>
+        )
+      }
 
         /**
          * input tag is created, it must be wrapped and label tag placed before or after input depending whether it is checkbox input
@@ -411,35 +513,35 @@ export function FormBuilder({
 
         //the 'hidden' type input tag is returned here as it has no label tag attached or any wrapping.
         //Also add 'key' attribute (for other input field and label 'key' attribute is added to wrapper element)
-        if (fieldOtherInfo.type === "hidden") {
+        if (fieldDefinition.type === "hidden") {
           return <input {...inputElemAttributes} key={fieldName} />;
         }
 
         //for all input tags except checkbox, label comes before input field. Checkbox input is followed by empty div to have possibility
         //to create custom checkbox style using css, it always has class name 'checkmark' present and appended class names from component
-        //property if it is not empty. input tag and "checkmark" div is placed inside label tag to make click on "checkmark" div detectable
+        //property if it is not empty. Input tag and "checkmark" div is placed inside label tag to make click on "checkmark" div detectable
         //in input when clicking on it
         let inputTagWithLabel;
-        if (fieldOtherInfo.type === "checkbox") {
+        if (fieldDefinition.type === "checkbox") {
           inputTagWithLabel =
             <label htmlFor={fieldName}>
               <div>
                 {inputTag}
-                {/*an element following*/}
+                {/*div for creating custom styled checkbox*/}
                 <div className={'checkmark ' + (checkboxFollwingSiblingCssCls ? checkboxFollwingSiblingCssCls : '')}></div>
               </div>
-              {fieldOtherInfo.label}
+              {fieldDefinition.label}
             </label>;
 
         } else {
           inputTagWithLabel =
             <>
-              <label htmlFor={fieldName}>{fieldOtherInfo.label}</label> {inputTag}
+              <label htmlFor={fieldName}>{fieldDefinition.label}</label> {inputTag}
             </>;
         }
 
         return (
-          <div className={"field " + fieldOtherInfo.type} key={fieldName}>
+          <div className={"field " + fieldDefinition.type} key={fieldName}>
             {inputTagWithLabel}
 
             {inputErrors[fieldName] &&
