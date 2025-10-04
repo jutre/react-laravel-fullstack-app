@@ -204,8 +204,11 @@ export function FormBuilder({
 
   //maintains all form's input fields' values making each form field a React "controlled input field"
   const [inputFieldValues, setInputFieldValues] = useState<SubmittedFormData>({});
+
   //contains input validation errors from validation after "submit" button pressed
   const [inputErrors, setInputErrors] = useState<ErrorMessages>({});
+
+  //errors displayed on initial or any subsequent render, those are not validation errors but might be errors received from REST API af
   const [initialErrors, setInitialErrors] = useState<ErrorMessages>({});
 
   /* Assigning initialFormData parameter value to component's state that maintains all form's input fields values. Doing that in
@@ -407,7 +410,10 @@ export function FormBuilder({
         //if input validation error exists for current field, remove error initially snown for field, invalid input error will be
         //snown instead
         if (fieldName in initialErrors) {
-          delete initialErrors[fieldName]
+          setInitialErrors((prevInitialErrors) => {
+            delete prevInitialErrors[fieldName]
+            return prevInitialErrors
+          })
         }
       }
     }
@@ -420,6 +426,14 @@ export function FormBuilder({
 
     //set actual errors to state for displaying
     setInputErrors(errors);
+  }
+
+
+  //on first render return null preventing running loop that creates all fields markup as first render will be followed by hook run that
+  //sets initial data for state variable that keeps values of controlled input fields and second render will happen which displays fields
+  //with initial data. (On first render state variable is empty object, not even empty string or false boolean values)
+  if(Object.entries(inputFieldValues).length === 0){
+    return null
   }
 
   return (
