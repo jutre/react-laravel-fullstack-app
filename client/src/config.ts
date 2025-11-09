@@ -49,11 +49,20 @@ export const bookCreatingFormFieldsDef: FormFieldsDefinition = {
     is_favorite: {
         label: "add to favorites",
         type: "checkbox"
+    },
+    literary_genre_id: {
+        label: "Book genre",
+        type: "select",
+        options: [
+            {optionValue: "1", optionLabel: "Genre with id 1"},
+            {optionValue: "2", optionLabel: "Genre with id 2"}
+        ],
+        promptText: "--unspecified--"
     }
 }
 
 /**
- * book creation form definition
+
  * book editing form has same fields as new book creating form and an extra "id" field
  */
 

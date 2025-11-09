@@ -247,25 +247,35 @@ export function findNonEmptyErrorFromList(...errors: [FetchBaseErrorTypes, Fetch
 }
 
 /**
- * target object type is object with string type key and property value type string, number or boolean; null is included to accept objects
- * who's property types can also be null alogn with mentioned primitive types as union type like 'string | null'
+ * null is included to accept objects who's property types alongside with string, number or boolean can also be null like
+ * {propA: string | null} but finding null runtime values will throw exception
  */
-type TargetFlatObject = { [key: string]: string | number | boolean | null }
+type TTemplateObject = { [key: string]: string | number | boolean | null }
 
 /**
- * Creates object of specified type assigning values to it's properties obtained from submitted form data object equal named properties.
- * Intended for converting submitted data received from form builder to object with certain type which will be passed as argument to RTK
- * Query endpoint.
+ * Converts form data to an object with structure as template object but values of form data object.
+ * Returned object contains same properties as template object taking its values from form data object same named properties with
+ * values converted to current runtime type of template object properties. This function in conjunction with FormBuilder component reduces
+ * code amount to convert data from defined form to a needed object but with drawback that types can not be fully garded by Typescript -
+ * by typing it is possible at most to assure that returned object has same properties as template object but their type is 'unknown'
+ * as to achieve data conversion automation indexed syntacs is used in assigning values to target object. Therefore the return value type
+ * should be asserted to assignable variable or param type like
  * 
- * Function assigns property values to target object obtaining values from equal named properties of submitted data object. Target object
- * properties runtime type is keeped same as they were when target object was passed as argument to function, that is runtime types 
- * `string | boolean` from form data object is converted target object property's current type runtime `string | number | boolean`.
- * Function returned object type is specified in function type generic argument which allows use returned value type predictably. Function
- * accepts a template object as it's second argument which type must be same as function's return type, this object is used as a source of
- * information about function's returned object's properties types by analysing template object's properties runtime type.
+ * const submittedData: MyType = createTargetObjFromSubmittedData(submittedFormData, templateMyTypeObj) as MyType;
+ * 
+ * therefore it is important to have form definition of FormBuilder component to correctly correspond to template object runtime types.
+ * Function detects cases of unconformity with form data type and template object field runtime type and throws error
+ * 
+ * Target runtime types can be javascript 'string', 'number' or 'boolean' types.
+ * It is possibile to assign null value to template object field instead of numeric value if form data string value equals to
+ * "" <empty string> or "null" string and field is present in nullable fields list which is usefull for cases when numeric or null value can
+ * be assigned for target object field.
+ * Not only boolean type form data object field can be converted to target object boolean type field value but also string values 'true' or
+ * 'false' is converted to appropriate boolean value allowing to get boolean value not only from checkbox input field but also from select
+ * or radio input element
  * 
  * @param formData - form submitted data object which is key-value object, value types may be either string or boolean
- * @param targetObjTemplate - object conforming to function's return type, conforms to funtion's generic type argument. The actual property
+ * @param templateObject - object conforming to function's return type, conforms to funtion's generic type argument. The actual property
  * values matters only from perspective of their runtime type, they will be overwritten by data from submitted data object converting data
  * to runtime type of template object.
  * 
@@ -275,41 +285,111 @@ type TargetFlatObject = { [key: string]: string | number | boolean | null }
  * target type of primitive `string | number | boolean` target runtime types the value from submitted data object should be
  * converted to
  */
-export function createTargetObjFromSubmittedData<T extends TargetFlatObject>(formData: SubmittedFormData, targetObjTemplate: T): T {
+export function createTargetObjFromSubmittedData<T extends TTemplateObject>(
+  formData: SubmittedFormData,
+  templateObject: T,
+  nullableFields: { [key in keyof T]?: boolean } = {}
+): { [key in keyof T]: unknown } {
 
-  //create copy of blueprint object not modifying object passed as argument. TS does not allow copied object variable to have inferred type
-  //'T' from original object and to be simultaniously being modified later - "Type 'T' is generic and can only be indexed for reading",
-  //therefore copied object type properties have wider property type 'unknown'. It is all right as we will analyse actual runtime type of
-  //properties
-  const targetObjCopy: { [key: string]: unknown } = { ...targetObjTemplate }
+  //create copy of template object to not modify original, transformed values from form data will be assigned to the copied object
+  const templateObjCopy: { [key in keyof T]: unknown } = { ...templateObject }
 
-  for (const [blueprintObjKey, blueprintObjFieldVal] of Object.entries(targetObjTemplate)) {
+  let templateObjKey: keyof T;
+  for (templateObjKey in templateObjCopy) {
+    const blueprintObjFieldVal = templateObjCopy[templateObjKey]
 
-    
-    const formFieldVal = formData[blueprintObjKey]
+    //create object key string version as formData object can't be indexed with symbol type keys contained in 'templateObjKey' variable,
+    //also used in error messages
+    const objKeyStrVal = String(templateObjKey)
 
-    //if form does not have field with blueprint object property name, skip and leave prop value in blueprint object as is, possibly it
-    //exists for other porpuses than carring value from form
-    if(formFieldVal === undefined){
-      continue;
+    const formFieldVal = formData[objKeyStrVal]
+
+    //if form does not have field with template object property name throw error
+    if (formFieldVal === undefined) {
+      throw new Error(`formData object does not have entry for template object field [${objKeyStrVal}]`)
     }
 
-    //assign value from submitted data to target object converting it to target object's runtime type
+    //convert form data value to string. Also boolean type value is converted to string runtime type not rising error
     if (typeof blueprintObjFieldVal === 'string') {
-      targetObjCopy[blueprintObjKey] = String(formFieldVal)
+      templateObjCopy[templateObjKey] = String(formFieldVal)
 
+
+      //convert form data value to integer/float runtime value if template object property is of integer/float.
+      //Assign null value to resulting object if after parsing form data using parseInt()/parseFloat() functions NaN is returned and current
+      //field is in nullable field list and form value is "" <empty string> or "null", otherwise throw error about non numeric string value
     } else if (typeof blueprintObjFieldVal === 'number') {
-      targetObjCopy[blueprintObjKey] = parseInt(String(formFieldVal))
+
+      if (typeof formFieldVal === 'boolean') {
+        throw new Error(`formData object field [${objKeyStrVal}] runtime type is boolean but templete object field [${objKeyStrVal}]
+          runtime type is "number". Possible there is error with form definition as boolean type form data comes from checkbox input field
+          which is not convertable to numeric value; value must come from input field stored as string type value: select, radio, possibly
+          text or number type input field`)
+      }
+
+      let fieldStringVal = formFieldVal;
+
+      let fieldNumericVal: number;
+      if (Number.isInteger(blueprintObjFieldVal)) {
+        fieldNumericVal = parseInt(fieldStringVal)
+      } else {
+        fieldNumericVal = parseFloat(fieldStringVal)
+      }
+
+
+      //if conversion result is NaN, the value will be converted to null value if nullable fields object has property with name equal to 
+      //current field name and form field value either "" <empty string> or "null" string value
+      if (isNaN(fieldNumericVal)) {
+
+        const errMsgCommonPart = `formData[${objKeyStrVal}] value "${fieldStringVal}" can not be converted neither to numeric type as defined 
+            by template object's [${objKeyStrVal}] property runtime type neither to null as form data value is not in integer/float format`;
+
+
+        if (nullableFields[templateObjKey] !== true) {
+          throw new Error(errMsgCommonPart + ' and property is not in nullable fields list.')
+
+        } else if (fieldStringVal !== '' && fieldStringVal !== 'null') {
+          throw new Error(errMsgCommonPart + ', property is present in nullable fields list but is not equal to either "" <empty string> ' +
+            'or "null" value as only those non numeric values can be converted to null if present in nullable fields list')
+
+        } else {
+          //assigning null value as field is in nullable list and equals to "" <empty string> or "null"
+          templateObjCopy[templateObjKey] = null;
+        }
+
+      } else {
+        //if after conversion to integer/float result is meaningfull numeric value not NaN then use it as resulting object's property value.
+        //The main goal of current function is to conveniently convert string literals to integer from 'select' or 'radio' input elements
+        //which would contain correct integer format string values usually comeing from database record ID values, therefore
+        //parseInt()/parseFloat() was used which returns numeric value if at least first part of string is in numeric format
+        templateObjCopy[templateObjKey] = fieldNumericVal
+      }
+
+
 
     } else if (typeof blueprintObjFieldVal === 'boolean') {
-      targetObjCopy[blueprintObjKey] = Boolean(formFieldVal)
+
+      //boolean form data runtime value originates from checkbox input field, use value as it is
+      if (typeof formFieldVal === 'boolean') {
+        templateObjCopy[templateObjKey] = formFieldVal
+
+        //convert 'true' string value to boolean true
+      } else if (formFieldVal === 'true') {
+        templateObjCopy[templateObjKey] = true
+
+        //convert 'false' string value to boolean false
+      } else if (formFieldVal === 'false') {
+        templateObjCopy[templateObjKey] = false
+
+      } else {
+        throw new Error(`formData[${objKeyStrVal}] value "${formFieldVal}" can not be converted to boolean type as defined by template 
+            object's [${objKeyStrVal}] property runtime type as form data value is not boolean true/false neither string "true"/"false"`)
+      }
 
     } else if (blueprintObjFieldVal === null) {
-      throw new Error(`blueprint object property with name "${blueprintObjKey}" value is null, must have value other than null to figure ` +
-        "out prop's target runtime type")
+      throw new Error(`template object property with name "${objKeyStrVal}" value is null, must have value other than null to ` +
+        "figure out prop's target runtime type")
     }
   }
 
-  //can safely assert that targetObjCopy is of type T because targetObjCopy was created by spread operator from object of type T
-  return targetObjCopy as T
+  return templateObjCopy
 }

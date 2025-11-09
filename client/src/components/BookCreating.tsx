@@ -60,10 +60,11 @@ export function BookCreating() {
       title: "",
       author: "",
       preface: "",
-      is_favorite: false
+      is_favorite: false,
+      literary_genre_id: 0
     }
 
-    const newBokData: NewBook = createTargetObjFromSubmittedData<NewBook>(submittedFormData, templateNewBookObj)
+    const newBokData: NewBook = createTargetObjFromSubmittedData(submittedFormData, templateNewBookObj, {literary_genre_id:true}) as NewBook
 
     //saving to state data from mutation response to display created book data after book successfully saved
     try {

@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Database\Seeders\Helper;
-
+use Database\Seeders\LiteraryGenresSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -26,5 +25,10 @@ class DatabaseSeeder extends Seeder
         $booksDataArr = Helper::getBookDataArray($userId);
 
         DB::table('books')->insert($booksDataArr);
+
+
+        $this->call([
+            LiteraryGenresSeeder::class,
+        ]);
     }
 }

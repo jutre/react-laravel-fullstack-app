@@ -2,15 +2,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\LiteraryGenre;
 use App\Models\User;
 use Database\Seeders\Helper;
 
 
 class BookController extends Controller
 {
+    //endpoints where all info about single book is returned (single book info, returned object after book creating, updating) includes same
+    //set of columns
+    private $singleBookInfoSelectedColumns = ['id', 'title', 'author', 'preface', 'is_favorite', 'literary_genre_id'];
+
     private $bookDataValidationRules = [
         'title' => 'between:3,255',
         'author' => 'between:3,255'
@@ -32,38 +36,55 @@ class BookController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate($this->bookDataValidationRules);
+        $this->validateSubmBookDataSyntacsAndFormat($request);
         usleep(500000);
 
-        //a book with same title among books belonging to user must not exist. If exists, return error message, don't create book
-
+        //a book with same title among books belonging to user must not exist. If exists, return error message,
+        //don't create book
         $bookTitle = $request->input('title');
         if ($this->doesBookTitleExistAmongUsersBooks($request, $bookTitle)) {
             $error = $this->createDataForExistingTitleErrorResponse($bookTitle);
             return response()->json($error, 409);
         }
 
+        $book = new Book($request->all());
+
+        //associate Book with LiteraryGenre instance if 'literary_genre_id' is not null,
+        //otherwise model's property stays null
+        $genreId = $request->input('literary_genre_id');
+        if ($genreId !== null) {
+            $literaryGenreFromDb = LiteraryGenre::find($genreId);
+
+            if (empty($literaryGenreFromDb)) {
+                return $this->literaryGenreNotFoundErrorResponse($genreId);
+            }
+
+            $book->literaryGenre()->associate($literaryGenreFromDb);
+        }
+
+        //associate Book with User (creator of book)
         $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
         $user = User::find($currentlyLoggedInUserId);
+        $book->user()->associate($user);
 
-        $book = new Book($request->all());
-        $savedBookRecord = $user->books()->save($book);
+        $book->save();
 
-        return $savedBookRecord;
+        return Book::select($this->singleBookInfoSelectedColumns)
+            ->find($book->id);
     }
 
     /**
      * Select book by id.
      * 
-     * Method adds book's user_id column value constraint to sql query to prevent accessing books belonging to other user (an ID of 
-     * arbitrary book id can be passed in REST API URL book id path segment, also of book belonging to other user)
+     * In addition to selecting record by books.id column, query also is constrained by book.user_id column by value of currently logged in
+     * user to prevent accessing books belonging to other user as in all endpoints user can only access books created by himself
      * 
      */
     public function show(Request $request, int $id)
     {
         usleep(100000);
         $bookRecord = $this->getBooksTableQueryWithCurrentUserConstraint($request)
-            ->select(['id', 'title', 'author', 'preface', 'is_favorite'])
+            ->select($this->singleBookInfoSelectedColumns)
             ->where('id', $id)
             ->first();
 
@@ -109,7 +130,7 @@ class BookController extends Controller
         $bookRecord->update($request->all());
         
         //can't use result object's refresh() method as it selects and returns all columns from model's table, but some are needed
-        $bookAfterUpdate = Book::select(['id', 'title', 'author', 'preface', 'is_favorite'])
+        $bookAfterUpdate = Book::select($this->singleBookInfoSelectedColumns)
             ->find($id);
 
         return $bookAfterUpdate;
@@ -256,6 +277,22 @@ class BookController extends Controller
     }
 
 
+    /**
+     * validates submitted book data string fields length; in case literary genre ID is not null validates it to be in integer format
+     *
+     * @param Request $request
+     * @return void
+     * @throws
+     */
+    private function validateSubmBookDataSyntacsAndFormat(Request $request)  {
+        $request->validate([
+            'title' => 'between:3,255',
+            'author' => 'between:3,255'
+        ]);
+        if ($request->input('literary_genre_id')!== null) {
+            $request->validate(['literary_genre_id' => 'integer']);
+        }
+    }
 
     /**
      * generates error response (JSON content and HTTP response code 404) for case that book is not found
@@ -265,6 +302,29 @@ class BookController extends Controller
      */
     private function bookNotFoundErrorResponse($bookId){
         return response()->json(['message' => "Book with id $bookId not found"], 404);
+    }
+
+
+
+    /**
+     * generates error response (JSON content and HTTP response code 404) for case that literary genre is not found
+     *
+     * @param integer $bookId - book identifier
+     * @return json with message that book does not exist and HTTP code 404
+     */
+    private function literaryGenreIncorrectFormatErrorResponse($genreId){
+        return response()->json(['message' => "Literary genre with id $genreId not found"], 404);
+    }
+
+
+    /**
+     * generates error response (JSON content and HTTP response code 404) for case that literary genre is not found
+     *
+     * @param integer $bookId - book identifier
+     * @return json with message that book does not exist and HTTP code 404
+     */
+    private function literaryGenreNotFoundErrorResponse($genreId){
+        return response()->json(['message' => "Literary genre with id $genreId not found"], 404);
     }
 
 
@@ -324,6 +384,7 @@ class BookController extends Controller
      * @param string $title - title that is trying to be saved for book that already is used for existing book
      * @return array
      */
+    //TODO - return response object (json and response code like in bookNotFoundErrorResponse () method)
     private function createDataForExistingTitleErrorResponse(string $title){
         $generalMessage = "Book with title \"$title\" already exists";
         $error = [

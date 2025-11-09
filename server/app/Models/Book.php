@@ -4,10 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\LiteraryGenre;
+use App\Models\User;
 
 class Book extends Model
 {
     use HasFactory;
+
 
     protected $fillable = [
         'title',
@@ -20,4 +24,21 @@ class Book extends Model
     protected $casts = [
         'is_favorite' => 'boolean',
     ];
+
+
+    /**
+     * a user the books belongs to
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * literary genre the books belongs to
+     */
+    public function literaryGenre(): BelongsTo
+    {
+        return $this->belongsTo(LiteraryGenre::class);
+    }
 }
