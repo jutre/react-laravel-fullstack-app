@@ -38,5 +38,8 @@ Route::get('/books/search/{title}', [BookController::class, 'search'])->middlewa
 Route::get('/favorite-books', [BookController::class, 'getFavoriteBooks'])->middleware('auth:sanctum');
 Route::delete('/favorite-books/{id}', [BookController::class, 'removeBookFromFavorites'])->middleware('auth:sanctum');
 
+//literary genres list
+Route::get('/literary_genres', [BookController::class, 'getLiteraryGenresList'])->middleware('auth:sanctum');
+
 //reseting demo data
 Route::post('/demo-data-reset', [BookController::class, 'resetDemoData'])->middleware('auth:sanctum');

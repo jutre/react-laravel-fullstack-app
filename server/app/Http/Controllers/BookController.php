@@ -276,6 +276,12 @@ class BookController extends Controller
         return response()->noContent();
     }
 
+    public function getLiteraryGenresList()
+    {
+        return LiteraryGenre::select(['id', 'title'])
+            ->orderBy('title', 'asc')
+            ->get();
+    }
 
     /**
      * validates submitted book data string fields length; in case literary genre ID is not null validates it to be in integer format
@@ -302,18 +308,6 @@ class BookController extends Controller
      */
     private function bookNotFoundErrorResponse($bookId){
         return response()->json(['message' => "Book with id $bookId not found"], 404);
-    }
-
-
-
-    /**
-     * generates error response (JSON content and HTTP response code 404) for case that literary genre is not found
-     *
-     * @param integer $bookId - book identifier
-     * @return json with message that book does not exist and HTTP code 404
-     */
-    private function literaryGenreIncorrectFormatErrorResponse($genreId){
-        return response()->json(['message' => "Literary genre with id $genreId not found"], 404);
     }
 
 

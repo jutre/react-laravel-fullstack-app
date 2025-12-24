@@ -3,7 +3,8 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { BooksListModes } from '../types/BooksListMode'
 import { FAVORITE_BOOKS_LIST } from "../constants/bookListModes";
 import { routes } from "../config";
-import { SubmittedFormData } from "./FormBuilder";
+import { SubmittedFormData, InputOptionsList } from "./FormBuilder";
+import { LiteraryGenre } from '../types/LiteraryGenre';
 /**
  * This function it intended to be used as a part of "click" event handler attached to attached to window.document. The other part of it
  * must be defined inside React compoent's function using useCallback() hook and invoke current function from it. The function defined
@@ -392,4 +393,10 @@ export function createTargetObjFromSubmittedData<T extends TTemplateObject>(
   }
 
   return templateObjCopy
+}
+
+export function convertLiteraryGenresListToOptionsList(literaryGenresList: LiteraryGenre[]): InputOptionsList {
+  return literaryGenresList.map((genre) =>
+    ({ value: genre.id, label: genre.title })
+  )
 }

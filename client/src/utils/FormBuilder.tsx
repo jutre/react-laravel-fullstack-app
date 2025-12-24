@@ -24,8 +24,12 @@ export type ValidationRule =
     message?: string
   }
 
-// 
-// 
+//represents information for creating 'option' tags for 'select' input element or list of 'radio' type input tags
+type InputElementOption = {
+  value: string | number,
+  label: string
+}
+export type InputOptionsList = InputElementOption[]
 
 /**
  * information for creating an a pair of HTML tags in form: an input element ("input", "textarea", etc.) tags and "label" tag associated
@@ -41,18 +45,21 @@ export type FieldDefinition = {
 {
   type: "select",
   label: string,
-  options: { optionValue: string | number, optionLabel: string | number }[],
+  //TODO improve comment
   //lets override default prompt label ("Select...") displayed as first option if 'promptText' set to non empty string or hide first option
   //with empty string as value displayed by default if 'promptText' is set to false
   promptText?: false | string,
   validationRules?: ValidationRule[]
+  /*!!! options list for input element is passed via component props. It can't be included in form definition constant to cover case when
+  options list becomes known only after it is fetched from API*/
 } |
 
 {
   label: string,
   type: "radio",
-  options: { optionValue: string | number, optionLabel: string | number }[],
   validationRules?: ValidationRule[]
+  /*!!! options list for input element is passed via component props. It can't be included in form definition constant to cover case when
+  options list becomes known only after it is fetched from API*/
 }
 
 /**
@@ -64,6 +71,7 @@ export type FormFieldsDefinition = {
   [index: string]: FieldDefinition
 }
 
+//TODO - improve comment for type
 /**
  * if null value is passed as fields initial data the effect is same as there is no initial data passed for field - on initial render field
  * is assigned a default value depending on forms input type as in case if initial data is not passed and in case initial data parameter is
@@ -83,6 +91,14 @@ export type ErrorMessages = {
 }
 
 /**
+ * Options list for select/radio input elements. Object index corresponds to select/radion input field name to which options list is
+ * to be attached
+ */
+export type OptionsForInputFields = {
+  [index: string]: InputOptionsList
+}
+
+/**
  * submitted data is plain object with keys corresponding to input field name and property value is submitted data. All input fields' values
  * except checkbox input fields are returned as "string" type values, for checkbox boolean type is returned
  */
@@ -94,6 +110,7 @@ interface FormBuilderProps {
   formFieldsDefinition: FormFieldsDefinition,
   submitButtonText?: string,
   initialFormData?: InitialFormData | null,
+  optionsForSelectOrRadioFields?: OptionsForInputFields | null,
   initiallyDisplayedErrors?: ErrorMessages | null,
   successfulSubmitCallback: (submittedFormData: SubmittedFormData) => void,
   disableAllFields?: boolean,
@@ -167,6 +184,9 @@ type InputElementAttributes = {
  * initial or override value for input field which has same name. The use case of updating field's value on some subsequent form render
  * after form submit would be login form where form after incorrect login/password is displayed with email field as it was entered by user
  * and setting password field blank
+ * @param optionsForSelectOrRadioFields - options list for select/radio input. There are situations when options list is only known after it it fetched
+ * from API, it can not be included in form definition variable. In such situations options list is to be passed to component using
+ * component property
  * @param initiallyDisplayedErrors - when dispaying form there is possibility to display errors. For case when it is necessarry to 
  * display errors received from REST API endpoint like error that "username is already used". Object key corresponds to field name
  * next to which error should be displayed, the value is error message. Initial error message is displayed until there is an input validation
@@ -193,6 +213,7 @@ export function FormBuilder({
   formFieldsDefinition,
   submitButtonText,
   initialFormData,
+  optionsForSelectOrRadioFields,
   initiallyDisplayedErrors,
   successfulSubmitCallback,
   disableAllFields,
@@ -266,35 +287,48 @@ export function FormBuilder({
   as it's selected option an option (label and value) taken from first element of current field's definition 'options' array with possibly
   non empty value. Displayed option and appropriate state variable field values will not match if user does not change select field's
   value and form is submitted as empty value instead of actually selected will be passed to submitted data callback, also non empty
-  validation rule if present for current field won't pass. In described situation take initial value from field's definition first option
-  and set it to stata variable that maintains controlled input fields values*/
+  validation rule if present for current field would not pass. In described situation take initial value from field's definition first
+  option and set it to state variable that maintains controlled input fields values*/
   useEffect(() => {
     const initialFormDataForSelectFields: SubmittedFormData = {};
 
     for (const [fieldName, fieldDefinition] of Object.entries(formFieldsDefinition)) {
 
+      //TODO - make same condition for promt option excluding as in code thats outputs 'select' element - there empty string is not checked
+      //but there it is, actually it is a bug currently
       if (fieldDefinition.type === "select" &&
         fieldDefinition.promptText === false) {
-
+        //TODO improve comment
         //in case hook executes after first display then inputFieldValues state var is not populated with value yet by previous hook, must
         //check if initial value for field is provided in 'initialFormData' property - it must be present and not be null.
         //This hook can execute also after any subsequent render as form definition can be changed f.e. for adding or disabling field
-        let isInitialDataSet: boolean = false
-        if (initialFormData &&
-          initialFormData[fieldName] !== undefined &&
-          initialFormData[fieldName] !== null) {
-          isInitialDataSet = true
-        }
 
-        //initial data is not set when 'initialFormData' property has no value in for appropriate field and state variable for appropriate
-        //field is undefined. Because form definition can be changed, a field could be added, removed and then again added and in case of
-        //adding field again state variable will have value from time it was displayed before
-        if (isInitialDataSet === false &&
+        //initial data for field is provided if value for current field in initialFormData property is present (not undefined) and it's
+        //value is not null (actual value is a number, string or boolean type value)
+        const isFieldInitialDataProvided =
+          initialFormData !== undefined &&
+          initialFormData !== null &&
+          initialFormData[fieldName] !== undefined &&
+          initialFormData[fieldName] !== null
+
+        //assign initial data for current field only if value for appropriate field in fields state variable is undefined. Field for
+        //current field in state variable will be undefined after first render (previous hook populated values is not in state yet)
+        //or when a select/radio field is added to form definition at some subsequent render.
+        //But it will be other than undefined if select/radio field was present, then was removed and then added again (possible there will
+        //be needed such logic) - it will have same selected value as before removing from form
+        //as it was before removing
+        if (isFieldInitialDataProvided === false &&
           inputFieldValues[fieldName] === undefined) {
 
-          //get value from first option's array element and add to initial data
-          const [firstOptionData] = fieldDefinition.options
-          initialFormDataForSelectFields[fieldName] = String(firstOptionData.optionValue)
+
+          const options: InputOptionsList = getOptionsListForInputField(fieldName, optionsForSelectOrRadioFields)
+          //get value from first option's array element and set it as initial data for field.
+          //Theoretically there may be situations that programmer does not provide options list neither in form definition nor in component
+          //prop therefore options lenght zero check to avoid runtime error (options list will be empty)
+          if(options.length > 0){
+            const [firstOptionData] = options
+            initialFormDataForSelectFields[fieldName] = String(firstOptionData.value)
+          }
         }
       }
     }
@@ -303,6 +337,34 @@ export function FormBuilder({
     setInputFieldValues(prevState => ({...prevState, ...initialFormDataForSelectFields}))
 
   }, [formFieldsDefinition]);
+
+
+  /**
+   * Returns list of options for specified select/radio input field.
+   * Intented to be invoked in loops that process input fields info when a select/radio input field is encauntered
+   * 
+   * @param fieldName - name of a select/radio input field for which to retrieve options list from {@link optionsForSelectOrRadioFields}
+   * parameter containing options for all select/radio input fields
+   * @param optionsForSelectOrRadioFields - options for all select/radio input fields, parameter value must be received from component's
+   * prop containing options for all select/radio input fields
+   * @returns - list of objects, each object containing a dedicated field for single option value and label
+   * 
+   * @throws error if {@link optionsForSelectOrRadioFields} parameter does not contain options for specified field name thus not letting
+   * create a select/radio input field if options list is not provided
+   */
+  function getOptionsListForInputField(
+    fieldName: string,
+    optionsForSelectOrRadioFields?: OptionsForInputFields | null): InputOptionsList {
+
+    if(optionsForSelectOrRadioFields &&
+      fieldName in optionsForSelectOrRadioFields){
+
+      return optionsForSelectOrRadioFields[fieldName]
+
+    }else{
+      throw new Error(`Options list for [${fieldName}] field are not specified!`)
+    }
+  }
 
 
   /* Setting initially displayed errors to state using useEffect hook to force populating new param value in case parent
@@ -485,7 +547,13 @@ export function FormBuilder({
 
         } else if(fieldDefinition.type === "select"){
           //if 'promptText' property is not false and empty string use it as first option text, otherwise displays default "Select..."
+          //TODO - possibly make prompt option excluding only by `false` value, not empty string and create function that checks
+          //for a prompt option excluding as also useEffect that checks initial data presence for select field has same condition
+          //for prompt option absence
           const promptTextForFirstOption = fieldDefinition.promptText ? fieldDefinition.promptText : "Select..."
+
+          let optionsList: InputOptionsList = getOptionsListForInputField(fieldName, optionsForSelectOrRadioFields)
+          //TODO - in options output loop replace array index with option value
           inputTag = <select {...inputElemAttributes}>
 
             { //first option with empty value which acts as prompt and by default is added to <select> element. If 'promptText' field
@@ -497,25 +565,26 @@ export function FormBuilder({
                 <option value="">{promptTextForFirstOption}</option>
             }
 
-            {fieldDefinition.options.map(({ optionValue, optionLabel }, index) =>
+            {optionsList.map(({ value, label }, index) =>
               <option
                 key={index}
-                value={optionValue}>{optionLabel}</option>
+                value={value}>{label}</option>
             )}
           </select>
 
 
       } else if(fieldDefinition.type === "radio"){
+        let optionsList: InputOptionsList = getOptionsListForInputField(fieldName, optionsForSelectOrRadioFields)
 
-        inputTag = fieldDefinition.options.map(({optionValue, optionLabel}, index) =>
+        inputTag = optionsList.map(({value, label}, index) =>
           <label key={index}>
             <input
               type="radio"
               name={fieldName}
-              value={optionValue}
-              checked={optionValue === fieldValue}
+              value={value}
+              checked={value === fieldValue}
               onChange={onInputFieldsChange}
-              disabled={disableAllFields === true}/>{optionLabel}
+              disabled={disableAllFields === true}/>{label}
           </label>
         )
       }

@@ -1,8 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { createEntityAdapter,
+  EntityState,
+  createSelector } from '@reduxjs/toolkit';
 import { User, UserCredentials } from '../../types/User';
 import { Book, NewBook } from '../../types/Book';
 import { getCookie } from '../../utils/utils'
 import { booksCollectionRemovedFromSelection } from '../booksSlice';
+import { LiteraryGenre } from '../../types/LiteraryGenre';
 
 type FilterQueryResultJsonFormat = {
   data: Book[],
@@ -14,9 +18,15 @@ type FilterQueryInputParameter = {
   limit?: number
 }
 
+
+//EntityAdapter will be used to generate selectors returning literary genres data in at least two shapes
+const literaryGenresAdapter = createEntityAdapter<LiteraryGenre>()
+const initialStateForLiteraryGenres = literaryGenresAdapter.getInitialState()
+
 // Define a service using a base URL and expected endpoints
 export const apiSlice = createApi({
   reducerPath: 'apiSlice',
+
   baseQuery: fetchBaseQuery({ 
     baseUrl: 'http://localhost/laravel_books_api/public/api/',
     credentials: 'include',
@@ -33,7 +43,9 @@ export const apiSlice = createApi({
       return headers
     }
   }),
+
   tagTypes: ['BookGeneralInfo', 'BookFullInfo', 'BookFavoriteFieldInfo'],
+
   endpoints: (builder) => ({
 
     /**
@@ -81,12 +93,20 @@ export const apiSlice = createApi({
     }),
 
 
+    getLiteraryGenres: builder.query<EntityState<LiteraryGenre, number>, void>({
+      query: () => '/literary_genres',
+      transformResponse(res: LiteraryGenre[]) {
+        // Create a normalized state object containing all the literary genre items
+        return literaryGenresAdapter.setAll(initialStateForLiteraryGenres, res)
+      }
+    }),
+
     
     getBooksList: builder.query<Book[], void>({
       query: () => "books",
       providesTags: (result) =>
         result
-          ? //each book list item contains just basic info, privide dedicated tag for each book and a tag to be invalidated when new book is
+          ? //each book list item contains just basic info, provide dedicated tag for each book and a tag to be invalidated when new book is
             //created 
             [
               { type: 'BookGeneralInfo', id: 'LIST' },
@@ -254,3 +274,15 @@ export const {
   useDeleteBookMutation,
   useRemoveBookFromFavoritesMutation,
   useResetDemoDataMutation } = apiSlice
+
+
+export const selectGenresResult = apiSlice.endpoints.getLiteraryGenres.select()
+
+const selectLiteraryGenreData = createSelector(
+  selectGenresResult,
+  // Fall back to the empty entity state if no response yet.
+  result => result.data ?? initialStateForLiteraryGenres
+)
+export const { 
+  selectAll: selectAllLiteraryGenres, 
+  selectEntities: selectLiteraryGenreEntities } = literaryGenresAdapter.getSelectors(selectLiteraryGenreData)

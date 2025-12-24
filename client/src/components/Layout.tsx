@@ -10,12 +10,14 @@ import {
   Routes,
   Route
 } from "react-router-dom";
-import { useAppSelector } from '../store/reduxHooks';
+import { useAppDispatch, useAppSelector } from '../store/reduxHooks';
 import { selectUserLoadingStatus, selectIsUserLoggenIn } from '../features/authSlice';
 import { LoginForm } from "./LoginForm";
 import { UserInfoAndLogoutControls } from "./UserInfoAndLogoutControls";
 import { BookCreating } from "./BookCreating";
 import { PageNotFound } from "./PageNotFound";
+import { apiSlice } from "../features/api/apiSlice";
+import { ResourcesPreloader } from './ResourcesPreloader';
 
 /**
  * returns markup that creates layout structure (three columns beginning with larget tablet devices, one column on smaller tablet devices,
@@ -24,6 +26,8 @@ import { PageNotFound } from "./PageNotFound";
  * @returns
  */
 const Layout = () => {
+  const dispatch = useAppDispatch();
+
   const userDataInitialLoadStatus = useAppSelector(selectUserLoadingStatus)
   const isUserLoggenIn = useAppSelector(selectIsUserLoggenIn);
 
@@ -35,21 +39,23 @@ const Layout = () => {
   if (userDataInitialLoadStatus === "pending") {
     content = <div>User session check...</div>
 
-
-    //got response from API, now we know whether user is authenticated or not
   } else {
-
-    //user is authenticated display component corresponding to current URL
     if (isUserLoggenIn) {
+      //User is authenticated
+
+      //display component corresponding to current URL
       content =
         <Routes>
           <Route path={routes.bookListPath} element={<BooksList />} />
           <Route path={routes.favoriteBooksListPath} element={<BooksList listMode={FAVORITE_BOOKS_LIST} />} />
           <Route path={routes.bookEditPath} element={<BookEditing />} />
-          <Route path={routes.createBookPath} element={<BookCreating />} />
+          <Route path={routes.createBookPath} element={<ResourcesPreloader><BookCreating /></ResourcesPreloader>} />
           <Route path={routes.demoDataResetPath} element={<DemoDataReset />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
+
+      //launch fetching literary genres list to be already loaded when user opens book creation or edit form
+      dispatch(apiSlice.endpoints.getLiteraryGenres.initiate())
 
       //NOT authenticated. For each URL that in authenticated state have a corresponding component display login form, for unrecognized
       //paths display "Page not found" component

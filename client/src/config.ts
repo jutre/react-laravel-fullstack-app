@@ -13,7 +13,7 @@ export const routes = {
     bookEditPath:"/:bookId/edit/",
     createBookPath:"/create/",
     demoDataResetPath:"/demo-data-reset/"
-};
+}
 
 
 /**
@@ -53,10 +53,6 @@ export const bookCreatingFormFieldsDef: FormFieldsDefinition = {
     literary_genre_id: {
         label: "Book genre",
         type: "select",
-        options: [
-            {optionValue: "1", optionLabel: "Genre with id 1"},
-            {optionValue: "2", optionLabel: "Genre with id 2"}
-        ],
         promptText: "--unspecified--"
     }
 }
