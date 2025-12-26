@@ -57,7 +57,7 @@ export function BookEditing() {
     }
 
     const submittedBookData: Book =
-      createTargetObjFromSubmittedData<Book>(submittedFormData, templateBookObj, {literary_genre_id:true}) as Book
+      createTargetObjFromSubmittedData<Book>(submittedFormData, templateBookObj, ["literary_genre_id"]) as Book
 
     //saving to state data from mutation response to be snown in form
     try {

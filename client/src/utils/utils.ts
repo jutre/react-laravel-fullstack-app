@@ -279,6 +279,9 @@ type TTemplateObject = { [key: string]: string | number | boolean | null }
  * values matters only from perspective of their runtime type, they will be overwritten by data from submitted data object converting data
  * to runtime type of template object.
  * 
+ * @param nullableFields - array of template object's keys of numeric fields whose corresponding values from form field can be converted to
+ * `null` value if converting form data to integer or float value will result in NaN
+ * 
  * @returns object of type which is specified in function type generic argument filled with values from submitted form data argument
  * 
  * @throws error if property's value in template object is null and property is present in submitted data object because it is intended that
@@ -288,7 +291,7 @@ type TTemplateObject = { [key: string]: string | number | boolean | null }
 export function createTargetObjFromSubmittedData<T extends TTemplateObject>(
   formData: SubmittedFormData,
   templateObject: T,
-  nullableFields: { [key in keyof T]?: boolean } = {}
+  nullableFields?: Array<keyof T>
 ): { [key in keyof T]: unknown } {
 
   //create copy of template object to not modify original, transformed values from form data will be assigned to the copied object
@@ -331,7 +334,9 @@ export function createTargetObjFromSubmittedData<T extends TTemplateObject>(
       let fieldNumericVal: number;
       if (Number.isInteger(blueprintObjFieldVal)) {
         fieldNumericVal = parseInt(fieldStringVal)
+
       } else {
+        //value is not integer value according to previous 'if' branch, conversion with parseFloat() will return either float of NaN
         fieldNumericVal = parseFloat(fieldStringVal)
       }
 
@@ -344,7 +349,8 @@ export function createTargetObjFromSubmittedData<T extends TTemplateObject>(
             by template object's [${objKeyStrVal}] property runtime type neither to null as form data value is not in integer/float format`;
 
 
-        if (nullableFields[templateObjKey] !== true) {
+        if (nullableFields &&
+          nullableFields.includes(templateObjKey) === false) {
           throw new Error(errMsgCommonPart + ' and property is not in nullable fields list.')
 
         } else if (fieldStringVal !== '' && fieldStringVal !== 'null') {
