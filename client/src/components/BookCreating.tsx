@@ -13,14 +13,13 @@ import { ButtonWithIconAndBackground } from './ui_elements/ButtonWithIconAndBack
 import { FormBuilder, SubmittedFormData } from '../utils/FormBuilder';
 import { Book, NewBook } from "../types/Book";
 import { useAddBookMutation,
-  selectAllLiteraryGenres,
-  selectLiteraryGenreEntities } from "../features/api/apiSlice";
+  selectLiteraryGenreEntities,
+  selectLiteraryGenresOptionsList } from "../features/api/apiSlice";
 import { useAppSelector } from '../store/reduxHooks';
 import DisappearingMessage from './DisappearingMessage';
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
 import { extractMessageOrMessagesObjFromQueryError,
-  createTargetObjFromSubmittedData,
-  convertLiteraryGenresListToOptionsList } from "../utils/utils";
+  createTargetObjFromSubmittedData } from "../utils/utils";
 
 
 export function BookCreating() {
@@ -32,7 +31,7 @@ export function BookCreating() {
 
   const navigate = useNavigate();
 
-  const literaryGenresList = useAppSelector(selectAllLiteraryGenres);
+  const literaryGenresOptionsList = useAppSelector(selectLiteraryGenresOptionsList)
 
   //literary genre entities object is used as choosen genre id will be known after form is submitted
   const literaryGenresEntities = useAppSelector(selectLiteraryGenreEntities);
@@ -217,7 +216,7 @@ export function BookCreating() {
     pageHeading = "Add book"
 
     const inputElementOptions = {
-      literary_genre_id: convertLiteraryGenresListToOptionsList(literaryGenresList)
+      literary_genre_id: literaryGenresOptionsList
     }
 
     mainContent =

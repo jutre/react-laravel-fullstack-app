@@ -2,12 +2,11 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getQueryParamValue,
   extractMessageOrMessagesObjFromQueryError,
-  createTargetObjFromSubmittedData,
-  convertLiteraryGenresListToOptionsList} from "../utils/utils";
+  createTargetObjFromSubmittedData } from "../utils/utils";
 import { Book } from "../types/Book";
 import { useGetBookQuery,
   useUpdateBookMutation,
-  selectAllLiteraryGenres } from "../features/api/apiSlice";
+  selectLiteraryGenresOptionsList } from "../features/api/apiSlice";
 import { skipToken } from '@reduxjs/toolkit/query/react'
 import {
   routes,
@@ -36,7 +35,7 @@ import { useAppSelector } from "../store/reduxHooks";
  */
 export function BookEditing() {
 
-  const literaryGenresList = useAppSelector(selectAllLiteraryGenres);
+  const literaryGenresOptionsList = useAppSelector(selectLiteraryGenresOptionsList)
 
   /**
    * TODO dispatches updating thunk to update book data in redux store. Additionally gets excludes get params 
@@ -190,7 +189,7 @@ export function BookEditing() {
   }
 
   const inputElementOptions = {
-      literary_genre_id: convertLiteraryGenresListToOptionsList(literaryGenresList)
+      literary_genre_id: literaryGenresOptionsList
   }
 
   return (

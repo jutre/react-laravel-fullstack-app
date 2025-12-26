@@ -286,3 +286,12 @@ const selectLiteraryGenreData = createSelector(
 export const { 
   selectAll: selectAllLiteraryGenres, 
   selectEntities: selectLiteraryGenreEntities } = literaryGenresAdapter.getSelectors(selectLiteraryGenreData)
+
+//converts literary genres object list to object list for using in select input element in FormBuilder
+export const selectLiteraryGenresOptionsList = createSelector(
+  selectAllLiteraryGenres,
+  //array contains object with structure that conforms to type used for options list of FormBuilder
+  literaryGenresList => literaryGenresList.map((genre) => {
+    return { value: genre.id, label: genre.title }
+  })
+)
