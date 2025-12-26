@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use App\Models\LiteraryGenre;
 use App\Models\User;
 use Database\Seeders\Helper;
@@ -14,11 +15,6 @@ class BookController extends Controller
     //endpoints where all info about single book is returned (single book info, returned object after book creating, updating) includes same
     //set of columns
     private $singleBookInfoSelectedColumns = ['id', 'title', 'author', 'preface', 'is_favorite', 'literary_genre_id'];
-
-    private $bookDataValidationRules = [
-        'title' => 'between:3,255',
-        'author' => 'between:3,255'
-    ];
 
     /**
      * return all books belonging to current user
@@ -36,7 +32,7 @@ class BookController extends Controller
      */
     public function store(Request $request)
     {
-        $this->validateSubmBookDataSyntacsAndFormat($request);
+        $this->validateSubmBookData($request);
         usleep(500000);
 
         //a book with same title among books belonging to user must not exist. If exists, return error message,
@@ -49,18 +45,8 @@ class BookController extends Controller
 
         $book = new Book($request->all());
 
-        //associate Book with LiteraryGenre instance if 'literary_genre_id' is not null,
-        //otherwise model's property stays null
-        $genreId = $request->input('literary_genre_id');
-        if ($genreId !== null) {
-            $literaryGenreFromDb = LiteraryGenre::find($genreId);
-
-            if (empty($literaryGenreFromDb)) {
-                return $this->literaryGenreNotFoundErrorResponse($genreId);
-            }
-
-            $book->literaryGenre()->associate($literaryGenreFromDb);
-        }
+        //associate Book with LiteraryGenre instance if literary genre is provided
+        $book = $this->associateOrDisassociateLiteraryGenreWithBook($request, $book);
 
         //associate Book with User (creator of book)
         $currentlyLoggedInUserId = $this->getCurrentlyLoggedInUserId($request);
@@ -101,13 +87,13 @@ class BookController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate($this->bookDataValidationRules);
+        $this->validateSubmBookData($request);
         usleep(500000);
 
         $bookRecord = $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->where('id', $id)
-            //include 'id' column to get working "refresh()" method from result object, title' column to detect whether
-            //user is changing title
+            //include 'id' column to get working update() method of fetched model's object,
+            //title' column to detect whether user is changing title
             ->select(['id', 'title'])
             ->first();
 
@@ -127,6 +113,8 @@ class BookController extends Controller
             }
         }
 
+        $bookRecord = $this->associateOrDisassociateLiteraryGenreWithBook($request, $bookRecord);
+
         $bookRecord->update($request->all());
         
         //can't use result object's refresh() method as it selects and returns all columns from model's table, but some are needed
@@ -134,6 +122,41 @@ class BookController extends Controller
             ->find($id);
 
         return $bookAfterUpdate;
+    }
+
+    /**
+     * Sets literary genre property on a passed Book model instance according to literary genreId JSON field value. Sets property to an
+     * actual literary genre instance if genreId value is integer or to null if genreId value is null.
+     * 
+     * @param \Illuminate\Http\Request $request - used to get literary genre id JSON field value
+     * @param App\Models\Book $book - Book model object
+     * 
+     * @return App\Models\Book - Book model object with literary genre association set depending on 'literary_genre_id' field value from
+     * request
+     * 
+     * @throws Illuminate\Validation\ValidationException - throws exception if literary genre record with identifier suplied in
+     * 'literary_genre_id' field value does not exist
+     */
+    function associateOrDisassociateLiteraryGenreWithBook(Request $request, Book $book){
+        $genreId = $request->input('literary_genre_id');
+        //associate Book with LiteraryGenre instance if 'literary_genre_id' is not null
+        if ($genreId !== null) {
+            $literaryGenreFromDb = LiteraryGenre::find($genreId);
+
+            if (empty($literaryGenreFromDb)) {
+                throw ValidationException::withMessages([
+                    'literary_genre_id' => "Literary genre with id $genreId not found"
+                ]);
+            }
+
+            $book->literaryGenre()->associate($literaryGenreFromDb);
+
+        //set Book's literaryGenre property to null if passed genreId argument is null
+        }else {
+            $book->literaryGenre()->dissociate();
+        }
+
+        return $book;
     }
 
 
@@ -290,7 +313,7 @@ class BookController extends Controller
      * @return void
      * @throws
      */
-    private function validateSubmBookDataSyntacsAndFormat(Request $request)  {
+    private function validateSubmBookData(Request $request)  {
         $request->validate([
             'title' => 'between:3,255',
             'author' => 'between:3,255'
@@ -308,17 +331,6 @@ class BookController extends Controller
      */
     private function bookNotFoundErrorResponse($bookId){
         return response()->json(['message' => "Book with id $bookId not found"], 404);
-    }
-
-
-    /**
-     * generates error response (JSON content and HTTP response code 404) for case that literary genre is not found
-     *
-     * @param integer $bookId - book identifier
-     * @return json with message that book does not exist and HTTP code 404
-     */
-    private function literaryGenreNotFoundErrorResponse($genreId){
-        return response()->json(['message' => "Literary genre with id $genreId not found"], 404);
     }
 
 

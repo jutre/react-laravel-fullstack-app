@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getQueryParamValue,
   extractMessageOrMessagesObjFromQueryError,
-  createTargetObjFromSubmittedData} from "../utils/utils";
+  createTargetObjFromSubmittedData,
+  convertLiteraryGenresListToOptionsList} from "../utils/utils";
 import { Book } from "../types/Book";
-import { useGetBookQuery, useUpdateBookMutation } from "../features/api/apiSlice";
+import { useGetBookQuery,
+  useUpdateBookMutation,
+  selectAllLiteraryGenres } from "../features/api/apiSlice";
 import { skipToken } from '@reduxjs/toolkit/query/react'
 import {
   routes,
@@ -23,6 +26,7 @@ import { BookDeletionProcessorForBookEditPage } from "./BookDeletionProcessorFor
 import { useTrackEndpointSuccessfulFinishing } from "../hooks/useTrackEndpointSuccessfulFinishing";
 import { SerializedError } from '@reduxjs/toolkit';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { useAppSelector } from "../store/reduxHooks";
 
 
 /**
@@ -31,6 +35,8 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
  * currently in input fields.
  */
 export function BookEditing() {
+
+  const literaryGenresList = useAppSelector(selectAllLiteraryGenres);
 
   /**
    * TODO dispatches updating thunk to update book data in redux store. Additionally gets excludes get params 
@@ -47,10 +53,12 @@ export function BookEditing() {
       title: "",
       author: "",
       preface: "",
-      is_favorite: false
+      is_favorite: false,
+      literary_genre_id: 0
     }
 
-    const submittedBookData: Book = createTargetObjFromSubmittedData<Book>(submittedFormData, templateBookObj)
+    const submittedBookData: Book =
+      createTargetObjFromSubmittedData<Book>(submittedFormData, templateBookObj, {literary_genre_id:true}) as Book
 
     //saving to state data from mutation response to be snown in form
     try {
@@ -76,7 +84,7 @@ export function BookEditing() {
 
 
   let deleteParamVal = getQueryParamValue("delete");
-  //validate delete param val, accepting only "true" string if it is not null because it will be used in hook as dependency
+  //validate delete param val, accepting only "true" string if it is not null because it will be used in useEffect hook as dependency
   if (deleteParamVal !== "true") {
     deleteParamVal = null;
   }
@@ -180,6 +188,11 @@ export function BookEditing() {
       validationErrors = errMsgOrObject
     }
   }
+
+  const inputElementOptions = {
+      literary_genre_id: convertLiteraryGenresListToOptionsList(literaryGenresList)
+  }
+
   return (
     <div>
       <NavLinkBack url={backToListUrl} />
@@ -233,6 +246,7 @@ export function BookEditing() {
             </div>
 
             <FormBuilder formFieldsDefinition={bookEditFormFieldsDef}
+              optionsForSelectOrRadioFields={inputElementOptions}
               submitButtonText="Update"
               initialFormData={formInitialData}
               successfulSubmitCallback={saveSubmittedData}

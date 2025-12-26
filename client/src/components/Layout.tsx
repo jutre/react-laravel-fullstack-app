@@ -48,7 +48,7 @@ const Layout = () => {
         <Routes>
           <Route path={routes.bookListPath} element={<BooksList />} />
           <Route path={routes.favoriteBooksListPath} element={<BooksList listMode={FAVORITE_BOOKS_LIST} />} />
-          <Route path={routes.bookEditPath} element={<BookEditing />} />
+          <Route path={routes.bookEditPath} element={<ResourcesPreloader><BookEditing /></ResourcesPreloader>} />
           <Route path={routes.createBookPath} element={<ResourcesPreloader><BookCreating /></ResourcesPreloader>} />
           <Route path={routes.demoDataResetPath} element={<DemoDataReset />} />
           <Route path="*" element={<PageNotFound />} />
