@@ -188,12 +188,15 @@ export function extractMessageOrMessagesObjFromQueryError(queryError: FetchBaseQ
       const responseErrorsIndexedObj: {[index:string]: unknown} = {...queryError.data.errors};
       for(const fieldTitle in responseErrorsIndexedObj) {
         let transformedErrMessage:string;
-        
-        if(Array.isArray(responseErrorsIndexedObj[fieldTitle])){
-          transformedErrMessage = responseErrorsIndexedObj[fieldTitle].join(',');
+
+        //variable instead of indexed access to make type narrowing working
+        const errorDescriptionObj = responseErrorsIndexedObj[fieldTitle]
+
+        if(Array.isArray(errorDescriptionObj)){
+          transformedErrMessage = errorDescriptionObj.join(',');
         }else{
           //error messages for field should be in array format, but assume there may be returned other format, just convert it to string
-          transformedErrMessage = JSON.stringify(responseErrorsIndexedObj[fieldTitle]);
+          transformedErrMessage = JSON.stringify(errorDescriptionObj);
         }
 
         flatErrorsObject[fieldTitle] = transformedErrMessage
