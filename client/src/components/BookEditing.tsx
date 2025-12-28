@@ -16,6 +16,7 @@ import {
 import { H1Heading } from "./ui_elements/H1Heading";
 import { ButtonWithIconAndBackground } from "./ui_elements/ButtonWithIconAndBackground";
 import { DataFetchingStatusLabel } from "./ui_elements/DataFetchingStatusLabel";
+import { BookFormSketeton } from "./BookFormSketeton";
 import { GeneralErrorMessage } from "./ui_elements/GeneralErrorMessage";
 import { NavLinkBack } from "./ui_elements/NavLinkBack";
 import { FormBuilder, SubmittedFormData } from '../utils/FormBuilder';
@@ -116,7 +117,8 @@ export function BookEditing() {
   //in response with book data that will be initially displayed in form or error like "book does not exist" ). When user submits form, the
   //updated book data will be sent back by mutation and displayed in form, data from book data fetching query will not be needed any more.
   const isBookDataQueryToBeExecuted: boolean =
-    (bookId !== 0 && formInitialData === undefined)
+    bookId !== 0 &&
+    formInitialData === undefined
 
   const { data: bookQueryData, error: getBookQueryError, isFetching: isGetBookQueryFetching } =
     useGetBookQuery(isBookDataQueryToBeExecuted ? bookId : skipToken);
@@ -208,9 +210,9 @@ export function BookEditing() {
           <GeneralErrorMessage msgText={errorMsg} />
         }
 
-        {/*while fetching book, show that data is loading*/
+        {/*while fetching book data for first time, show form skeleton*/
           isGetBookQueryFetching &&
-          <DataFetchingStatusLabel labelText="loading..." />
+          <BookFormSketeton />
         }
         {/*while updated data is being sent, show that data is loading*/
           isUpdatingBook &&

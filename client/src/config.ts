@@ -46,14 +46,14 @@ export const bookCreatingFormFieldsDef: FormFieldsDefinition = {
         label: "Preface",
         type: "textarea"
     },
-    is_favorite: {
-        label: "add to favorites",
-        type: "checkbox"
-    },
     literary_genre_id: {
         label: "Book genre",
         type: "select",
         promptLabelOverride: "-- not specified --"
+    },
+    is_favorite: {
+        label: "add to favorites",
+        type: "checkbox"
     }
 }
 
@@ -83,6 +83,7 @@ export const customCheckboxSquareBoxClasses =
     "block relative w-[18px] h-[18px] border-[2px] border-solid border-[#4066a5] rounded-[3px] bg-white "
 
 //classes for visually custom ckeckbox
+//TODO - add graying out for disabled checkbox
 export const customCheckboxCheckmarkClasses = customCheckboxSquareBoxClasses +
     "peer-checked:bg-[#ccc] peer-checked:after:block after:hidden after:absolute peer-focus-visible:[outline-style:auto] " +
     "after:left-[4px] after:top-0 after:w-[6px] after:h-[11px] after:border after:border-solid " +
