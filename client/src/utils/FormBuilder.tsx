@@ -46,9 +46,14 @@ export type FieldDefinition = {
   type: "select",
   label: string,
   //TODO improve comment
-  //lets override default prompt label ("Select...") displayed as first option if 'promptText' set to non empty string or hide first option
-  //with empty string as value displayed by default if 'promptText' is set to false
-  promptText?: false | string,
+  //Replaces the default prompt option label text "Select..." if value is a non empty string.
+  //Prompt option is the first input option in 'select' input element added by default with "Select..." label and empty string "" value
+  // which simplifies 'select' input creating by eleminating need to programmatically add a first promt option letting just set actual
+  //input options array for the 'select' input. Default prompt option adding can be prevented by corresponding configuration option
+  promptLabelOverride?: string,
+  //if set to true then default prompt option is not added to 'select' input element options letting programmer build options without
+  //promt option
+  hidePropmtOption?: boolean,
   validationRules?: ValidationRule[]
   /*!!! options list for input element is passed via component props. It can't be included in form definition constant to cover case when
   options list becomes known only after it is fetched from API*/
@@ -294,10 +299,8 @@ export function FormBuilder({
 
     for (const [fieldName, fieldDefinition] of Object.entries(formFieldsDefinition)) {
 
-      //TODO - make same condition for promt option excluding as in code thats outputs 'select' element - there empty string is not checked
-      //but there it is, actually it is a bug currently
       if (fieldDefinition.type === "select" &&
-        fieldDefinition.promptText === false) {
+        fieldDefinition.hidePropmtOption === true) {
         //TODO improve comment
         //in case hook executes after first display then inputFieldValues state var is not populated with value yet by previous hook, must
         //check if initial value for field is provided in 'initialFormData' property - it must be present and not be null.
@@ -546,23 +549,23 @@ export function FormBuilder({
 
 
         } else if(fieldDefinition.type === "select"){
-          //if 'promptText' property is not false and empty string use it as first option text, otherwise displays default "Select..."
+          //if 'promptLabelOverride' property is not false and empty string use it as first option text, otherwise displays default "Select..."
           //TODO - possibly make prompt option excluding only by `false` value, not empty string and create function that checks
           //for a prompt option excluding as also useEffect that checks initial data presence for select field has same condition
           //for prompt option absence
-          const promptTextForFirstOption = fieldDefinition.promptText ? fieldDefinition.promptText : "Select..."
+          const promptLabelOverrideForFirstOption = fieldDefinition.promptLabelOverride ? fieldDefinition.promptLabelOverride : "Select..."
 
           let optionsList: InputOptionsList = getOptionsListForInputField(fieldName, optionsForSelectOrRadioFields)
           //TODO - in options output loop replace array index with option value
           inputTag = <select {...inputElemAttributes}>
 
-            { //first option with empty value which acts as prompt and by default is added to <select> element. If 'promptText' field
+            { //first option with empty value which acts as prompt and by default is added to <select> element. If 'promptLabelOverride' field
               //definition property equals to false then prompt option is not added to select, only options provided in 'options' array 
-              fieldDefinition.promptText === false
+              fieldDefinition.hidePropmtOption === true
                 ?
                 null
                 :
-                <option value="">{promptTextForFirstOption}</option>
+                <option value="">{promptLabelOverrideForFirstOption}</option>
             }
 
             {optionsList.map(({ value, label }, index) =>

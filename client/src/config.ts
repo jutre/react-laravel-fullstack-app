@@ -53,7 +53,7 @@ export const bookCreatingFormFieldsDef: FormFieldsDefinition = {
     literary_genre_id: {
         label: "Book genre",
         type: "select",
-        promptText: "--unspecified--"
+        promptLabelOverride: "-- not specified --"
     }
 }
 
