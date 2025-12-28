@@ -549,28 +549,35 @@ export function FormBuilder({
 
 
         } else if(fieldDefinition.type === "select"){
-          //if 'promptLabelOverride' property is not false and empty string use it as first option text, otherwise displays default "Select..."
-          //TODO - possibly make prompt option excluding only by `false` value, not empty string and create function that checks
-          //for a prompt option excluding as also useEffect that checks initial data presence for select field has same condition
-          //for prompt option absence
-          const promptLabelOverrideForFirstOption = fieldDefinition.promptLabelOverride ? fieldDefinition.promptLabelOverride : "Select..."
 
-          let optionsList: InputOptionsList = getOptionsListForInputField(fieldName, optionsForSelectOrRadioFields)
-          //TODO - in options output loop replace array index with option value
+          let optionsList: InputOptionsList = []
+
+          //Add as a first option a prompt option unless it is not disabled by field definition. A prompt option value is empty
+          //string "" and label is "Select...", it acts as prompt for input.
+          if(fieldDefinition.hidePropmtOption !== true){
+
+            //Default "Select..." label can be overriden by text value from field definition if it's value it non empty string
+            const promptOptionLabel = fieldDefinition.promptLabelOverride ? fieldDefinition.promptLabelOverride : "Select..."
+
+            optionsList.push({
+              value: "",
+              label: promptOptionLabel
+            })
+          }
+
+          //add the actual options list an array with possibly added prompt input
+          optionsList  = [
+            ...optionsList,
+            ...getOptionsListForInputField(fieldName, optionsForSelectOrRadioFields)
+          ]
+
           inputTag = <select {...inputElemAttributes}>
+            {/*using the 'value' property of option list element as 'key' attribute when outputting options list. Assuming that select
+            option values are unique values, there should not be situation to add identical values to more than one option*/}
 
-            { //first option with empty value which acts as prompt and by default is added to <select> element. If 'promptLabelOverride' field
-              //definition property equals to false then prompt option is not added to select, only options provided in 'options' array 
-              fieldDefinition.hidePropmtOption === true
-                ?
-                null
-                :
-                <option value="">{promptLabelOverrideForFirstOption}</option>
-            }
-
-            {optionsList.map(({ value, label }, index) =>
+            {optionsList.map(({ value, label }) =>
               <option
-                key={index}
+                key={value}
                 value={value}>{label}</option>
             )}
           </select>
@@ -579,8 +586,11 @@ export function FormBuilder({
       } else if(fieldDefinition.type === "radio"){
         let optionsList: InputOptionsList = getOptionsListForInputField(fieldName, optionsForSelectOrRadioFields)
 
-        inputTag = optionsList.map(({value, label}, index) =>
-          <label key={index}>
+        {/*using the 'value' property of radio option list element as 'key' attribute when outputting label with radio input elements.
+          Assuming that radio input element values are unique values, there should not be situation to add identical values to more than one
+          distinct radio input*/}
+        inputTag = optionsList.map(({value, label}) =>
+          <label key={value}>
             <input
               type="radio"
               name={fieldName}
