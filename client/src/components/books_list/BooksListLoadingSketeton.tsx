@@ -31,8 +31,7 @@ export function BooksListLoadingSketeton() {
           </div>
 
           <div className="grow-0 shrink-0 flex items-center gap-[10px] ml-[10px]">
-            {/*add to favorites, edit, delete buttons replacement*/}
-            <div className={"h-[35px] w-[35px] rounded-full " + pulsingBgndClasses}></div>
+            {/*edit, delete buttons replacement*/}
             <div className={"h-[35px] w-[35px] rounded-full " + pulsingBgndClasses}></div>
             <div className={"h-[35px] w-[35px] rounded-full " + pulsingBgndClasses}></div>
           </div>
