@@ -117,7 +117,7 @@ export function LoginForm() {
       <div className='pb-[20px] max-w-[360px]'>
         <FormBuilder
           formFieldsDefinition={loginFormFieldsDef}
-          initialFormData={initialFormData}
+          initialOrOverrideData={initialFormData}
           initiallyDisplayedErrors={initiallyDisplayedErrors}
           successfulSubmitCallback={onSubmit}
           submitButtonText={submitButtonText}

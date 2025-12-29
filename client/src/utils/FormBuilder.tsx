@@ -114,7 +114,7 @@ export type SubmittedFormData = {
 interface FormBuilderProps {
   formFieldsDefinition: FormFieldsDefinition,
   submitButtonText?: string,
-  initialFormData?: InitialFormData | null,
+  initialOrOverrideData?: InitialFormData | null,
   optionsForSelectOrRadioFields?: OptionsForInputFields | null,
   initiallyDisplayedErrors?: ErrorMessages | null,
   successfulSubmitCallback: (submittedFormData: SubmittedFormData) => void,
@@ -184,11 +184,10 @@ type InputElementAttributes = {
  * }
  *
  * @param submitButtonText - text for submit button, can be empty, if parameter empty, text will be "Submit"
- * @param initialFormData - object with form's input fields initial values. Intended to be used to create form with prefilled fields when
- * displayed initially or overriding needed field values after a form submit. initialFormData object property with a certain name holds
- * initial or override value for input field which has same name. The use case of updating field's value on some subsequent form render
- * after form submit would be login form where form after incorrect login/password is displayed with email field as it was entered by user
- * and setting password field blank
+ * @param initialOrOverrideData - object with input fields initial values. Lets create form with some or all fields prefilled when form is
+ * displayed for first time or override some or all fields values on some re-render when parent component re-renders and FormBuilder as it's
+ * child also is re-rendered. The case of updating field's value on some subsequent render would be a login form displayed after incorrect
+ * login/password submitting with email field value as it was entered by user and password field set to be blank
  * @param optionsForSelectOrRadioFields - options list for select/radio input. There are situations when options list is only known after it it fetched
  * from API, it can not be included in form definition variable. In such situations options list is to be passed to component using
  * component property
@@ -217,7 +216,7 @@ type InputElementAttributes = {
 export function FormBuilder({
   formFieldsDefinition,
   submitButtonText,
-  initialFormData,
+  initialOrOverrideData,
   optionsForSelectOrRadioFields,
   initiallyDisplayedErrors,
   successfulSubmitCallback,
@@ -237,16 +236,17 @@ export function FormBuilder({
   //errors displayed on initial or any subsequent render, those are not validation errors but might be errors received from REST API af
   const [initialErrors, setInitialErrors] = useState<ErrorMessages>({});
 
-  /* Assigning initialFormData parameter value to component's state that maintains all form's input fields values. Doing that in
-  useEffect hook with dependancy of initialFormData parameter to execute assigning initialFormData parameter's value to state 
-  in case current component is re-rendered with different initialFormData value*/
+  /*Copy values from initialOrOverrideData parameter value to component's state variable that maintains all form's input fields values.
+  Current useEffect hook has dependancy on initialOrOverrideData prop which lets assign initial values to fields after first render and
+  override needed fields values after any subsequent renders*/
   useEffect(() => {
 
     /* Create an key/value object {<input field name> => <field value>} that maintains all form's input fields' values and set it to
-    component's state making each form field a React "controlled input field". The object will be added a corresponding key/value pair from each
-    formFieldsDefinition parameter array element. Each object's entie's value will be set to either empty string "" or boolean "false" if
-    there is no data in initialFormData parameter for corresponding field or value from initialFormData parameter if initial value for
-    curent field exists. Values from initialFormData parameter with runtime types "string", "number", "boolean" are converted to values with
+    component's state making each form field a controlled input field. The object will contain all keys from formFieldsDefinition object.
+    Each object's entie's value will be set to either empty string "" or boolean "false" in case there is no data in initialOrOverrideData
+    prop for corresponding field or value from initialOrOverrideData parameter, the value from initialOrOverrideData prop if it exists or
+    contain current value from fields state variable.
+    Values from initialOrOverrideData parameter with runtime types "string", "number", "boolean" are converted to values with
     "string" or "boolean" runtime type values according to input field's type: any of initial value is converted to "string" runtime type
     for all html input field types except 'checkbox' type where value is converted to boolean type as it is used as input's 'checked'
     attribute value.*/
@@ -256,35 +256,45 @@ export function FormBuilder({
     for (const [fieldName, fieldDefinition] of Object.entries(formFieldsDefinition)) {
       
       type InitialFieldValueType = InitialFormData[string]
-      //field's value preparing - either set to default empty value (""), if entry with field name exists in controlled input field's state
-      //variable use that value (keeping value from previous render or user input), and finally it is overriden by value from
-      //initialFormData parameter if initial value is present for field
+      //create a temp variable which will be set to input fields state variable at the end of hook. Current code performs setting initial
+      //input field values after first render or overrides field values on a subsequent render in case initialOrOverrideData component
+      //prop changes on subsequent render. The following steps are involved:
+
+      //1)set to empty string ("")
       let initialFieldValue: InitialFieldValueType = ""
+
+      //2)if input fields state variable already contains value for current field name, use that value (current value is already in state
+      //variable in case initial initialOrOverrideData prop is changed on some of subsequent render - field value overriding happens)
       if(inputFieldValues[fieldName] !== undefined){
         initialFieldValue = inputFieldValues[fieldName]
       }
-      if(initialFormData &&
-        (initialFormData[fieldName] !== undefined && initialFormData[fieldName] !== null)){
-        initialFieldValue = initialFormData[fieldName]
+
+      //3)if there is value in initialOrOverrideData prop for current field it overrides previously set empty string (initial data
+      //assigning after first render) or existing value from input fields state variable (field value overriding on subsequent render)
+      if(initialOrOverrideData &&
+        initialOrOverrideData[fieldName] !== undefined &&
+        initialOrOverrideData[fieldName] !== null){
+
+        initialFieldValue = initialOrOverrideData[fieldName]
       }
 
-      //convert prepared value to runtime type according to html input field type
+      //convert prepared value to runtime type according to html input field type:
+      //set boolean type value for checkbox, coercing non boolean value to boolean,
+      //for all other fields convert initial value to string type
       if (fieldDefinition.type === "checkbox") {
-        //set boolean type value for checkbox, coercing non boolean value to boolean
         initialFormDataCorrectedTypes[fieldName] = Boolean(initialFieldValue);
 
       } else {
-        //for all other fields convert initial value if set to a string type
         initialFormDataCorrectedTypes[fieldName] = String(initialFieldValue);
       }
 
     }
 
-    //finally set corrected data to state
+    //finally set corrected values to state
     setInputFieldValues(initialFormDataCorrectedTypes);
 
 
-  }, [initialFormData]);
+  }, [initialOrOverrideData]);
 
 
   /*if default prompt option of select input element is disabled and initial value for this field is not provided in initial form data then
@@ -303,16 +313,16 @@ export function FormBuilder({
         fieldDefinition.hidePropmtOption === true) {
         //TODO improve comment
         //in case hook executes after first display then inputFieldValues state var is not populated with value yet by previous hook, must
-        //check if initial value for field is provided in 'initialFormData' property - it must be present and not be null.
+        //check if initial value for field is provided in initialOrOverrideData property - it must be present and not be null.
         //This hook can execute also after any subsequent render as form definition can be changed f.e. for adding or disabling field
 
-        //initial data for field is provided if value for current field in initialFormData property is present (not undefined) and it's
+        //initial data for field is provided if value for current field in initialOrOverrideData property is present (not undefined) and it's
         //value is not null (actual value is a number, string or boolean type value)
         const isFieldInitialDataProvided =
-          initialFormData !== undefined &&
-          initialFormData !== null &&
-          initialFormData[fieldName] !== undefined &&
-          initialFormData[fieldName] !== null
+          initialOrOverrideData !== undefined &&
+          initialOrOverrideData !== null &&
+          initialOrOverrideData[fieldName] !== undefined &&
+          initialOrOverrideData[fieldName] !== null
 
         //assign initial data for current field only if value for appropriate field in fields state variable is undefined. Field for
         //current field in state variable will be undefined after first render (previous hook populated values is not in state yet)

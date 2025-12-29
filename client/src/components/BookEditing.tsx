@@ -249,7 +249,7 @@ export function BookEditing() {
             <FormBuilder formFieldsDefinition={bookEditFormFieldsDef}
               optionsForSelectOrRadioFields={inputElementOptions}
               submitButtonText="Update"
-              initialFormData={formInitialData}
+              initialOrOverrideData={formInitialData}
               successfulSubmitCallback={saveSubmittedData}
               initiallyDisplayedErrors={validationErrors}
               disableAllFields={formDisabled}
