@@ -91,7 +91,7 @@ export function getCookie(key: string) {
 
 /**
    * returns string format error message extracted from REST API response json 'message' field in case of HTTP error response (response
-   * with non 2** HTTP status) when working with RTK Query endpoint. 
+   * with non 2** HTTP status) when working with RTK Query endpoint.
    * 
    * RTK Query endpoint returns a FetchBaseQueryError type error object on response with non 2** HTTP status, it's 'data' property contains
    * object that represents json returned in API response. The error message is expected to be in 'message' field of json, json is expected
@@ -118,20 +118,22 @@ export function getCookie(key: string) {
    */
 export function extractMessageFromQueryErrorObj(queryError: FetchBaseQueryError | SerializedError): string {
   
+  //FetchBaseQueryError type object.
+  //Detailed description is resides in either FetchBaseQueryError object 'error' field or in response JSON 'message' field
   if ('status' in queryError) {
-    //FetchBaseQueryError type object. 
-    //Detailed description is resides in either 'error' string type property (network access, data parsing, timeout errors)
-    //or in 'data' property which value represents object created from json that came as response from Laravel backend.
 
+    //errors not from response JSON but present in FetchBaseQueryError: network access, data parsing, timeout errors
     if ('error' in queryError) {
       return queryError.error;
 
-      //Laravel sends the actual error message in json's 'message' field, if it exists then it is accessable in error's data.message field
-    } else if (typeof queryError.data === 'object' && queryError.data !== null &&
-      'message' in queryError.data && typeof queryError.data.message === 'string') {
+    //error from JSON object. JSON object resides in 'data' property of FetchBaseQueryError, Laravel sends the actual error message
+    //in 'message' JSON field
+    } else if (typeof queryError.data === 'object' &&
+      queryError.data !== null &&
+      'message' in queryError.data &&
+      typeof queryError.data.message === 'string') {
 
       return queryError.data.message;
-
 
       //no data.message string type property found, returns message containing 'status' property which is always present according to type
     } else {
@@ -147,13 +149,10 @@ export function extractMessageFromQueryErrorObj(queryError: FetchBaseQueryError 
 type StringOrIndexedObject = string | { [index:string]: string };
 
 /**
- * returns error message in form of string or object with errors extracting data from REST API response json in case of HTTP error response
- * (response with non 2** HTTP status) when working with RTK Query endpoint. First trying to find 'errors' field in json and returns error
- * information in form of object where key is submitted data object key and value is error description. This is the case when server is
- * responding with f.e. validation errors on submitted object with multiple fields. If 'errors' field in json is not present, function tries
- * to find 'message' field and return its value as string type message. Actually, when 'errors' json field is not present, current function
- * invokes extractMessageFromQueryErrorObj() function and that function is analysing for 'message' field presence in json, also analyses
- * other function's error objects fields, see extractMessageFromQueryErrorObj function's description.
+ * extracts error message in form of string or plain object from error object returned by RTK Query endpoint as endpoint can respond with
+ * either types of error. First tries to find 'errors' field in response JSON and returns error as object where key is submitted data field
+ * name and value is error description which is the case when server is responding with validation errors per submitted object field.
+ * If 'errors' field is not present in JSON function returns string type message trying to find it in 'message' JSON field
  * 
  * @param queryError error object returned by RTK Query @reduxjs/toolkit/query/react/createApi query endpoint 
  * @returns 
@@ -161,8 +160,8 @@ type StringOrIndexedObject = string | { [index:string]: string };
 export function extractMessageOrMessagesObjFromQueryError(queryError: FetchBaseQueryError | SerializedError): StringOrIndexedObject {
 
   if ('status' in queryError) {
-    /*FetchBaseQueryError type object;
-    look for 'errors' property as Laravel backend returns validation errors per field in json's field 'errors' property. The example of json
+    /*FetchBaseQueryError type object.
+    Look for 'errors' property as Laravel backend returns validation errors per field in json's field 'errors' property. The example of json
     send by Laravel - 
     {
       "message": "The title field is required. (and 1 more error)",
@@ -177,9 +176,13 @@ export function extractMessageOrMessagesObjFromQueryError(queryError: FetchBaseQ
     }
     */
 
-    //The json representing object resides in 'data' property of FetchBaseQueryError type object
-    if (typeof queryError.data === 'object' && queryError.data !== null &&
-      'errors' in queryError.data && typeof queryError.data.errors === 'object' && queryError.data.errors !== null) {
+    //response JSON resides in 'data' property of FetchBaseQueryError type object
+    //and array of errors resides in 'errors' field of JSON
+    if (typeof queryError.data === 'object' &&
+      queryError.data !== null &&
+      'errors' in queryError.data &&
+      typeof queryError.data.errors === 'object' &&
+      queryError.data.errors !== null) {
 
       //transform response errors object. Originally error information for each field is in form of an array of string values (array of
       //error messages for each field), all array items will be joined into single string
@@ -206,14 +209,13 @@ export function extractMessageOrMessagesObjFromQueryError(queryError: FetchBaseQ
 
 
     } else {
-      //error did not contain 'errors' property, error description must be in 'message' property, extract it using 
-      //extractMessageFromQueryErrorObj function
+      //FetchBaseQueryError did not contain both 'data' and 'data.errors' properties, extract and return string type error description
       return extractMessageFromQueryErrorObj(queryError)
     }
 
 
   }else{
-    //this is SerializedError type object, analyse it using extractMessageFromQueryErrorObj function
+    //this is SerializedError type object, extract and return string type error description
     return extractMessageFromQueryErrorObj(queryError)
   }
 }
