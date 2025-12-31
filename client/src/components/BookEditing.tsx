@@ -39,12 +39,9 @@ export function BookEditing() {
   const literaryGenresOptionsList = useAppSelector(selectLiteraryGenresOptionsList)
 
   /**
-   * TODO dispatches updating thunk to update book data in redux store. Additionally gets excludes get params 
-   * from current book edit url by using useNavigate hook's returned function. A "delete" get param can be 
-   * page's url value if deleting failed when "Delete book" link was clicked in book edit screen. If get 
-   * param would not be removed from url also a delete confirmation modal dialog would be displayed in  
-   * response to "delete" get param. 
-   * @param {*} submittedFormData 
+   * triggers book updating endpoint and sets updated book data returned by updating endpoint to initial form data state variable
+   * 
+   * @param submittedFormData - object with submitted form data which will be sent to backed
    */
   async function saveSubmittedData(submittedFormData: SubmittedFormData) {
 
@@ -60,7 +57,8 @@ export function BookEditing() {
     const submittedBookData: Book =
       createTargetObjFromSubmittedData<Book>(submittedFormData, templateBookObj, ["literary_genre_id"]) as Book
 
-    //saving to state data from mutation response to be snown in form
+    //saving to state response data from book updating endpoint to snow the form with book update result again. If book updating endpoint
+    //rejects the state variable is not chainged, form input field values will not be changed
     try {
       const bookDataFromUpdateResponse = await triggerBookUpdateMutation(submittedBookData).unwrap();
       setFormInitialData(bookDataFromUpdateResponse)
@@ -71,8 +69,10 @@ export function BookEditing() {
     }
   }
 
-  //contains book data that will be displayed in form fields. Initially from book data fetching endpoint and later from book updating
-  //mutation response data after user submits form.
+  //contains book data that will be displayed in book edit form.
+  //Initially contains book data obtained from REST API GET method endpoint to display existing book data to be updated and after user
+  //submits form state variable is assigned data the update result returned by book updating endpoint which also is displayed in form
+  //and user can edit and submit it again
   const [formInitialData, setFormInitialData] = useState<Book | undefined>();
 
 
@@ -115,7 +115,8 @@ export function BookEditing() {
 
   //if book id parameter was valid and formInitialData is empty then execute book data fetching query. Query will be executed once resulting
   //in response with book data that will be initially displayed in form or error like "book does not exist" ). When user submits form, the
-  //updated book data will be sent back by mutation and displayed in form, data from book data fetching query will not be needed any more.
+  //updated book data will be sent back by mutation and displayed in form, data from book data fetching query will not be needed anymore
+  //therefore will not be run when formInitialData will not be undefined
   const isBookDataQueryToBeExecuted: boolean =
     bookId !== 0 &&
     formInitialData === undefined
@@ -167,11 +168,9 @@ export function BookEditing() {
     showDeletionConfirmationDialog = true;
   }
 
-  //from updating endpoint two types of error can be returned. One type results in error where a string error message can be obtained like 
-  //"Book with id=<bookId> not found". Other type is validation error which is related to field, the error extractor function returns it in
-  //form of object. F.e., if trying to update title and set it to title that already has other book an error object contains object with 
-  //'title' field and approprite error message. Error by field is needed to display it next to input field with same name as error object
-  //key. It is used in case of book updating endpoint
+  /* book update endpoint can respond with two types of error. One type contains only general error message like which will be output above
+  the form, other type is validation errors per submitted input field where each must be displayed next to form's input field. Therefore two
+  distinct variables are created for each error type */
   let errorMsg: string | null = null
   let validationErrors: { [index:string]: string } | null = null
 
@@ -201,7 +200,7 @@ export function BookEditing() {
       <div className="relative max-w-[700px]">
         <H1Heading headingText="Edit book" />
 
-        {//if url param format is invalid nothing to process, return just error message 
+        {/* if url param format is invalid nothing to process, return just error message */
           bookIdParamFormatErrorMsg &&
           <GeneralErrorMessage msgText={bookIdParamFormatErrorMsg} />
         }
@@ -210,24 +209,22 @@ export function BookEditing() {
           <GeneralErrorMessage msgText={errorMsg} />
         }
 
-        {/*while fetching book data for first time, show form skeleton*/
+        {/* while fetching book data for first time, show form skeleton */
           isGetBookQueryFetching &&
           <BookFormSketeton />
         }
-        {/*while updated data is being sent, show that data is loading*/
+        {/* while updated data is being sent, show that data is loading */
           isUpdatingBook &&
           <DataFetchingStatusLabel labelText="updating..." />
         }
 
-        {//after succesful update display message
+        {/* after succesful update display message*/
           displaySuccessMsg &&
           <DisappearingMessage messageText="Changes saved"
             initialDisplayDuration={500} />
         }
 
-        {//display modal deleting confirmation dialog.
-          //condition "&& formInitialData" is added to convince Typescipt that value passed to deletableBook is not undefined as
-          //TS does not understard that it is done when calculation "showDeletionConfirmationDialog" value
+        {/* display modal deleting confirmation dialog */
           (showDeletionConfirmationDialog && formInitialData) &&
           <BookDeletionProcessorForBookEditPage deletableBook={formInitialData}
             afterDeletingRedirectUrl={backToListUrl}
@@ -235,10 +232,10 @@ export function BookEditing() {
         }
 
 
-        {//book edit form and delete button when book data is loaded
+        {/* book edit form and delete button when book data is loaded */
           formInitialData &&
           <>
-            {/*delete button placed on the right top corner of container*/}
+            {/* delete button placed on the right top corner of container */}
             <div className="absolute right-0 top-0">
               <ButtonWithIconAndBackground
                 iconName="delete"
