@@ -255,7 +255,7 @@ export function findNonEmptyErrorFromList(...errors: [FetchBaseErrorTypes, Fetch
  * null is included to accept objects who's property types alongside with string, number or boolean can also be null like
  * {propA: string | null} but finding null runtime values will throw exception
  */
-type TTemplateObject = { [key: string]: string | number | boolean | null }
+type TemplateObject = { [key: string]: string | number | boolean | null }
 
 /**
  * Converts form data to an object with structure as template object but values of form data object.
@@ -293,7 +293,7 @@ type TTemplateObject = { [key: string]: string | number | boolean | null }
  * target type of primitive `string | number | boolean` target runtime types the value from submitted data object should be
  * converted to
  */
-export function createTargetObjFromSubmittedData<T extends TTemplateObject>(
+export function createTargetObjFromSubmittedData<T extends TemplateObject>(
   formData: SubmittedFormData,
   templateObject: T,
   nullableFields?: Array<keyof T>
