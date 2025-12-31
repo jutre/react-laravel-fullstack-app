@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getQueryParamValue,
   extractMessageOrMessagesObjFromQueryError,
-  createTargetObjFromSubmittedData } from "../utils/utils";
+  createTargetObjFromSubmittedData,
+  findNonEmptyErrorFromList } from "../utils/utils";
 import { Book } from "../types/Book";
 import { useGetBookQuery,
   useUpdateBookMutation,
@@ -175,11 +176,8 @@ export function BookEditing() {
   let validationErrors: { [index:string]: string } | null = null
 
   let currentErrorFromEndpoint: FetchBaseQueryError | SerializedError | undefined = undefined
-  if (getBookQueryError) {
-    currentErrorFromEndpoint = getBookQueryError    
-  } else if (bookUpdatingError) {
-    currentErrorFromEndpoint = bookUpdatingError
-  }
+  currentErrorFromEndpoint = findNonEmptyErrorFromList(getBookQueryError, bookUpdatingError)
+
   if (currentErrorFromEndpoint) {
     const errMsgOrObject = extractMessageOrMessagesObjFromQueryError(currentErrorFromEndpoint)
     if(typeof errMsgOrObject === 'string'){
@@ -188,6 +186,7 @@ export function BookEditing() {
       validationErrors = errMsgOrObject
     }
   }
+
 
   const inputElementOptions = {
       literary_genre_id: literaryGenresOptionsList
