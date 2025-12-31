@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getQueryParamValue,
   extractMessageOrMessagesObjFromQueryError,
-  createTargetObjFromSubmittedData,
   findNonEmptyErrorFromList } from "../utils/utils";
 import { Book } from "../types/Book";
 import { useGetBookQuery,
@@ -20,7 +19,9 @@ import { DataFetchingStatusLabel } from "./ui_elements/DataFetchingStatusLabel";
 import { BookFormSketeton } from "./BookFormSketeton";
 import { GeneralErrorMessage } from "./ui_elements/GeneralErrorMessage";
 import { NavLinkBack } from "./ui_elements/NavLinkBack";
-import { FormBuilder, SubmittedFormData } from '../utils/FormBuilder';
+import { FormBuilder,
+  SubmittedFormData,
+  createTargetObjFromSubmittedData } from '../utils/FormBuilder';
 import DisappearingMessage from './DisappearingMessage';
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
 import { BookDeletionProcessorForBookEditPage } from "./BookDeletionProcessorForBookEditPage";

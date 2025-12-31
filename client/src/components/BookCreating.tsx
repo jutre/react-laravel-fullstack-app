@@ -10,7 +10,9 @@ import { NavLinkBack } from "./ui_elements/NavLinkBack";
 import { SquareButton } from './ui_elements/SquareButton';
 import { DataFetchingStatusLabel, LABEL_TYPE_ERROR } from "./ui_elements/DataFetchingStatusLabel";
 import { ButtonWithIconAndBackground } from './ui_elements/ButtonWithIconAndBackground';
-import { FormBuilder, SubmittedFormData } from '../utils/FormBuilder';
+import { FormBuilder,
+  SubmittedFormData,
+  createTargetObjFromSubmittedData } from '../utils/FormBuilder';
 import { Book, NewBook } from "../types/Book";
 import { useAddBookMutation,
   selectLiteraryGenreEntities,
@@ -18,8 +20,7 @@ import { useAddBookMutation,
 import { useAppSelector } from '../store/reduxHooks';
 import DisappearingMessage from './DisappearingMessage';
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
-import { extractMessageOrMessagesObjFromQueryError,
-  createTargetObjFromSubmittedData } from "../utils/utils";
+import { extractMessageOrMessagesObjFromQueryError } from "../utils/utils";
 
 
 export function BookCreating() {
