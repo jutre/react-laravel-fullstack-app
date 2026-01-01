@@ -7,7 +7,7 @@ import {
   chekboxInputClasses } from "../config";
 import { H1Heading } from "./ui_elements/H1Heading";
 import { NavLinkBack } from "./ui_elements/NavLinkBack";
-import { SquareButton } from './ui_elements/SquareButton';
+import { CreateBookButton } from "./ui_elements/CreateBookButton";
 import { DataFetchingStatusLabel, LABEL_TYPE_ERROR } from "./ui_elements/DataFetchingStatusLabel";
 import { ButtonWithIconAndBackground } from './ui_elements/ButtonWithIconAndBackground';
 import { FormBuilder,
@@ -184,16 +184,13 @@ export function BookCreating() {
     pageHeading = "Created book"
 
 
-    //display screen with book infor that just has been created
+    //display screen with book info that just has been created
     const editUrl = routes.bookEditPath.replace(":bookId", String(createdBook.id))
-    const addBookButtonContent = <><span className="mr-[7px]">+</span>Add another book</>
 
     mainContent = (
       <>
         {/*button for adding another book on top right corner*/}
-          <SquareButton buttonContent={addBookButtonContent}
-            clickHandler={handleAddNewBookLinkClick}
-            additionalTwcssClasses="absolute top-0 right-0"/>
+          <CreateBookButton urlRedirectFunctOverride={handleAddNewBookLinkClick} />
 
         <div>
           <DisappearingMessage messageText="Book was added" initialDisplayDuration={1000} />
@@ -213,7 +210,7 @@ export function BookCreating() {
           {/*div with text and button for redirecting to editing url of just created book*/}
           <div onClick={() => { navigate(editUrl) }}
             className="flex items-center cursor-pointer">
-            <span className="mr-[5px]">Edit added book</span>
+            <span className="mr-[5px]">Edit created book</span>
             <ButtonWithIconAndBackground iconName="edit" />
           </div>
         </div>

@@ -1,9 +1,7 @@
-import { routes } from "../../config";
-import { useNavigate } from "react-router-dom";
 import BooksListParamProcessor from "./BooksListParamsProcessor";
 import { BooksListBody } from "./BooksListBody";
 import { BooksListHeadingAndTitleSelector } from "./BooksListHeadingAndTitleSelector";
-import { SquareButton } from '../ui_elements/SquareButton';
+import { CreateBookButton } from "../ui_elements/CreateBookButton";
 import { BooksListModeParams } from '../../types/BooksListMode'
 
 /**
@@ -12,23 +10,18 @@ import { BooksListModeParams } from '../../types/BooksListMode'
  * child components to do needed calculations for display data correspoding to books list mode
  */
 export function BooksList({ listMode }: BooksListModeParams) {
-  
-  const navigate = useNavigate();
-
-  const addBookButtonContent = <><span className="mr-[7px]">+</span>Add book</>
-
-  const redirectToBookCreatingPage = () => {navigate(routes.createBookPath)}
 
   return  (
     <div className="relative">
       <BooksListHeadingAndTitleSelector listMode={listMode}/>
 
-      {/*button for redirect to book creating page on top right corner when not displaying favorite books - on empty favorites
-      list a button "Add book" would be misleading letting him thing about adding book to favorites list*/}
+      {/*button for redirect to book creating page on top right corner on all books list, search result list but not on favorite books list.
+      It keeps code simple as there is no need to manage two different values of "Back" link on book creating page. What matters the most is
+      that there is no clear understanding what behaviour of "Back" link to implement - if user clicks "New book" on favorites list and
+      immediately clicks "Back" link then page is redirected to favorites list; but if user saves new book data what URL should "Back" link
+      point to - to new book creating page with empty form or to favorites list?*/}
       {listMode !=="FAVORITE_BOOKS_LIST" &&
-        <SquareButton buttonContent={addBookButtonContent}
-          clickHandler={redirectToBookCreatingPage}
-          additionalTwcssClasses="absolute top-[-5px] right-0"/>
+        <CreateBookButton />
       }
 
       <BooksListParamProcessor listMode={listMode}/>
