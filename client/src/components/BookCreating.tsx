@@ -104,7 +104,7 @@ export function BookCreating() {
 
     for (const formFieldName in bookCreatingFormFieldsDef) {
 
-      //form field must be present in Book type object as created by form defined by same form definition objec, but check field existance
+      //form field must be present in Book type object as created by form defined by same form definition object, but check field existance
       //and skip non existing fields in Book object preventing runtime crash and as a result a field is not included in created book data
       //table. Field absence might happen if for some reasong API does not include field in response
       if (formFieldName in bookObjCopy === false) {
@@ -145,9 +145,17 @@ export function BookCreating() {
       } else if (typeof fieldValue === 'boolean') {
         presentationValue = fieldValue === true ? 'yes' : 'no';
 
-        //string and number type values are converted to string type
+        //Convert all other types to string. Previous branches excluded null, boolean types, fields related to select input field, in the
+        //beginning skipped field that is not in Book object copy. Remaining types what could be found in Book object copy are string and
+        //number type values - convert them to string type. Formally the type is unknown, but also any values of that would be converted to
+        //string using String() constructor
       } else {
         presentationValue = String(fieldValue);
+      }
+
+      //fix empty string values to dash
+      if(presentationValue.length === 0){
+        presentationValue = '-'
       }
 
       createdBookData[formFieldName] = presentationValue
@@ -194,11 +202,11 @@ export function BookCreating() {
           definition object and book field values from prepared presentation object */}
           <div className="mb-[15px]">
             {Object.entries(bookCreatingFormFieldsDef).map(([fieldName, fieldDefinition]) =>
-              <div key={fieldName}
-                  className="flex">
-                  <div className="grow-0 shrink-0 basis-[110px] pb-[15px] font-bold capitalize">{fieldDefinition.label}:</div>
-                  <div className="flex items-center pb-[15px]">{createdBookPresentationObj[fieldName]}</div>
-                </div>
+              <div className="pb-[15px]"
+                key={fieldName}>
+                <div className="italic capitalize ">{fieldDefinition.label}:</div>
+                <div className="font-bold">{createdBookPresentationObj[fieldName]}</div>
+              </div>
             )}
           </div>
 
