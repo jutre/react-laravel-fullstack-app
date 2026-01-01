@@ -224,8 +224,7 @@ class BookController extends Controller
         //select record according to filtering string, do limiting returned row number if limit set
         $recordsQuery = $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->where('title', 'like', '%' . $filterString . '%')
-            //TODO - add author column, it's missing in list view
-            ->select(['id', 'title']);
+            ->select(['id', 'title', 'author']);
         if($limit > 0){
             $recordsQuery = $recordsQuery->limit($limit);
         }
