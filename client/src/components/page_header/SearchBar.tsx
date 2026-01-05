@@ -6,7 +6,6 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { ButtonWithIcon } from '../ui_elements/ButtonWithIcon';
 import { SerializedError } from '@reduxjs/toolkit';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { skipToken } from '@reduxjs/toolkit/query/react'
 
 function SearchBar() {
   //holds value of controlled <input/> element
@@ -21,18 +20,28 @@ function SearchBar() {
   const maxItemsCountForOutput = 5;
 
   
-  //invoke endpoint sending request to server if search string length is at least 3 symbols, but skip executing endpoint if string length is
-  //less than 3 symbols
-  //in case of error returned from endpoint seach bar must be hidden. Therefore use {currentData} result variable as {currentData} will be 
-  //undefined in error case which will be converted to empty array.
-  //Disable cache usage using refetchOnMountOrArgChange option, fetch on every new search string also if same is typed again
+  //invoke endpoint sending request to server if search string length is at least 3 symbols, otherwise skip executing the endpoint.
+  //In case error is returned seach bar must be hidden. Therefore currentData property of endpoint returned object is used as currentData
+  //value becomes undefined in case of error which lets assign an empty array to search result variable
+  //To force enpoint execution on every newly typed search string also if same string as was passed as endpoint argument before query cache
+  //is disabled using refetchOnMountOrArgChange enpdoint option
   const trimmedSearchString = searchTerm.trim()
-  const { currentData: searchQueryResult,
-      isFetching,
-      error: queryError } = useGetFilteredBooksListQuery(trimmedSearchString.length < 3
-      ? skipToken
-      : {filterString: trimmedSearchString},
-      {refetchOnMountOrArgChange: true});
+  const skipEndpointExecution = trimmedSearchString.length < 3
+
+  const {
+    currentData: searchQueryResult,
+    isFetching,
+    error: queryError
+  } = useGetFilteredBooksListQuery(
+    {
+      filterString: trimmedSearchString,
+      limit: maxItemsCountForOutput
+    },
+    {
+      skip: skipEndpointExecution,
+      refetchOnMountOrArgChange: true
+    }
+  )
 
   //extract book rows from result
   const foundBooks = searchQueryResult ? searchQueryResult.data : []
@@ -290,7 +299,7 @@ function SearchBar() {
   //items count displayed in result bar must not contain more than defined maximum items count. If there are more items in result then add
   //link to page displaying all found items (all book list URL with search string URL query param).
   //Also get slice from result array to contain at most defined maximum items number. This guards againt breaking UI by outputting too much
-  //rows in quick result div in case backend returns more rows then was specified in limit result
+  //rows in quick result div in case backend returns more rows then was specified in rows limit parameter
   const totalRowsInfoFromResponseJson = searchQueryResult ? searchQueryResult.total_rows_found : 0;
   const searchResultArrForOutput = searchResult.slice(0, maxItemsCountForOutput);
 
