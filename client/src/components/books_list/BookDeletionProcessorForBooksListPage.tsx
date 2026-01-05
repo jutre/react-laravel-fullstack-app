@@ -122,7 +122,10 @@ export function BookDeletionProcessorForBooksListPage({
     isFetching: isFetchingBooksList } =
     apiSlice.endpoints.getBooksList.useQueryState(executableEndpoint !== 'all_books_query' ? skipToken : undefined);
 
-    const { data: booksFilteringQueryData,
+  //currentData property instead of 'data' property from endpoint returned object is used to get actual payload from server as currentData
+  //value becomes undefined in case of error which clears previous search result in case if there is a following search request after
+  //previous successful one and it returns error
+    const { currentData: booksFilteringQueryData,
       error: booksFilteringQueryError,
       isFetching: isFetchingBooksFiltering } =
       apiSlice.endpoints.getFilteredBooksList.useQueryState(executableEndpoint !== 'filtered_list_query'
