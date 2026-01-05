@@ -121,7 +121,10 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
     isFetching: isFetchingBooksList } =
     useGetBooksListQuery(executableEndpoint !== 'all_books_query' ? skipToken : undefined);
 
-  const { data: booksFilteringQueryData,
+  //currentData property instead of 'data' property from endpoint returned object is used to get actual payload from server as currentData
+  //value becomes undefined in case of error which clears previous search result in case if there is a following search request after
+  //previous successful one and it returns error
+  const { currentData: booksFilteringQueryData,
     error: booksFilteringQueryError,
     isFetching: isFetchingBooksFiltering } =
     useGetFilteredBooksListQuery(executableEndpoint !== 'filtered_list_query'
@@ -148,8 +151,7 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
     return null;
   }
 
-  //assign to common variable that is used in loop that creates the actual list HTML markup data from executed endpoint according to
-  //presentation mode
+  //assign result of currently executed endpoint to common variable that is used to finally create list of books
   let booksToDisplay: Book[] = [];
   if (currentlyDisplayedList === 'favorites_list') {
     booksToDisplay = favoriteBooksQueryData
@@ -160,7 +162,7 @@ export function BooksListBody({ listMode }: BooksListModeParams) {
   }
 
 
-  //Ff non empty search string is too short, make currently displayable books variable empty as there may be returned non empty result
+  //If non empty search string is too short, make currently displayable books variable empty as there may be returned non empty result
   //from previous filtering endpoint invocation, it is still assigned to booksFilteringQueryData result variable as endpoint result is
   //not reset any way
   if (currentlyDisplayedList === 'filtered_list' && currentSearchString.length < 3) {
