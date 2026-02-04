@@ -16,14 +16,12 @@ return new class extends Migration
             $table->string('title');
             $table->string('author');
             $table->text('preface')->nullable();
-            //user can add to favorites only his own book(s), use a boolean field on book record inself, by default not added to favorites
+            //user can add to favorites only his own books, a boolean field on book record, by default not added to favorites
             $table->boolean('is_favorite')->default(false);
-            $table->timestamps();
+            //FK to book owner - a user
             $table->unsignedBigInteger('user_id');
-
-            //'books' table 'user_id' column is foreing key to 'users' table primary key, 'books' and 'users' table has "one to many" 
-            //relation.
             $table->foreign('user_id')->references('id')->on('users');
+            $table->timestamps();
         });
     }
 
