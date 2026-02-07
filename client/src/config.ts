@@ -9,6 +9,7 @@ import { FormFieldsDefinition } from './utils/FormBuilder';
 //are substituted with actual values when generating URLs for links or redirects
 export const routes = {
     bookListPath:"/",
+    filteredBookListPath:"/search/",
     favoriteBooksListPath:"/favorites/",
     bookEditPath:"/:bookId/edit/",
     createBookPath:"/create/",

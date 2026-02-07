@@ -2,52 +2,41 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { extractMessageFromQueryErrorObj, getQueryParamValue } from "../../utils/utils";
 import { useTrackEndpointSuccessfulFinishing } from "../../hooks/useTrackEndpointSuccessfulFinishing";
-import { useDeleteBookMutation, apiSlice } from "../../features/api/apiSlice";
-import { getCurrentListMode } from "./BooksListBody";
+import { useDeleteBookMutation } from "../../features/api/apiSlice";
 import { ModalDialog } from "../ModalDialog";
 import { DataFetchingStatusLabel } from "../ui_elements/DataFetchingStatusLabel";
 import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
 import { Book } from "../../types/Book";
-import { BooksListModes } from '../../types/BooksListMode'
 
 type BookDeletionProcessorProps = {
-  listMode: BooksListModes
   deletableBooksIds: number[],
+  allBooksDisplayedInList: Book[] | undefined,
   booksListPageUrl: string,
-  currentSearchString: string | null
 }
 
 /**
- * Displays deletion confirmation modal dialog before deleting single or multiple books and performs deleting if user confirms deletion.
- * For use with book list component. After confirming or canceling deleting page is redirected to book list user initiated deletion from:
- * (all books, filtered or favorite books list).
- * In case a single book is selected for deleting confirmation message displays deletable book title, in case of multiple books selection
- * confirmation message displays an amount of selected books.
- * When deleting a single book a check for book existing among all list's books is performed, if book is not found an error is displayed
- * instead of deletion confirmation message (it's possible to input deletion URL directly in browser's address bar). Technically the check
- * is done among already fetched books for the current list using apiSlice.endpoints.<endpoint name>.useQueryState() hook as deletion
- * processor component is not part of books list component for performance reason (every params change would cause books list re-render)
- *
- * Deletion processor for single book works technically in different context this is the reason code for deletion processor for list and
- * single book can not be reused for each other and single book deletion has a dedicated component. In case deleting multiple book their
- * presence in all books list is not checked.
+ * Displays deletion confirmation modal dialog and performs deleting if user confirms deletion.
+ * If single book is selected for deleting confirmation message contains deletable book title, if multiple books are selected then
+ * message contains amount of selected books. Single book title displaying in confirmation dialog is convenient for user when
+ * user clicks "Delete" button next to book title in list.
+ * It's also possible to input deletion URL with non existing IDs directly in browser's address bar. When deleting a single book a check for
+ * book existance among currently displayed books list is performed. If book is not found an error is displayed; in case deleting
+ * multiple books deletable list is sent to backend without any checking.
  * 
- * @param deletableBooksIds - list of deletable books. In case of deleting single book, array contains only one element
+ * @param deletableBooksIds - list of deletable books. In case of deleting single book array contains single element
+ * @param allBooksDisplayedInList - books array of all books displayed in list, must be passed from parent component; this is the source of
+ * data where deletable book title is obtained if single book is deleted
  * @param booksListPageUrl - a book list page url where page should be redirected after book(s) are deleted or deletion is cancelled by
- * user. An URL value will be used with react-router useNavigate hook. URL may be books list or favorite books list url depending on parent
- * list where a book editing page was navitated from
- * @param searchString - current search string. Used to determine whether books list works in filtering mode to choose a corresponding
- * RTK Query endpoint (all books of filtered list) where to look for book title when single book is choosen for deleting
+ * user. URL must be of list type (e.g. all books, favorite books) where user clicked deleting button.
  */
 
 export function BookDeletionProcessorForBooksListPage({
-  listMode,
   deletableBooksIds,
-  booksListPageUrl,
-  currentSearchString }: BookDeletionProcessorProps) {
+  allBooksDisplayedInList,
+  booksListPageUrl }: BookDeletionProcessorProps) {
 
   /**
-   * deletes book in redux store and redirects to book list url.
+   * triggers book deletion endpoint
    * Intended to invoke when in modal confirmation dialog user clicks button "Confirm"
    */
   function deleteBooks(deletableBooksIds: number []) {
@@ -63,11 +52,6 @@ export function BookDeletionProcessorForBooksListPage({
     navigate(booksListPageUrl);
   }
 
-  //convert null value to empty string to be able to conveniently pass to filtering endpoint with correct type (endpoint does not accept
-  //null as argument)
-  if (currentSearchString === null) {
-    currentSearchString = ""
-  }
 
   //safest way to distinguish that user has clicked "Confirm" option is to maintain a state variable which is explicitly assigned true
   //if user confirmed deletion
@@ -80,7 +64,7 @@ export function BookDeletionProcessorForBooksListPage({
     error: bookDeletingError,
     isLoading: isDeletingBook }] = useDeleteBookMutation()
 
-
+    //TODO replace useTrackEndpointSuccessfulFinishing with isSuccess prop from endpoint returned object
   const [deletionEndpointExecFinishedSuccessfully] = useTrackEndpointSuccessfulFinishing(isDeletingBook, bookDeletingError);
 
   //when deletion endpoint execution finishes successfully redirect page to list where book was deleted from 
@@ -113,54 +97,6 @@ export function BookDeletionProcessorForBooksListPage({
     }
   }, [errorQueryParameter]);
 
-
-  //calculate which of three endpoints is to be used to access data according to current list mode; other endpoints' execution is skipped
-  const currentlyDisplayedList = getCurrentListMode(listMode, currentSearchString)
-  let isBooksListQuerySkipable = true
-  let isFilteredBooksListQuerySkipable = true
-  let isFavoriteBooksListQuerySkipable = true
-
-  if (currentlyDisplayedList === 'all_books_list') {
-    isBooksListQuerySkipable = false
-
-  } else if (currentlyDisplayedList === 'filtered_list') {
-    isFilteredBooksListQuerySkipable = false
-
-  }else if (currentlyDisplayedList === 'favorites_list') {
-    isFavoriteBooksListQuerySkipable = false
-  }
-
-  //a book for deleting can be choosed from all books, filtered or favorite books list in books list component. In books list component data
-  //is fetched with one of use[endpointName]Query hook according according to list mode. In this component data from corresponding hook is
-  //accessed using use[endpointName]QueryState hook.
-  //useQueryState hooks are used to access primary useQuery hook's returned data as current component is not descendant of books list
-  //component
-  const { data: booksListQueryData } = apiSlice.endpoints.getBooksList.useQueryState(
-    undefined,
-    { skip: isBooksListQuerySkipable }
-  )
-
-  const { data: booksFilteringQueryData } = apiSlice.endpoints.getFilteredBooksList.useQueryState(
-    { filterString: currentSearchString },
-    { skip: isFilteredBooksListQuerySkipable }
-  )
-
-  const { data: favoriteBooksQueryData } = apiSlice.endpoints.getFavoriteBooks.useQueryState(
-    undefined,
-    { skip: isFavoriteBooksListQuerySkipable }
-  )
-
-  //assign data from currently executed endpoint to common variable from endpoint's data variable which was not skipped
-  let allBooksDisplayedInList: Book[] | undefined;
-  if (isBooksListQuerySkipable === false) {
-    allBooksDisplayedInList = booksListQueryData
-
-  } else if (isFilteredBooksListQuerySkipable === false) {
-    allBooksDisplayedInList = booksFilteringQueryData ? booksFilteringQueryData.data : undefined
-
-  }else if (isFavoriteBooksListQuerySkipable === false) {
-    allBooksDisplayedInList = favoriteBooksQueryData
-  }
 
   // check the case of unsusual interaction with app - user enters list url with delete params and hits "Enter" not using deletion
   // interface button. In such case stop any further processing and don't display dialog until data is fetched by corresponding useQuery

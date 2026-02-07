@@ -1,8 +1,9 @@
 import { routes } from "../config";
-import { FAVORITE_BOOKS_LIST } from "../constants/bookListModes";
 import { PageHeader } from "./page_header/PageHeader";
 import { BooksListTypeMenu } from "./BooksListTypeMenu";
-import { BooksList } from "./books_list/BooksList";
+import { FilteredBooksListInitializer } from "./books_list/FilteredBooksListInitializer";
+import { AllBooksList } from "./books_list/AllBooksList";
+import { FavoriteBookList } from "./books_list/FavoriteBookList";
 import { BookEditing } from "./BookEditing";
 import { DemoDataReset } from "./DemoDataReset";
 import {
@@ -46,8 +47,9 @@ const Layout = () => {
       //display component corresponding to current URL
       content =
         <Routes>
-          <Route path={routes.bookListPath} element={<BooksList />} />
-          <Route path={routes.favoriteBooksListPath} element={<BooksList listMode={FAVORITE_BOOKS_LIST} />} />
+          <Route path={routes.bookListPath} element={<AllBooksList />} />
+          <Route path={routes.filteredBookListPath} element={<FilteredBooksListInitializer />} />
+          <Route path={routes.favoriteBooksListPath} element={<FavoriteBookList />} />
           <Route path={routes.bookEditPath} element={<ResourcesPreloader><BookEditing /></ResourcesPreloader>} />
           <Route path={routes.createBookPath} element={<ResourcesPreloader><BookCreating /></ResourcesPreloader>} />
           <Route path={routes.demoDataResetPath} element={<DemoDataReset />} />

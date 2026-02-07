@@ -1,7 +1,7 @@
 import { SerializedError } from '@reduxjs/toolkit';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { BooksListModes } from '../types/BooksListMode'
-import { FAVORITE_BOOKS_LIST } from "../constants/bookListModes";
+import { FAVORITE_BOOKS_LIST, FILTERED_BOOKS_LIST } from "../constants/bookListModes";
 import { routes } from "../config";
 
 /**
@@ -70,6 +70,8 @@ export function getQueryParamValue(paramName: string) {
 export function getBookListBaseUrl(listMode: BooksListModes) {
   if (listMode === FAVORITE_BOOKS_LIST) {
     return routes.favoriteBooksListPath;
+  } else if (listMode === FILTERED_BOOKS_LIST) {
+    return routes.filteredBookListPath;
   } else {
     return routes.bookListPath
   }

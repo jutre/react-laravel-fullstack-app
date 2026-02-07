@@ -13,16 +13,14 @@ type BookListItemProps = {
   book: Book,
   editUrl: string,
   deleteUrl: string,
-  removeFromFavoritesQueryTrigger: (bookId: number) => void,
-  displayRemoveFromFavoritesButton: boolean
+  removeFromFavoritesButtonClickHandler?: (bookId: number) => void
 }
 
 export function BookListItem({
   book,
   editUrl,
   deleteUrl,
-  removeFromFavoritesQueryTrigger,
-  displayRemoveFromFavoritesButton }: BookListItemProps) {
+  removeFromFavoritesButtonClickHandler }: BookListItemProps) {
 
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -43,13 +41,6 @@ export function BookListItem({
     }else{
       dispatch(singleBookRemovedFromSelection(book));
     }
-  }
-
-  /**
-   * when clicking on favourites icon, add or remove from favourites depending on whether book currently is added to favorites
-   */
-  function handleFavoritesIconClick(bookId: number){
-    removeFromFavoritesQueryTrigger(bookId)
   }
 
 
@@ -80,11 +71,11 @@ export function BookListItem({
       
       <div className="grow-0 shrink-0 flex items-center gap-[10px] ml-[15px]">
         
-        {/*remove from favorites button is displayed only if component param set to 'true'*/
-        displayRemoveFromFavoritesButton &&
+        {/*display remove from favorites button if click handler function is not undefined*/
+        removeFromFavoritesButtonClickHandler !== undefined &&
           <ButtonWithIconAndBackground
             iconName = "remove-from-favourites"
-            clickHandler={()=>{handleFavoritesIconClick(book.id)}}/>
+            clickHandler={()=>{removeFromFavoritesButtonClickHandler(book.id)}}/>
         }
 
         {/*edit button*/}

@@ -99,7 +99,7 @@ function SearchBar() {
   const [searchResult, setSearchResult] = useState<Book[]>([]);
 
 
-  const bookListWithSearchResultUrl = routes.bookListPath + "?search=" + searchTerm;
+  const bookListWithSearchResultUrl = routes.filteredBookListPath + "?search=" + searchTerm;
 
   //needed for detecting that user clicked outside of search bar div
   const beginningOfSearchBarRef = useRef(null);

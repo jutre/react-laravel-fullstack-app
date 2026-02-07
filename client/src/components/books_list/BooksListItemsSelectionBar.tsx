@@ -12,7 +12,7 @@ import { Book } from "../../types/Book";
 
 type BooksListItemsSelectionBarProps = {
   allDisplayedBooks: Book[], 
-  searchGetParamVal: string | null, 
+  searchGetParamVal?: string,
   baseUrl: string
 }
 
