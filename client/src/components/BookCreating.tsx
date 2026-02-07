@@ -237,7 +237,8 @@ export function BookCreating() {
 
   return (
     <div className="relative">
-      <NavLinkBack url={routes.bookListPath} />
+      <NavLinkBack url={routes.bookListPath} 
+        linkLabelOverrideText="All books"/>
 
       <H1Heading headingText={pageHeading} />
 
