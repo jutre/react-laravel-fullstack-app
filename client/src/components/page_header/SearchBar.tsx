@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Book } from '../../types/Book';
 import { useGetFilteredBooksListQuery } from '../../features/api/apiSlice';
-import { routes } from '../../config';
+import { routes, searchStringUrlQueryParamName } from '../../config';
 import { NavLink, useNavigate } from "react-router-dom";
 import { ButtonWithIcon } from '../ui_elements/ButtonWithIcon';
 import { SerializedError } from '@reduxjs/toolkit';
@@ -99,7 +99,7 @@ function SearchBar() {
   const [searchResult, setSearchResult] = useState<Book[]>([]);
 
 
-  const bookListWithSearchResultUrl = routes.filteredBookListPath + "?search=" + searchTerm;
+  const bookListWithSearchResultUrl = routes.filteredBookListPath + "?" + searchStringUrlQueryParamName + "=" + searchTerm;
 
   //needed for detecting that user clicked outside of search bar div
   const beginningOfSearchBarRef = useRef(null);

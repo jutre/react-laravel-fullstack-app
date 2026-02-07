@@ -17,6 +17,10 @@ export const routes = {
 }
 
 
+//the name for URL query parameter holding search string like "q" in URL /search/q=find-this
+export const searchStringUrlQueryParamName = "q"
+
+
 /**
  * book creation form definition
  */

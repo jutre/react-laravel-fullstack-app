@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useAppDispatch } from '../../store/reduxHooks';
 import { searchStringUpdated } from "../../features/booksSlice"
 import { useSearchParams } from "react-router-dom";
+import { searchStringUrlQueryParamName } from "../../config";
 
 /**
  * This component processes page's URL "search" query parameter setting it's value to Redux state.
@@ -17,7 +18,7 @@ export function SearchUrlQueryParamProcessor() {
 
   const [searchParams] = useSearchParams()
 
-  let searchStringParamVal = searchParams.get("search");
+  let searchStringParamVal = searchParams.get(searchStringUrlQueryParamName);
 
   //If search string length after trimming is zero convert it to null - equals to no search string entered
   if (searchStringParamVal !== null) {
