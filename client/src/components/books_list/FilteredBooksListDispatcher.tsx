@@ -7,12 +7,9 @@ import { useAppSelector } from "../../store/reduxHooks";
 
 
 /**
- * Makes decision which books list component to render (all books, filtered list or favorites books list) depending on listMode property
- * values and filter string URL query parameter value.
+ * Processes case when user enters filtered URL directly in browser and does not supply search string URL query parameter.
+ * If search string is not empty renders filtered book list component, otherwise redirect to all books list.
  * 
- * @param listMode - determines the books list component that will be rendered. If value is "FAVORITE_BOOKS_LIST" then favorite books list
- * component is displayed. On undefined value the decision between all books or filtered books list is made based on filter string URL query
- * parameter presence 
  */
 
 export function FilteredBooksListDispatcher() {
