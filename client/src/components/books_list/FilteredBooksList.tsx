@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { BooksListBody } from "./BooksListBody.tsx";
 import { useGetFilteredBooksListQuery } from '../../features/api/apiSlice.ts';
 import { extractMessageFromQueryErrorObj } from '../../utils/utils.ts';
-import { Book } from "../../types/Book.ts";
 import { FILTERED_BOOKS_LIST } from "../../constants/bookListModes.ts";
 
 
@@ -36,7 +35,7 @@ export function FilteredBooksList({ filterString }: FilteredBooksListProps) {
     errorMessage = "Searching string must contain at least three symbols"
   }
 
-  const { currentData: filteredListQueryData,
+  const { currentData: listItems,
     error: booksListQueryError,
     isFetching: isFetching } = useGetFilteredBooksListQuery(
       {
@@ -46,12 +45,6 @@ export function FilteredBooksList({ filterString }: FilteredBooksListProps) {
         skip: isQueryExecutingSkippable
       }
     )
-
-  //get books list from query result returned object
-  let listItems: Book[] | undefined = undefined
-  if (filteredListQueryData !== undefined) {
-    listItems = filteredListQueryData.data
-  }
 
 
   if (booksListQueryError) {

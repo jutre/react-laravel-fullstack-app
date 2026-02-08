@@ -29,7 +29,7 @@ function SearchBar() {
   const skipEndpointExecution = trimmedSearchString.length < 3
 
   const {
-    currentData: searchQueryResult,
+    currentData: foundBooks = [],
     isFetching,
     error: queryError
   } = useGetFilteredBooksListQuery(
@@ -43,8 +43,6 @@ function SearchBar() {
     }
   )
 
-  //extract book rows from result
-  const foundBooks = searchQueryResult ? searchQueryResult.data : []
 
   useEffect(() => {
     const filterText = searchTerm.trim();
@@ -296,17 +294,9 @@ function SearchBar() {
   const searchResultWrapperClasses = "absolute w-full mt-[-15px] pt-[15px] border border-[gray] bg-white rounded-b-[8px]";
 
 
-  //items count displayed in result bar must not contain more than defined maximum items count. If there are more items in result then add
-  //link to page displaying all found items (all book list URL with search string URL query param).
-  //Also get slice from result array to contain at most defined maximum items number. This guards againt breaking UI by outputting too much
-  //rows in quick result div in case backend returns more rows then was specified in rows limit parameter
-  const totalRowsInfoFromResponseJson = searchQueryResult ? searchQueryResult.total_rows_found : 0;
+  // Get slice from result array to contain at most max defined items number. This prevents breaking UI in case backend returns more rows
+  // then was specified in rows limit parameter
   const searchResultArrForOutput = searchResult.slice(0, maxItemsCountForOutput);
-
-  let resultCountExceedsMaxOutputCount = false;
-  if (totalRowsInfoFromResponseJson > maxItemsCountForOutput) {
-    resultCountExceedsMaxOutputCount = true;
-  }
 
   return (
     <div className="flex relative grow shrink-0 basis-auto min-w-[90%] md:min-w-[unset] min-[800px]:justify-center
@@ -374,15 +364,6 @@ function SearchBar() {
                 </div>
               )
             })}
-
-            {resultCountExceedsMaxOutputCount &&
-              <div onClick={handleSearchResultLinkClick}>
-                <NavLink className={() => "block p-[15px] relative z-[1] text-center"}
-                  to={bookListWithSearchResultUrl}>
-                  Show all {totalRowsInfoFromResponseJson} found items...
-                </NavLink>
-              </div>
-            }
           </div>
         }
 

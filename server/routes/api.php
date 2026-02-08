@@ -23,23 +23,25 @@ Route::get('/current_logged_in_user', [AuthController::class, 'getCurrentLoggedI
 Route::post('/login', [AuthController::class, 'login']);
 Route::delete('/login', [AuthController::class, 'logout']);
 
-//books - CRUD operations
+//books - CRUD operations on books
+//GET method endpoint also performs searching books by title if URL query param is set;
+//performs result rows count limit if URL query param is set
 Route::get('/books', [BookController::class, 'index'])->middleware('auth:sanctum');
 Route::get('/books/{id}', [BookController::class, 'show'])->middleware('auth:sanctum');
 Route::post('/books', [BookController::class, 'store'])->middleware('auth:sanctum');
 Route::put('/books/{id}', [BookController::class, 'update'])->middleware('auth:sanctum');
 Route::delete('/books', [BookController::class, 'destroy'])->middleware('auth:sanctum');
 
-//books - search
-Route::get('/books/search/{title}', [BookController::class, 'search'])->middleware('auth:sanctum');
 
 //favorite books list - read list, remove book from favorite book list (book can be added to favorites in book edit form, no dedicated 
 //endpoint for adding to favorites)
 Route::get('/favorite-books', [BookController::class, 'getFavoriteBooks'])->middleware('auth:sanctum');
 Route::delete('/favorite-books/{id}', [BookController::class, 'removeBookFromFavorites'])->middleware('auth:sanctum');
 
+
 //literary genres list
 Route::get('/literary_genres', [BookController::class, 'getLiteraryGenresList'])->middleware('auth:sanctum');
+
 
 //reseting demo data
 Route::post('/demo-data-reset', [BookController::class, 'resetDemoData'])->middleware('auth:sanctum');

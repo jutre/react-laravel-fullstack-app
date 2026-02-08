@@ -8,10 +8,6 @@ import { getCookie } from '../../utils/utils'
 import { booksCollectionRemovedFromSelection } from '../booksSlice';
 import { LiteraryGenre } from '../../types/LiteraryGenre';
 
-type FilterQueryResultJsonFormat = {
-  data: Book[],
-  total_rows_found: number
-}
 
 type FilterQueryInputParameter = {
   filterString: string,
@@ -121,19 +117,23 @@ export const apiSlice = createApi({
     received in response which is used to optimise request for quick search component as only few records are displayed in results div;
     record amount limiting is not used in filtered books list body
     */
-    getFilteredBooksList: builder.query<FilterQueryResultJsonFormat, FilterQueryInputParameter>({
-      query: (searchStringAndLimit) => `books/search/${searchStringAndLimit.filterString}` +
-        (searchStringAndLimit.limit ? `?limit=${searchStringAndLimit.limit}` : ''),
+    getFilteredBooksList: builder.query<Book[], FilterQueryInputParameter>({
+      query: (searchStringAndLimit) => {
+        const encodedSearchString = encodeURIComponent(searchStringAndLimit.filterString);
+        const limitRowsNumber = searchStringAndLimit.limit
+
+        return `books?q=${encodedSearchString}` + (limitRowsNumber ? `&limit=${limitRowsNumber}` : '')
+      },
 
       //privide tags for book filtering list as in filtering result list there is option to delete any of found books and after deletion 
       //result list must be re-fetched immediatelly
       providesTags: (result) =>
-        (result && result.data)
+        (result)
           ? // successful query, create tag for each returned book and a tag to make query invalidated when new book is created 
-            [
-              { type: 'BookGeneralInfo', id: 'LIST' },
-              ...result.data.map(({ id }) => ({ type: 'BookGeneralInfo', id }) as const)
-            ]
+          [
+            { type: 'BookGeneralInfo', id: 'LIST' },
+            ...result.map(({ id }) => ({ type: 'BookGeneralInfo', id }) as const)
+          ]
           : // an error occurred, refetch this query when `{ type: 'BookGeneralInfo', id: 'LIST' }` is invalidated f.e. new book is added
           [{ type: 'BookGeneralInfo', id: 'LIST' }]
 
