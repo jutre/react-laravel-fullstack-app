@@ -37,7 +37,7 @@ type BooksListTableProps = {
  * Also contains component invoking book deletion component in response to URL query parameter change.
  * 
  * @param listBaseUrl - the basic URL that list is displayed on. May contain also query parameters, e.g "/search/?q=foo". This URL is
- * used to construct other URLs like by adding query parameters or creating back to list URL in book edit page links
+ * used to construct other URLs by adding query parameters
  * @param listItems - list of books to display
  * @param isFetchingData - whether data is being fetched, used to display loading state in UI
  * @param isRemovingFromFavorites - whether book is being removed from favorites, used to display loading state in UI
