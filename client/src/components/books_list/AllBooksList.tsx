@@ -36,6 +36,7 @@ export function AllBooksList() {
   return (
     <>
       <BooksListBody
+        listBaseUrl={routes.bookListPath}
         listItems={booksListQueryData}
         isFetchingData={isFetching}
         errorMessage={errorMsgFromEndpoint}

@@ -1,9 +1,8 @@
-import { routes } from "../../config.ts";
+import { routes, searchStringUrlQueryParamName } from "../../config.ts";
 import { Link } from "react-router-dom";
 import { BooksListBody } from "./BooksListBody.tsx";
 import { useGetFilteredBooksListQuery } from '../../features/api/apiSlice.ts';
 import { extractMessageFromQueryErrorObj } from '../../utils/utils.ts';
-import { FILTERED_BOOKS_LIST } from "../../constants/bookListModes.ts";
 
 
 /**
@@ -75,16 +74,19 @@ export function FilteredBooksList({ filterString }: FilteredBooksListProps) {
 
   }
 
+  //filtered list always contains also search string query parameter
+  const listBaseUrl = routes.filteredBookListPath + "?" + searchStringUrlQueryParamName + "=" + filterString
+
   return (
     <>
       <BooksListBody
-        listMode={FILTERED_BOOKS_LIST}
+        listBaseUrl={listBaseUrl}
         listItems={listItems}
         isFetchingData={isFetching}
         errorMessage={errorMessage}
         listHeader="Search books"
-        searchedStringAndResultInfoMessage={searchResultsInfoMessage} 
-        currentSearchString={filterString}/>
+        searchedStringAndResultInfoMessage={searchResultsInfoMessage}
+      />
     </>
   )
 }

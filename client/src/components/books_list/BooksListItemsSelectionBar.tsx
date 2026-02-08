@@ -6,13 +6,13 @@ import {  bookCollectionAddedToSelection,
           selectIsAnyBookSelected,
           selectBooksInSelection } from "../../features/booksSlice";
 import { ButtonWithIconAndBackground } from '../ui_elements/ButtonWithIconAndBackground';
-import { searchStringUrlQueryParamName, customCheckboxSquareBoxClasses } from '../../config'
+import { customCheckboxSquareBoxClasses } from '../../config'
 import { Book } from "../../types/Book";
+import { getDeviderForNextUrlQueryStringParam } from "./BooksListBody";
 
 
 type BooksListItemsSelectionBarProps = {
   allDisplayedBooks: Book[], 
-  searchGetParamVal?: string,
   baseUrl: string
 }
 
@@ -23,15 +23,13 @@ type BooksListItemsSelectionBarProps = {
  * 
  * @param allDisplayedBooks - array of book objects currently displayed in list. In case user clicks "select all items"
  * control all books from array will be added to selected items state.
- * @param searchGetParamVal - current search parameter value. After delete operation page will be redirected to list url with
- * search paramater preserved
  * @param baseUrl - base path for current list (all books or favarite books list), needed to be included in delete url to
  * stay on current list when redirected to deletion url
  * @returns 
  */
 
 
-function BooksListItemsSelectionBar({allDisplayedBooks, searchGetParamVal, baseUrl}: BooksListItemsSelectionBarProps) {
+function BooksListItemsSelectionBar({allDisplayedBooks, baseUrl}: BooksListItemsSelectionBarProps) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -64,10 +62,7 @@ function BooksListItemsSelectionBar({allDisplayedBooks, searchGetParamVal, baseU
    */
   function handleRedirectToDeletionUrl(){
     if(isAnyBookSelected){
-      let deleteUrl = baseUrl + "?deleteId="+ selectedBooks.join(",");
-      if(searchGetParamVal){
-        deleteUrl += "&" + searchStringUrlQueryParamName + "=" + searchGetParamVal; 
-      }
+      let deleteUrl = baseUrl + getDeviderForNextUrlQueryStringParam(baseUrl) + "deleteId="+ selectedBooks.join(",");
       navigate(deleteUrl);
     }
   }

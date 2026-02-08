@@ -1,7 +1,7 @@
+import { routes } from "../../config.ts";
 import { BooksListBody } from "./BooksListBody.tsx";
 import { useGetFavoriteBooksQuery, useRemoveBookFromFavoritesMutation } from '../../features/api/apiSlice.ts';
 import { findNonEmptyErrorFromList, extractMessageFromQueryErrorObj } from '../../utils/utils.ts';
-import { FAVORITE_BOOKS_LIST } from "../../constants/bookListModes";
 
 
 /**
@@ -42,7 +42,7 @@ export function FavoriteBookList() {
   return (
     <>
       <BooksListBody
-        listMode={FAVORITE_BOOKS_LIST}
+        listBaseUrl={routes.favoriteBooksListPath}
         listItems={favoriteBooksListQueryData}
         isFetchingData={isFetching}
         errorMessage={errorMsgFromEndpoint}

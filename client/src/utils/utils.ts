@@ -1,8 +1,5 @@
 import { SerializedError } from '@reduxjs/toolkit';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { BooksListModes } from '../types/BooksListMode'
-import { FAVORITE_BOOKS_LIST, FILTERED_BOOKS_LIST } from "../constants/bookListModes";
-import { routes } from "../config";
 
 /**
  * This function it intended to be used as a part of "click" event handler attached to attached to window.document. The other part of it
@@ -60,22 +57,6 @@ export function getQueryParamValue(paramName: string) {
   return paramValue;
 }
 
-/**
- * books may be displayed in all books list and in favorites book list. Each list is displayed in it's corresponding url.
- * This function is to be used in situations when it is needed to get a base url for deleting, deleting cancellation url
- * and an url where to redirect after deleting for a supplied list mode (there are all books and favorite books list modes)
- * @param {string} listMode 
- * @returns 
- */
-export function getBookListBaseUrl(listMode: BooksListModes) {
-  if (listMode === FAVORITE_BOOKS_LIST) {
-    return routes.favoriteBooksListPath;
-  } else if (listMode === FILTERED_BOOKS_LIST) {
-    return routes.filteredBookListPath;
-  } else {
-    return routes.bookListPath
-  }
-}
 
 /**
  * returns browser cookie value if a cookie with name defined name exists, otherwise returns `undefined`

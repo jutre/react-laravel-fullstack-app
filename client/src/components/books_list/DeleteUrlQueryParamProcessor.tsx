@@ -1,8 +1,5 @@
 
-import { searchStringUrlQueryParamName } from '../../config'
-import { BooksListModes } from '../../types/BooksListMode'
 import { useSearchParams } from "react-router-dom";
-import { getBookListBaseUrl } from "../../utils/utils";
 import { BookDeletionProcessorForBooksListPage } from "./BookDeletionProcessorForBooksListPage";
 import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
 import { Book } from "../../types/Book";
@@ -16,25 +13,20 @@ import { Book } from "../../types/Book";
  * URL query params processing is done in separate component for optimisation purpose as any URL query parameter value change
  * triggers component's re-render through react-router API, if placed directly in book list the list would also re-render.
  * 
- * @param listMode - indicates current mode books list is currently working in - all books list or favorites books list. Value is used
- * to calculate base URL when creating links for deletion confirmation dialog. If page displays favorite books list, after deleting page
- * must be redirected to favorites books list for which an appropriate URL query param is added
+ * @param listBaseUrl - list base URL to which page will be redirected to after deletion is confirmed or canceled 
  * @param allBooksDisplayedInList - all books passed as books list to parent component that creates list HTML markup, will be passed
  * to component performing the deletion
  * @param currentFilterString - 
  */
 
 type UrlDeleteQueryParamProcessorProps = {
-  listMode: BooksListModes | undefined,
+  listBaseUrl: string,
   allBooksDisplayedInList: Book[] | undefined,
-  currentFilterString?: string,
-
 }
 
 export function DeleteUrlQueryParamProcessor({ 
-  listMode,
-  allBooksDisplayedInList,
-  currentFilterString }: UrlDeleteQueryParamProcessorProps) {
+  listBaseUrl,
+  allBooksDisplayedInList }: UrlDeleteQueryParamProcessorProps) {
 
   const [searchParams] = useSearchParams()
 
@@ -47,13 +39,6 @@ export function DeleteUrlQueryParamProcessor({
   let errorMessage;
   let displayDeletionConfirmationDialog = false;
 
-  //the url of book list (general or favorites list) page will be redirected to after deletion is confirmed or canceled; keep also search
-  //query param (may delete a book from filtered list, must be redirected to list with same search string as other books may still found by
-  //current search string)
-  let currentBookListUrl = getBookListBaseUrl(listMode);
-  if (currentFilterString) {
-    currentBookListUrl += "?" + searchStringUrlQueryParamName + "=" + currentFilterString
-  }
 
   if (deleteBookIdParamVal) {
     //delete id must be string consisting of comma separated positive integers. List of integers is used in case of deleting multiple
@@ -85,7 +70,7 @@ export function DeleteUrlQueryParamProcessor({
         <BookDeletionProcessorForBooksListPage
         deletableBooksIds={deletableBooksIdsArr}
         allBooksDisplayedInList={allBooksDisplayedInList}
-        booksListPageUrl={currentBookListUrl} />
+        booksListPageUrl={listBaseUrl} />
      }
     </>
   )
