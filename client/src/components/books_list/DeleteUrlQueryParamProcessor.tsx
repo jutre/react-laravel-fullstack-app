@@ -1,4 +1,5 @@
 
+import { searchStringUrlQueryParamName } from '../../config'
 import { BooksListModes } from '../../types/BooksListMode'
 import { useSearchParams } from "react-router-dom";
 import { getBookListBaseUrl } from "../../utils/utils";
@@ -51,7 +52,7 @@ export function DeleteUrlQueryParamProcessor({
   //current search string)
   let currentBookListUrl = getBookListBaseUrl(listMode);
   if (currentFilterString) {
-    currentBookListUrl += "?search=" + currentFilterString
+    currentBookListUrl += "?" + searchStringUrlQueryParamName + "=" + currentFilterString
   }
 
   if (deleteBookIdParamVal) {

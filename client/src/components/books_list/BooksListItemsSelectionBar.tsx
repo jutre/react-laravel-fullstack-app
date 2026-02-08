@@ -6,7 +6,7 @@ import {  bookCollectionAddedToSelection,
           selectIsAnyBookSelected,
           selectBooksInSelection } from "../../features/booksSlice";
 import { ButtonWithIconAndBackground } from '../ui_elements/ButtonWithIconAndBackground';
-import { customCheckboxSquareBoxClasses } from '../../config'
+import { searchStringUrlQueryParamName, customCheckboxSquareBoxClasses } from '../../config'
 import { Book } from "../../types/Book";
 
 
@@ -66,7 +66,7 @@ function BooksListItemsSelectionBar({allDisplayedBooks, searchGetParamVal, baseU
     if(isAnyBookSelected){
       let deleteUrl = baseUrl + "?deleteId="+ selectedBooks.join(",");
       if(searchGetParamVal){
-        deleteUrl += "&search=" + searchGetParamVal; 
+        deleteUrl += "&" + searchStringUrlQueryParamName + "=" + searchGetParamVal; 
       }
       navigate(deleteUrl);
     }

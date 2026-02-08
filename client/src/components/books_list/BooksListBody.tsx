@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { routes } from "../../config";
+import { routes, searchStringUrlQueryParamName } from "../../config";
 import { DeleteUrlQueryParamProcessor } from "./DeleteUrlQueryParamProcessor";
 import BooksListItemsSelectionBar from "./BooksListItemsSelectionBar"
 import { H1Heading } from "../ui_elements/H1Heading";
@@ -94,7 +94,7 @@ export function BooksListBody({
     deleteUrl += "?deleteId=" + bookId;
 
     if (searchGetParamVal) {
-      deleteUrl += "&search=" + searchGetParamVal;
+      deleteUrl += "&" + searchStringUrlQueryParamName + "=" + searchGetParamVal;
     }
     return deleteUrl;
   }
