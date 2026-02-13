@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { getQueryParamValue,
   extractMessageOrMessagesObjFromQueryError,
   findNonEmptyErrorFromList } from "../utils/utils";
@@ -24,11 +24,12 @@ import { FormBuilder,
   createTargetObjFromSubmittedData } from '../utils/FormBuilder';
 import DisappearingMessage from './DisappearingMessage';
 import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
-import { BookDeletionProcessorForBookEditPage } from "./BookDeletionProcessorForBookEditPage";
 import { useTrackEndpointSuccessfulFinishing } from "../hooks/useTrackEndpointSuccessfulFinishing";
 import { SerializedError } from '@reduxjs/toolkit';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { useAppSelector } from "../store/reduxHooks";
+import { useAppDispatch, useAppSelector } from "../store/reduxHooks";
+import { singleBookChoosenForDeleting } from "../features/booksSlice";
+import { BookDeletionProcessor } from "./BookDeletionProcessor";
 
 
 /**
@@ -37,6 +38,7 @@ import { useAppSelector } from "../store/reduxHooks";
  * currently in input fields.
  */
 export function BookEditing() {
+  const dispatch = useAppDispatch()
 
   const literaryGenresOptionsList = useAppSelector(selectLiteraryGenresOptionsList)
 
@@ -71,14 +73,18 @@ export function BookEditing() {
     }
   }
 
+
+  function handleDeleteButtonClick(bookId: number) {
+    dispatch(singleBookChoosenForDeleting(bookId))
+  }
+
+
   //contains book data that will be displayed in book edit form.
   //Initially contains book data obtained from REST API GET method endpoint to display existing book data to be updated and after user
   //submits form state variable is assigned data the update result returned by book updating endpoint which also is displayed in form
   //and user can edit and submit it again
   const [formInitialData, setFormInitialData] = useState<Book | undefined>();
 
-
-  const navigate = useNavigate();
 
   const [triggerBookUpdateMutation, {
     error: bookUpdatingError,
@@ -148,14 +154,6 @@ export function BookEditing() {
     backToListUrl = parentListUrl;
   }
 
-  //create current book delete url by adding delete parameter to book edit link.
-  //if edit page was opened from other than all books list, parentListUrl get param is to be keeped in delete url
-  //to redirect page to same list user opened editing page from in case user confirms or cancels deleting
-  let deleteLinkUrl = bookEditUrlWithoutQueryParams + "?delete=true";
-  if (parentListUrl) {
-    deleteLinkUrl += "&parentListUrl=" + parentListUrl;
-  }
-
   //if user clicks on "Cancel" botton in delete confirmation dialog, page should redirect
   //to book editing url without delete get param, keeping parent list url param
   let deletionCancelActionUrl = bookEditUrlWithoutQueryParams
@@ -163,16 +161,9 @@ export function BookEditing() {
     deletionCancelActionUrl += "?parentListUrl=" + parentListUrl;
   }
 
-  //show deletion confirmation dialog when deleting get param is set and if form data is not empty which means an
-  //existing book id query param is passed as
-  let showDeletionConfirmationDialog = false;
-  if (formInitialData && deleteParamVal === "true") {
-    showDeletionConfirmationDialog = true;
-  }
 
   /* book update endpoint can respond with two types of error. One type contains only general error message like which will be output above
-  the form, other type is validation errors per submitted input field where each must be displayed next to form's input field. Therefore two
-  distinct variables are created for each error type */
+  the form, other type is validation errors per submitted input field where each must be displayed next to form's input field. */
   let errorMsg: string | null = null
   let validationErrors: { [index:string]: string } | null = null
 
@@ -213,6 +204,7 @@ export function BookEditing() {
           isGetBookQueryFetching &&
           <BookFormSketeton />
         }
+
         {/* while updated data is being sent, show that data is loading */
           isUpdatingBook &&
           <DataFetchingStatusLabel labelText="updating..." />
@@ -224,26 +216,25 @@ export function BookEditing() {
             initialDisplayDuration={500} />
         }
 
-        {/* display modal deleting confirmation dialog */
-          (showDeletionConfirmationDialog && formInitialData) &&
-          <BookDeletionProcessorForBookEditPage deletableBook={formInitialData}
-            afterDeletingRedirectUrl={backToListUrl}
-            cancelActionUrl={deletionCancelActionUrl} />
-        }
-
-
-        {/* book edit form and delete button when book data is loaded */
+        {/* book edit form, other elements when book data has been loaded */
           formInitialData &&
           <>
+
+            <BookDeletionProcessor
+              allBooksDisplayedInList={[formInitialData]}
+              redirectAfterDeletingUrl={backToListUrl} />
+
+
             {/* delete button placed on the right top corner of container */}
             <div className="absolute right-0 top-0">
               <ButtonWithIconAndBackground
                 iconName="delete"
-                //redirect to delete url on click
-                clickHandler={() => { navigate(deleteLinkUrl) }} />
+                clickHandler={() => { handleDeleteButtonClick(formInitialData.id) }} />
             </div>
 
-            <FormBuilder formFieldsDefinition={bookEditFormFieldsDef}
+
+            <FormBuilder
+              formFieldsDefinition={bookEditFormFieldsDef}
               optionsForSelectOrRadioFields={inputElementOptions}
               submitButtonText="Update"
               initialOrOverrideData={formInitialData}
