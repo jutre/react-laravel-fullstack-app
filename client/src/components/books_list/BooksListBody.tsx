@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { routes } from "../../config";
-import { BookDeletionProcessorForBooksListPage } from "./BookDeletionProcessorForBooksListPage";
+import { BookDeletionProcessor } from "../BookDeletionProcessor";
 import { BooksListItemsSelectionBar } from "./BooksListItemsSelectionBar"
 import { H1Heading } from "../ui_elements/H1Heading";
 import { CreateBookButton } from '../ui_elements/CreateBookButton.tsx';
@@ -104,7 +104,7 @@ export function BooksListBody({
 
 
       {/*outputs markup of modal of deletion confirmation dialog, deleting progress indicator or error message*/}
-      <BookDeletionProcessorForBooksListPage
+      <BookDeletionProcessor
         allBooksDisplayedInList={listItems} />
 
 

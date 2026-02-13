@@ -1,13 +1,13 @@
 import { useEffect } from "react";
-import { useAppDispatch, useAppSelector } from '../../store/reduxHooks';
-import { selectBooksChosenForDeleting, booksChoiceForDeletingCleared } from "../../features/booksSlice";
+import { useAppDispatch, useAppSelector } from '../store/reduxHooks';
+import { selectBooksChosenForDeleting, booksChoiceForDeletingCleared } from "../features/booksSlice";
 import { useNavigate } from "react-router-dom";
-import { extractMessageFromQueryErrorObj } from "../../utils/utils";
-import { useDeleteBookMutation } from "../../features/api/apiSlice";
-import { ModalDialog } from "../ModalDialog";
-import { DataFetchingStatusLabel } from "../ui_elements/DataFetchingStatusLabel";
-import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
-import { Book } from "../../types/Book";
+import { extractMessageFromQueryErrorObj } from "../utils/utils";
+import { useDeleteBookMutation } from "../features/api/apiSlice";
+import { ModalDialog } from "./ModalDialog";
+import { DataFetchingStatusLabel } from "./ui_elements/DataFetchingStatusLabel";
+import { GeneralErrorMessage } from "./ui_elements/GeneralErrorMessage";
+import { Book } from "../types/Book";
 
 type BookDeletionProcessorProps = {
   allBooksDisplayedInList: Book[] | undefined,
@@ -15,13 +15,9 @@ type BookDeletionProcessorProps = {
 }
 
 /**
- * Displays deletion confirmation modal dialog and performs deleting if user confirms deletion.
- * If single book is selected for deleting confirmation message contains deletable book title, if multiple books are selected then
- * message contains amount of selected books. Single book title displaying in confirmation dialog is convenient for user when
- * user clicks "Delete" button next to book title in list.
- * It's also possible to input deletion URL with non existing IDs directly in browser's address bar. When deleting a single book a check for
- * book existance among currently displayed books list is performed. If book is not found an error is displayed; in case deleting
- * multiple books deletable list is sent to backend without any checking.
+ * Displays deletion confirmation modal dialog and performs deleting if deletion confirmed. Usable for single and multiple book deleting.
+ * If single book is selected for deleting confirmation message contains deletable book title, if multiple books then message contains
+ * amount of selected books.
  * 
  * @param allBooksDisplayedInList - books array of all books displayed in list, must be passed from parent component; this is the source of
  * data where deletable book title is obtained if single book is deleted
@@ -29,7 +25,7 @@ type BookDeletionProcessorProps = {
  * page should be redirected to list where user came from
  */
 
-export function BookDeletionProcessorForBooksListPage({
+export function BookDeletionProcessor({
   allBooksDisplayedInList,
   redirectAfterDeletingUrl }: BookDeletionProcessorProps) {
 
