@@ -4,6 +4,20 @@ import { Book } from '../types/Book.ts';
 import { RootState } from "../store/store";
 import { STATUS_IDLE, STATUS_PENDING } from '../constants/asyncThunkExecutionStatus.ts';
 
+
+/* user can choose book for deleting two ways:
+   1) using delete button next to book list item which means single book is chosen for deleting, its ID will be stored in dedicated field or
+   2) using delete botton in batch selection bar which means multiple books are chosen for deleting, their IDs are items added to books
+   selection in list state variable*/
+type DeletableBooksInfo = {
+  deleteBooksIdsSource: "singleDeletableId",
+  bookId: number
+
+} | {
+  deleteBooksIdsSource: "currentlySelectedBooks",
+}
+
+
 /**
  * book slice stores 1) current search string for sending as parameter to backend to get filtered books list;
  * 2)books list that are selected by user in book list. Selected books list will be sent to backend when user chooses
@@ -16,18 +30,22 @@ import { STATUS_IDLE, STATUS_PENDING } from '../constants/asyncThunkExecutionSta
  * store "searchString" parameter value in Redux store and book list re-renders only in case "searchString" changes 
  * 
  */
+
+
 interface BooksState {
   searchString: string | null
   booksSelectedInList: { [index: number]: boolean }
   booksListBaseUrl: string | null
   bookDeletingEndpointLoadingStatus: "idle" | "pending"
+  booksChoosenForDeleting: DeletableBooksInfo | null
 }
 
 const initialState: BooksState = {
   searchString: null,
   booksSelectedInList: {},
   booksListBaseUrl: null,
-  bookDeletingEndpointLoadingStatus: "idle"
+  bookDeletingEndpointLoadingStatus: "idle",
+  booksChoosenForDeleting: null,
 };
 
 const booksSlice = createSlice({
@@ -95,6 +113,27 @@ const booksSlice = createSlice({
       }
     },
 
+    //action to be dispatched when user clicks delete button next to book list item
+    singleBookChoosenForDeleting(state, action: PayloadAction<number>) {
+      state.booksChoosenForDeleting = {
+        deleteBooksIdsSource: "singleDeletableId",
+        bookId: action.payload
+      }
+    },
+
+    //action to be dispatched when user clicks delete button in books batch selection bar
+    booksCurrentSelectionChoosenForDeleting(state) {
+      state.booksChoosenForDeleting = {
+        deleteBooksIdsSource: "currentlySelectedBooks"
+      }
+    },
+
+
+    // dispatched from confirmation dialog when user cancels deleting and also confirms deleting - in both cases it it is needed to hide
+    // confirmation dialog, it is done by removing info about books chosen for deleting from state
+    booksChoiceForDeletingCleared(state) {
+      state.booksChoosenForDeleting = null
+    },
   },
 
   extraReducers: (builder) => {
@@ -159,20 +198,35 @@ export const selectIsBookAddedToSelection = (state: RootState, bookId: number) =
   bookId in state.booksState.booksSelectedInList
 
 
-/**
- * return array of book ids thare currently are selected. Return in form of array as usually in comsuming component list of 
- * values are needed, same is in current application - there wont be need to convert object to array
- * @param {*} state 
- * @returns array - array where each element is book id currently added to selection
- */
-export const selectBooksInSelection = createSelector(
-  (state: RootState) => state.booksState.booksSelectedInList,
-  selectedBookObj => Object.keys(selectedBookObj)
-)
-
 export const selectBookDeletingEndpointLoadingStatus = (state: RootState) => state.booksState.bookDeletingEndpointLoadingStatus;
 
 
+// Selects deletable books IDs array (each elem is integer) or null if no any book is chosen for deleting.
+// If single book is selected for deleting, returns array containing single books id, if books from list selection is chosen for deleting
+// returns array of currently selected books
+export const selectBooksChosenForDeleting = createSelector(
+  (state: RootState) => state.booksState.booksChoosenForDeleting,
+  (state: RootState) => state.booksState.booksSelectedInList,
+  (booksChoosenForDeletingInfo, booksSelectedInListObj) => {
+
+    //when nothing is currently selected for deleting
+    if (booksChoosenForDeletingInfo === null) {
+      return null
+    }
+
+    //single book selected for deleting, return array containing single book id
+    if (booksChoosenForDeletingInfo.deleteBooksIdsSource === "singleDeletableId") {
+      return [booksChoosenForDeletingInfo.bookId]
+
+    } else {
+      const bookIdsAsStringVals = Object.keys(booksSelectedInListObj)
+
+      //each object key is number, parse it to integer
+      return bookIdsAsStringVals.map(idStringVal => parseInt(idStringVal))
+    }
+
+  }
+)
 
 
 export const { searchStringUpdated,
@@ -180,6 +234,9 @@ export const { searchStringUpdated,
   singleBookRemovedFromSelection,
   allBooksRemovedFromSelection,
   booksCollectionRemovedFromSelection,
-  booksListBaseUrlUpdated
+  booksListBaseUrlUpdated,
+  singleBookChoosenForDeleting,
+  booksCurrentSelectionChoosenForDeleting,
+  booksChoiceForDeletingCleared,
 } = booksSlice.actions
 export default booksSlice.reducer

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { routes } from "../../config";
-import { DeleteUrlQueryParamProcessor } from "./DeleteUrlQueryParamProcessor";
+import { BookDeletionProcessorForBooksListPage } from "./BookDeletionProcessorForBooksListPage";
 import { BooksListItemsSelectionBar } from "./BooksListItemsSelectionBar"
 import { H1Heading } from "../ui_elements/H1Heading";
 import { CreateBookButton } from '../ui_elements/CreateBookButton.tsx';
@@ -72,18 +72,6 @@ export function BooksListBody({
     return editUrl;
   }
 
-  /**
-   * creates deleting url by adding deleteId parameter to needed book list (all books list of favourites list) url. 
-   * Adds "search" get param if currently displayed list is search result list.
-   * "search" param is added to keep displaying search results list after a selected book is deleted.
-   * Intended to use for a book list item to create delete url for a single book.
-   * @param bookId
-   * @param listBaseUrl
-   * @returns 
-   */
-  function getBookDeletionUrl(bookId: number, listBaseUrl: string) {
-    return listBaseUrl + getDeviderForNextUrlQueryStringParam(listBaseUrl) + "deleteId=" + bookId
-  }
 
   useEffect(() => {
     setPageTitleTagValue(listHeader);
@@ -116,8 +104,7 @@ export function BooksListBody({
 
 
       {/*outputs markup of modal of deletion confirmation dialog, deleting progress indicator or error message*/}
-      <DeleteUrlQueryParamProcessor
-        listBaseUrl={listBaseUrl}
+      <BookDeletionProcessorForBooksListPage
         allBooksDisplayedInList={listItems} />
 
 
@@ -179,7 +166,6 @@ export function BooksListBody({
               key={book.id}
               book={book}
               editUrl={getBookEditUrl(book.id, listBaseUrl)}
-              deleteUrl={getBookDeletionUrl(book.id, listBaseUrl)}
               removeFromFavoritesButtonClickHandler={removeFromFavoritesCallback} />
           )}
         </fieldset>

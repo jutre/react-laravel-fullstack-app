@@ -1,13 +1,11 @@
 import { useAppDispatch, useAppSelector } from '../../store/reduxHooks';
-import { useNavigate } from "react-router-dom";
 import {  bookCollectionAddedToSelection, 
           allBooksRemovedFromSelection, 
           selectIsAnyBookSelected,
-          selectBooksInSelection } from "../../features/booksSlice";
+          booksCurrentSelectionChoosenForDeleting } from "../../features/booksSlice";
 import { ButtonWithIconAndBackground } from '../ui_elements/ButtonWithIconAndBackground';
 import { customCheckboxSquareBoxClasses } from '../../config'
 import { Book } from "../../types/Book";
-import { getDeviderForNextUrlQueryStringParam } from "./BooksListBody";
 
 
 type BooksListItemsSelectionBarProps = {
@@ -30,10 +28,8 @@ type BooksListItemsSelectionBarProps = {
 
 export function BooksListItemsSelectionBar({allDisplayedBooks, baseUrl}: BooksListItemsSelectionBarProps) {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
 
   const isAnyBookSelected = useAppSelector(state => selectIsAnyBookSelected(state));
-  const selectedBooks = useAppSelector(state => selectBooksInSelection(state));
 
   /**
    * process logic when user click batch selection checkbox control. 
@@ -53,16 +49,12 @@ export function BooksListItemsSelectionBar({allDisplayedBooks, baseUrl}: BooksLi
   
 
   /**
-   * Click handler on delete button. If there is any book selected then redirects to deletion url when user clicks on "Delete" button,
-   * ignores click when no any book is selected (button is displayed inactive in this case).
+   * Click handler on delete button. Dispatch action that books selection is chosen for deleting
    * 
-   * Creates delete parameter value by adding selected books ids to it. 
-   * If list is filtered by searching string, adds search get parameter to url
    */
   function handleRedirectToDeletionUrl(){
     if(isAnyBookSelected){
-      let deleteUrl = baseUrl + getDeviderForNextUrlQueryStringParam(baseUrl) + "deleteId="+ selectedBooks.join(",");
-      navigate(deleteUrl);
+      dispatch(booksCurrentSelectionChoosenForDeleting())
     }
   }
 

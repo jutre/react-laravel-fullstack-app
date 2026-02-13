@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { 
   bookCollectionAddedToSelection, 
   singleBookRemovedFromSelection,
-  selectIsBookAddedToSelection } from "../../features/booksSlice";
+  selectIsBookAddedToSelection,
+  singleBookChoosenForDeleting } from "../../features/booksSlice";
 import { ButtonWithIconAndBackground } from '../ui_elements/ButtonWithIconAndBackground';
 import { customCheckboxCheckmarkClasses, chekboxInputClasses } from '../../config'
 import { Book } from '../../types/Book';
@@ -12,14 +13,12 @@ import { Book } from '../../types/Book';
 type BookListItemProps = {
   book: Book,
   editUrl: string,
-  deleteUrl: string,
   removeFromFavoritesButtonClickHandler?: (bookId: number) => void
 }
 
 export function BookListItem({
   book,
   editUrl,
-  deleteUrl,
   removeFromFavoritesButtonClickHandler }: BookListItemProps) {
 
   const navigate = useNavigate();
@@ -43,6 +42,9 @@ export function BookListItem({
     }
   }
 
+  function handleDeleteButtonClick(){
+    dispatch(singleBookChoosenForDeleting(book.id))
+  }
 
   return  (
     <div className="flex border-b-[1px] border-[grey] last:border-b-0">
@@ -88,7 +90,7 @@ export function BookListItem({
         <ButtonWithIconAndBackground
           iconName = "delete"
           //redirect to delete url on click
-          clickHandler={()=>{navigate(deleteUrl)}}/>
+          clickHandler={handleDeleteButtonClick}/>
       </div>
     </div>
   )
