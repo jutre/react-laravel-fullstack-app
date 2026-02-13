@@ -286,9 +286,11 @@ function SearchBar() {
    */
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    //reset search bar after we add current searchTerm to url as resetting search bar sets searchTerm to empty string
-    resetSearchBar();
-    navigate(bookListWithSearchResultUrl);
+    if(searchTerm !== ""){
+      //reset search bar after we add current searchTerm to url as resetting search bar sets searchTerm to empty string
+      resetSearchBar();
+      navigate(bookListWithSearchResultUrl);
+    }
   }
 
   const searchResultWrapperClasses = "absolute w-full mt-[-15px] pt-[15px] border border-[gray] bg-white rounded-b-[8px]";
