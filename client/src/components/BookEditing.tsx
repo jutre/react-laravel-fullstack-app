@@ -8,8 +8,7 @@ import { useGetBookQuery,
   useUpdateBookMutation,
   selectLiteraryGenresOptionsList } from "../features/api/apiSlice";
 import { skipToken } from '@reduxjs/toolkit/query/react'
-import {
-  routes,
+import { routes,
   bookEditFormFieldsDef,
   customCheckboxCheckmarkClasses,
   chekboxInputClasses } from "../config";
@@ -139,7 +138,6 @@ export function BookEditing() {
     }
   }, [bookQueryData]);
   
-  const bookEditUrlWithoutQueryParams = routes.bookEditPath.replace(":bookId", String(bookId));
 
   const [displaySuccessMsg] = useTrackEndpointSuccessfulFinishing(isUpdatingBook, bookUpdatingError);
 
@@ -152,13 +150,6 @@ export function BookEditing() {
   let backToListUrl = routes.bookListPath;
   if (parentListUrl) {
     backToListUrl = parentListUrl;
-  }
-
-  //if user clicks on "Cancel" botton in delete confirmation dialog, page should redirect
-  //to book editing url without delete get param, keeping parent list url param
-  let deletionCancelActionUrl = bookEditUrlWithoutQueryParams
-  if (parentListUrl) {
-    deletionCancelActionUrl += "?parentListUrl=" + parentListUrl;
   }
 
 
