@@ -19,12 +19,14 @@ import { STATUS_IDLE, STATUS_PENDING } from '../constants/asyncThunkExecutionSta
 interface BooksState {
   searchString: string | null
   booksSelectedInList: { [index: number]: boolean }
+  booksListBaseUrl: string | null
   bookDeletingEndpointLoadingStatus: "idle" | "pending"
 }
 
 const initialState: BooksState = {
   searchString: null,
   booksSelectedInList: {},
+  booksListBaseUrl: null,
   bookDeletingEndpointLoadingStatus: "idle"
 };
 
@@ -59,10 +61,7 @@ const booksSlice = createSlice({
     },
 
     //removes all books currently added to selection. All books removing use case is when user has selected at least one book 
-    //is selected in books list and clicks on "unselect all" button.
-    //Reducer actually sets selection state to empty object as currently there is no pagination in books list, there is no
-    //need to pass a list of selected books that should be removed from selection, that is there does not exist second page
-    //with selected books
+    //is selected in books list and clicks on "unselect all" button
     allBooksRemovedFromSelection(state) {
       state.booksSelectedInList = {};
     },
@@ -81,18 +80,25 @@ const booksSlice = createSlice({
     },
 
 
+    //if dispatched URL value differs from value in state then remove all information about selected books in state as it is completely new
+    //list and old selection is unrelevant; set new URL to state to track changes of URL
+    booksListBaseUrlUpdated(state, action: PayloadAction<string | null>) {
+      const newUrl = action.payload
+
+      if (newUrl !== state.booksListBaseUrl) {
+        const selectedBooksCount = Object.keys(state.booksSelectedInList).length;
+        if (selectedBooksCount > 0) {
+          state.booksSelectedInList = {}
+        }
+
+        state.booksListBaseUrl = newUrl
+      }
+    },
 
   },
 
   extraReducers: (builder) => {
     builder
-      //when user submits different search string, clear current selection. Possibly user selected some books in previous search
-      //result list but with new search string that book might be not visible in list but would be deleted together with
-      //selection from current result list if user clicks  "delete all selected" button.
-      //Also when user navigates from a result list to "all records" page, the selection made in result list also must be cleared
-      .addCase(searchStringUpdated, (state) => {
-        state.booksSelectedInList = {}
-      })
 
     /*
     tracking fetching statuses and returned data from api endpoint which fetches currently logged in user
@@ -173,5 +179,7 @@ export const { searchStringUpdated,
   bookCollectionAddedToSelection,
   singleBookRemovedFromSelection,
   allBooksRemovedFromSelection,
-  booksCollectionRemovedFromSelection } = booksSlice.actions
+  booksCollectionRemovedFromSelection,
+  booksListBaseUrlUpdated
+} = booksSlice.actions
 export default booksSlice.reducer

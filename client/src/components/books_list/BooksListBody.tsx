@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { routes } from "../../config";
 import { DeleteUrlQueryParamProcessor } from "./DeleteUrlQueryParamProcessor";
-import BooksListItemsSelectionBar from "./BooksListItemsSelectionBar"
+import { BooksListItemsSelectionBar } from "./BooksListItemsSelectionBar"
 import { H1Heading } from "../ui_elements/H1Heading";
 import { CreateBookButton } from '../ui_elements/CreateBookButton.tsx';
 import { setPageTitleTagValue } from '../../utils/setPageTitleTagValue';
@@ -13,6 +13,7 @@ import { Book } from '../../types/Book.ts';
 import { useAppSelector } from "../../store/reduxHooks.ts";
 import { selectBookDeletingEndpointLoadingStatus } from "../../features/booksSlice.ts";
 import { STATUS_PENDING } from '../../constants/asyncThunkExecutionStatus.ts'
+import { useDispatchBooksListBaseUrl } from './hooks/useDispatchBooksListBaseUrl.tsx';
 
 type BooksListTableProps = {
   listBaseUrl: string,
@@ -87,6 +88,12 @@ export function BooksListBody({
   useEffect(() => {
     setPageTitleTagValue(listHeader);
   }, [])
+
+
+  // current component is used by all type of books list component receiving base URL from them, this is central place from where to send
+  // it to Redux
+  useDispatchBooksListBaseUrl(listBaseUrl)
+
 
   //book deleting endpoint is invoked in URL query params processing component. Here endpoints execution status is obtained from Redux store
   const bookDeletingEndpointLoadingStatus = useAppSelector(state => selectBookDeletingEndpointLoadingStatus(state));

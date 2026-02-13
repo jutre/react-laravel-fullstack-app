@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from '../../store/reduxHooks';
 import { useNavigate } from "react-router-dom";
 import {  bookCollectionAddedToSelection, 
@@ -29,7 +28,7 @@ type BooksListItemsSelectionBarProps = {
  */
 
 
-function BooksListItemsSelectionBar({allDisplayedBooks, baseUrl}: BooksListItemsSelectionBarProps) {
+export function BooksListItemsSelectionBar({allDisplayedBooks, baseUrl}: BooksListItemsSelectionBarProps) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -67,16 +66,6 @@ function BooksListItemsSelectionBar({allDisplayedBooks, baseUrl}: BooksListItems
     }
   }
 
-  
-  //if base path changes which means page is navigated from one type of list to other, like from all books to favarite books list,
-  //remove currently selected books from state as a book selected in one list can be absent in other list but still residing among
-  //selected books
-  useEffect(() => {
-    if(isAnyBookSelected){
-      dispatch(allBooksRemovedFromSelection());
-    }
-  }, [baseUrl]);
-  
 
   let displayDeselectionModeDash = false;
   let batchSelectorModeTitle = "select all items";
@@ -117,6 +106,3 @@ function BooksListItemsSelectionBar({allDisplayedBooks, baseUrl}: BooksListItems
     </div>
   )
 }
-
-
-export default BooksListItemsSelectionBar;
