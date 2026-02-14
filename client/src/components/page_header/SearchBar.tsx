@@ -43,15 +43,15 @@ function SearchBar() {
     }
   )
 
-
+  /* hook sets endpoint returned result to result state variable, shows or hides result bar depending on endpoint returned object
+  'currentData' property containing any books. 'isFetching' being false usually means filter endpoint was fetching and finished fetching,
+  the 'currentData' contains fetched data. But not in case of first component render when search bar is just shown for first time, input
+  field did not have any input, therefore filter text length is checked to be empty. In other useEffect run because of isFetching changed
+  value and that happend only if endpoint had executed and that happens when input string length was at least three symbols */
   useEffect(() => {
-    const filterText = searchTerm.trim();
 
-    //hook runs when isFetching changes from true to false and false to true; the case when isFetching is false means books filter endpoint
-    //was fetching and finished fetching, the {currentData} contains fetched result, set it to result state variable, show result bar.
-    //Filter text length check prevents from running code after component's first render as useEffect always runs after first render and
-    //isFetching is false in that case
-    if (filterText.length >= 3 && !isFetching) {
+    if (isFetching === false &&
+      trimmedSearchString !== "") {
 
       //set current search result to state
       setSearchResult(foundBooks);
@@ -175,11 +175,11 @@ function SearchBar() {
     //original text goes to state (controller input in React)
     setSearchTerm(searchTermOriginal);
 
-    //when user inputs some string in search bar, we need to add an event lister that hides search bar on click anywhere in doc 
-    //except on search bar and clears search input field if the element user clicked is an anchor to make user feel the same as
-    //traditional page is navigated to page according to link (links are react-router managed)
+    // when user inputs some string in search bar, we need to add an event lister that manages hiding search bar and/or clearing input field
+    // when user clicks anywhere in document except on search bar
     if (searchTermOriginal.length === 0) {
       documentRef.current.removeEventListener('click', manageSearchBarOnClickOutsideOfSearchBar);
+
     } else {
       documentRef.current.addEventListener('click', manageSearchBarOnClickOutsideOfSearchBar);
     }
