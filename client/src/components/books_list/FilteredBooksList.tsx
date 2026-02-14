@@ -50,29 +50,35 @@ export function FilteredBooksList({ filterString }: FilteredBooksListProps) {
     errorMessage = extractMessageFromQueryErrorObj(booksListQueryError)
   }
 
-
-  // if fetching process is done, no any errors then create message about found books amount or that no found books has been found
-  let searchResultsInfoMessage = null
+  // if fetching process is done, no any errors then create message about found books amount or that no found books were found
+  let foundBooksInfo = null
   if (isFetching === false &&
     listItems !== undefined &&
     booksListQueryError === undefined) {
 
-    searchResultsInfoMessage = (
-      <div className="mb-[15px]">
-        <p>{`Your searched for "${filterString}".`}</p>
-        <p>
-          {listItems.length === 0
-            ?
-            "No books were found."
-            :
-            `Number of records found is ${listItems.length}.`
-          }
-        </p>
-        <p><Link to={routes.bookListPath}>Show all books</Link></p>
-      </div>
+    foundBooksInfo = (
+      <p>
+        {listItems.length === 0
+          ?
+          "No books were found."
+          :
+          `Number of records found is ${listItems.length}.`
+        }
+      </p>
     )
-
   }
+
+  // always output searched string and found books info if relevant - it's awailable if searching was performed (search string was long
+  // enough)
+  const searchResultsInfoMessage = (
+    <div className="mb-[15px]">
+      <p>{`Your searched for "${filterString}".`}</p>
+
+      {foundBooksInfo}
+
+      <p><Link to={routes.bookListPath}>Show all books</Link></p>
+    </div>
+  )
 
   //filtered list always contains also search string query parameter
   const listBaseUrl = routes.filteredBookListPath + "?" + searchStringUrlQueryParamName + "=" + filterString
