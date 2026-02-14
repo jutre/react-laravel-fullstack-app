@@ -4,17 +4,13 @@ import { useGetFilteredBooksListQuery } from '../../features/api/apiSlice';
 import { routes, searchStringUrlQueryParamName } from '../../config';
 import { NavLink, useNavigate } from "react-router-dom";
 import { ButtonWithIcon } from '../ui_elements/ButtonWithIcon';
-import { SerializedError } from '@reduxjs/toolkit';
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
 function SearchBar() {
   //holds value of controlled <input/> element
   const [inputFieldValue, setInputFieldValue] = useState("");
 
-  //using a state variable where an {error} field's value returned by useLazyQuery will be stored. useLazyQuery does not have a method to
-  //reset {error} to undefined but it is needed to remove error from UI on certain interactions: error message must be removed in all
-  //cases when resetSearchBar() is called, when user navigates to other page, search string in input field becomes less than three symbols
-  const [errorFromEndpoint, setErrorFromEndpoint] = useState<FetchBaseQueryError | SerializedError | undefined>(undefined);
+  //stores value in case error from endpoint is returned or trying to submit form with empty search string
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   //maximum items to be output in quick result div
   const maxItemsCountForOutput = 5;
@@ -71,8 +67,10 @@ function SearchBar() {
 
 
   useEffect(() => {
-    //set current error (error value or undefined) from endpoint to state
-    setErrorFromEndpoint(queryError)
+    //if error is returned by endpoint set error message to general string not decoding actual returned error or set message to null value
+    //if returned error is undefined
+    const errFromEndpoint = queryError ? "an error occured" : null
+    setErrorMessage(errFromEndpoint)
 
     //fixing result in case of error response in case of using previously used argument by setting search result state to empty array and
     //hiding quick search result div. Currently useLazyQuery behaves following way - ff search string "boo" is sent in request and
@@ -152,7 +150,7 @@ function SearchBar() {
     if (anchorOrButtonElementFound) {
       setInputFieldValue("");
       setSearchResult([]);
-      setErrorFromEndpoint(undefined)
+      setErrorMessage(null)
       documentRef.current.removeEventListener('click', manageSearchBarOnClickOutsideOfSearchBar);
     }
   }, [])
@@ -189,12 +187,12 @@ function SearchBar() {
     //If search results div is currently displayed, hide it, remove any results from results state 
     //(search bar visiblity state var might be "true" in situations when there were results from previous search input 
     //string when length was three or more symbols)
-    //set errorFromEndpoint in state to undefined as search is not perfomed with string too short and endpoint will not change the error
-    //value to undefined as it happens when another string is entered and endpoint is triggered again
+    //set errorMessage in state to null as search is not perfomed with string too short, the endpoint will not be executed which possibly
+    //might setting error message to null as it would be with another string valid to perform searching
     if (trimmedSearchString.length < 3) {
       setIsSearchResultBarVisible(false);
       setSearchResult([]);
-      setErrorFromEndpoint(undefined);
+      setErrorMessage(null);
     }
   }
 
@@ -206,7 +204,7 @@ function SearchBar() {
    * 1) Sets search term text input field value to empty string
    * 2) hides results bar (migth be visible from current input) 
    * 3) sets search results to empty array (migth be present with current search string input)
-   * 4) set errorFromEndpoint in state to undefined to hide possible currently non empty error
+   * 4) set errorMessage in state to null to hide possible currently non empty error
    * 5) removes event listener from window.document that hides result list on search bar when user clicks anywhere in
    * documet except on search bar
    */
@@ -214,7 +212,7 @@ function SearchBar() {
     setInputFieldValue('');
     setIsSearchResultBarVisible(false);
     setSearchResult([]);
-    setErrorFromEndpoint(undefined)
+    setErrorMessage(null)
     documentRef.current.removeEventListener('click', manageSearchBarOnClickOutsideOfSearchBar);
   }
 
@@ -266,29 +264,21 @@ function SearchBar() {
   const navigate = useNavigate();
 
   /**
-   * Removes entered string from search input field and clears related state variables when user submits search form
-   * and redirects to book list url with added "search" query parameter with value as string that is entered in
-   * search bar input field.
-   * 
-   * The redirection after form submittion is done using react-router, the page is not navigated or redirected, 
-   * the seach bar does not change anyway visually and technically - result list is visible, input field contains endred string.
-   * To make user feel the same as traditional page is navigated to page when submitted, we must hide result list and 
-   * clear input field.
-   * This metod resets all state variables in search bar:
-   * - set search term text input field value to empty string,
-   * - hide result list
-   * - set search results to empty array
-   * - remove event listener to document that manages search bar when user clicks anywhere in doc except on search bar
+   * Redirects to searching URL with entered search string if after trimming search string is a non empty string, otherwise displays error
+   * message. In addition to redirection method resets search bar
    * 
    * @param {*} event - form submit event - used to prevent submitting of page (from navigating to submitting url)
    */
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if(inputFieldValue !== ""){
+    if(trimmedSearchString !== ""){
       resetSearchBar();
 
       const bookListWithSearchResultUrl = routes.filteredBookListPath + "?" + searchStringUrlQueryParamName + "=" + inputFieldValue
       navigate(bookListWithSearchResultUrl);
+
+    }else{
+      setErrorMessage("please enter a non empty string")
     }
   }
 
@@ -379,9 +369,9 @@ function SearchBar() {
           </div>
         }
 
-        {errorFromEndpoint &&
-        <div className='absolute mt-[4px] text-[red] border border-[red] rounded-[8px] mb-[15px] py-[2px] px-[10px]'>
-          an error occured
+        {errorMessage &&
+        <div className='absolute text-[red] bg-white mt-[4px] border border-[red] rounded-[8px] mb-[15px] py-[2px] px-[10px]'>
+          {errorMessage}
         </div>}
       </div>
     </div>
