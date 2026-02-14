@@ -9,7 +9,7 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
 function SearchBar() {
   //holds value of controlled <input/> element
-  const [searchTerm, setSearchTerm] = useState("");
+  const [inputFieldValue, setInputFieldValue] = useState("");
 
   //using a state variable where an {error} field's value returned by useLazyQuery will be stored. useLazyQuery does not have a method to
   //reset {error} to undefined but it is needed to remove error from UI on certain interactions: error message must be removed in all
@@ -25,7 +25,7 @@ function SearchBar() {
   //value becomes undefined in case of error which lets assign an empty array to search result variable
   //To force enpoint execution on every newly typed search string also if same string as was passed as endpoint argument before query cache
   //is disabled using refetchOnMountOrArgChange enpdoint option
-  const trimmedSearchString = searchTerm.trim()
+  const trimmedSearchString = inputFieldValue.trim()
   const skipEndpointExecution = trimmedSearchString.length < 3
 
   const {
@@ -96,9 +96,6 @@ function SearchBar() {
   const [isSearchResultBarVisible, setIsSearchResultBarVisible] = useState(false);
   const [searchResult, setSearchResult] = useState<Book[]>([]);
 
-
-  const bookListWithSearchResultUrl = routes.filteredBookListPath + "?" + searchStringUrlQueryParamName + "=" + searchTerm;
-
   //needed for detecting that user clicked outside of search bar div
   const beginningOfSearchBarRef = useRef(null);
 
@@ -153,7 +150,7 @@ function SearchBar() {
     //if the click was inside "a" or "button" also set search term input field's value to empty string, clear search results, remove
     //error near search input field
     if (anchorOrButtonElementFound) {
-      setSearchTerm("");
+      setInputFieldValue("");
       setSearchResult([]);
       setErrorFromEndpoint(undefined)
       documentRef.current.removeEventListener('click', manageSearchBarOnClickOutsideOfSearchBar);
@@ -170,22 +167,23 @@ function SearchBar() {
    * @param {*} event 
    */
 
-  function handleSearchTermInputChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const searchTermOriginal = event.target.value;
+  function handleInputFieldChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const inputFieldOriginalVal = event.target.value;
     //original text goes to state (controller input in React)
-    setSearchTerm(searchTermOriginal);
+    setInputFieldValue(inputFieldOriginalVal);
 
     // when user inputs some string in search bar, we need to add an event lister that manages hiding search bar and/or clearing input field
     // when user clicks anywhere in document except on search bar
-    if (searchTermOriginal.length === 0) {
+    if (inputFieldOriginalVal.length === 0) {
       documentRef.current.removeEventListener('click', manageSearchBarOnClickOutsideOfSearchBar);
 
     } else {
       documentRef.current.addEventListener('click', manageSearchBarOnClickOutsideOfSearchBar);
     }
 
-    //for performing searching use trimmed input string
-    const filterText = searchTermOriginal.trim();
+    //further condition use trimmed searching value as that is the actual value that might be or not sent to backend and accordingly other
+    //actions should be done
+    const trimmedSearchString = inputFieldOriginalVal.trim();
 
     //search phrase length is less than three symbols - searching is not performed in such case.
     //If search results div is currently displayed, hide it, remove any results from results state 
@@ -193,7 +191,7 @@ function SearchBar() {
     //string when length was three or more symbols)
     //set errorFromEndpoint in state to undefined as search is not perfomed with string too short and endpoint will not change the error
     //value to undefined as it happens when another string is entered and endpoint is triggered again
-    if (filterText.length < 3) {
+    if (trimmedSearchString.length < 3) {
       setIsSearchResultBarVisible(false);
       setSearchResult([]);
       setErrorFromEndpoint(undefined);
@@ -213,7 +211,7 @@ function SearchBar() {
    * documet except on search bar
    */
   function resetSearchBar() {
-    setSearchTerm('');
+    setInputFieldValue('');
     setIsSearchResultBarVisible(false);
     setSearchResult([]);
     setErrorFromEndpoint(undefined)
@@ -286,9 +284,10 @@ function SearchBar() {
    */
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if(searchTerm !== ""){
-      //reset search bar after we add current searchTerm to url as resetting search bar sets searchTerm to empty string
+    if(inputFieldValue !== ""){
       resetSearchBar();
+
+      const bookListWithSearchResultUrl = routes.filteredBookListPath + "?" + searchStringUrlQueryParamName + "=" + inputFieldValue
       navigate(bookListWithSearchResultUrl);
     }
   }
@@ -313,8 +312,8 @@ function SearchBar() {
           className="search-form relative z-[12]">
           <input type='text'
             placeholder='Search book titles...'
-            value={searchTerm}
-            onChange={handleSearchTermInputChange}
+            value={inputFieldValue}
+            onChange={handleInputFieldChange}
             onFocus={handleSearchInputFocus}
             ref={searchInputFieldRef}
             className='w-full p-2.5 pr-[70px] rounded-[8px] border border-[#e5e7eb] focus:border-solid 
@@ -322,7 +321,7 @@ function SearchBar() {
 
           <div className='absolute top-0 right-0 bottom-0 flex items-center pr-[8px]'>
             {/*show input clear button only when input is not empty*/}
-            {searchTerm &&
+            {inputFieldValue &&
               <ButtonWithIcon
                 clickHandler={handleSearchInputClearing}
                 beforeElemMaskImgUrlTwCssClass="before:[mask-image:url(assets/clear-form.svg)]"
