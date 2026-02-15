@@ -9,7 +9,8 @@ function SearchBar() {
   //holds value of controlled <input/> element
   const [inputFieldValue, setInputFieldValue] = useState("");
 
-  //stores value in case error from endpoint is returned or trying to submit form with empty search string
+  //contains error message in case of error from endpoint or when trying to submit form with empty search string; when search string
+  //too short any error message must be removed
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   //maximum items to be output in quick result div
@@ -184,11 +185,9 @@ function SearchBar() {
     const trimmedSearchString = inputFieldOriginalVal.trim();
 
     //search phrase length is less than three symbols - searching is not performed in such case.
-    //If search results div is currently displayed, hide it, remove any results from results state 
-    //(search bar visiblity state var might be "true" in situations when there were results from previous search input 
-    //string when length was three or more symbols)
-    //set errorMessage in state to null as search is not perfomed with string too short, the endpoint will not be executed which possibly
-    //might setting error message to null as it would be with another string valid to perform searching
+    //If search results div is currently displayed hide it, remove possible results from previous search,
+    //set errorMessage in state to null as search is not perfomed with string too short as the endpoint will not be executed which could
+    //set error message to null or set new error message
     if (trimmedSearchString.length < 3) {
       setIsSearchResultBarVisible(false);
       setSearchResult([]);
@@ -285,10 +284,6 @@ function SearchBar() {
   const searchResultWrapperClasses = "absolute w-full mt-[-15px] pt-[15px] border border-[gray] bg-white rounded-b-[8px]";
 
 
-  // Get slice from result array to contain at most max defined items number. This prevents breaking UI in case backend returns more rows
-  // then was specified in rows limit parameter
-  const searchResultArrForOutput = searchResult.slice(0, maxItemsCountForOutput);
-
   return (
     <div className="flex relative grow shrink-0 basis-auto min-w-[90%] md:min-w-[unset] min-[800px]:justify-center
                     xl:absolute xl:top-1/2 xl:left-1/2 xl:[transform:translateX(-50%)_translateY(-50%)] xl:w-[500px]">
@@ -333,13 +328,13 @@ function SearchBar() {
 
         {//condition of not fetching (!isFetching) is added to hide result bar as soon as fetching starts because instead of result bar
         //loading skeleton must be shown and value of "searchResultArrForOutput" var does not become empty immidiatelly when fetching starts
-        (searchResultArrForOutput.length > 0 && !isFetching) &&
+        (searchResult.length > 0 && !isFetching) &&
           <div className={searchResultWrapperClasses +
           (isSearchResultBarVisible
           ? " block"
           : " hidden")}>
 
-            {searchResultArrForOutput.map((book) => {
+            {searchResult.map((book) => {
               //display result list as book titles with link to their edit page.
               //replace bookId segment in book edit route pattern
               const editUrl = routes.bookEditPath.replace(":bookId", String(book.id));
