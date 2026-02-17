@@ -313,7 +313,7 @@ function SearchBar() {
   const navigate = useNavigate();
 
   function redirectToFilteredBooksListUrl(searchString: string) {
-    const filteredBooksListUrl = routes.filteredBookListPath + "?" + searchStringUrlQueryParamName + "=" + searchString
+    const filteredBooksListUrl = routes.filteredBookListPath + "?" + searchStringUrlQueryParamName + "=" + encodeURIComponent(searchString)
     navigate(filteredBooksListUrl)
   }
 
