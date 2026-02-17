@@ -16,6 +16,11 @@ class BookController extends Controller
     //set of columns
     private $singleBookInfoSelectedColumns = ['id', 'title', 'author', 'preface', 'is_favorite', 'literary_genre_id'];
 
+
+    //time that controller methods will sleep before sending response to debug loading states in frontend. When not begugging set to 0
+    private $responseSleepTime = 0;//400000
+
+
     /**
      * Return all books or books filtered by title belonging to current user. Optionally limits returned rows count
      * Searching by title is performed if 'q' URL query parameter is not null. Book records with 'title' field containing search string are
@@ -25,7 +30,7 @@ class BookController extends Controller
      */
     public function index(Request $request)
     {
-        usleep(400000);
+        usleep($this->responseSleepTime);
         $recordsQuery = $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->select(['id', 'title', 'author']);
 
@@ -62,7 +67,7 @@ class BookController extends Controller
     public function store(Request $request)
     {
         $this->validateSubmBookData($request);
-        usleep(500000);
+        usleep($this->responseSleepTime);
 
         //a book with same title among books belonging to user must not exist. If exists, return error message,
         //don't create book
@@ -97,7 +102,7 @@ class BookController extends Controller
      */
     public function show(Request $request, int $id)
     {
-        usleep(100000);
+        usleep($this->responseSleepTime);
         $bookRecord = $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->select($this->singleBookInfoSelectedColumns)
             ->where('id', $id)
@@ -117,7 +122,7 @@ class BookController extends Controller
     public function update(Request $request, string $id)
     {
         $this->validateSubmBookData($request);
-        usleep(500000);
+        usleep($this->responseSleepTime);
 
         $bookRecord = $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->where('id', $id)
@@ -202,7 +207,7 @@ class BookController extends Controller
      */
     public function destroy(Request $request)
     {
-        usleep(500000);
+        usleep($this->responseSleepTime);
 
         $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->whereIn('id', $request->input('ids'))
@@ -218,7 +223,7 @@ class BookController extends Controller
      */
     public function getFavoriteBooks(Request $request)
     {
-        usleep(100000);
+        usleep($this->responseSleepTime);
         return $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->select(['id', 'author', 'title'])
             ->where('is_favorite', true)
@@ -238,7 +243,7 @@ class BookController extends Controller
      */
     public function removeBookFromFavorites(Request $request, int $id)
     {
-        usleep(100000);
+        usleep($this->responseSleepTime);
 
         $bookRecord = $this->getBooksTableQueryWithCurrentUserConstraint($request)
             ->select(['id', 'is_favorite'])
@@ -372,7 +377,7 @@ class BookController extends Controller
      */
     public function resetDemoData()
     {
-        usleep(100000);
+        usleep($this->responseSleepTime);
 
         DB::table('books')->delete();
 
