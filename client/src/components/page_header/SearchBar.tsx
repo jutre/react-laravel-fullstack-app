@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Book } from '../../types/Book';
 import { useGetFilteredBooksListQuery } from '../../features/api/apiSlice';
 import { routes, searchStringUrlQueryParamName } from '../../config';
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ButtonWithIcon } from '../ui_elements/ButtonWithIcon';
 
 function SearchBar() {
@@ -13,18 +13,32 @@ function SearchBar() {
   //too short any error message must be removed
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  //for highlighting item in result bar using keyboard Up, Down arrow keys
+  const [selectedFromResultItemIndex, setSelectedFromResultItemIndex] = useState<number | null>(null)
+
+  //set search form input field value equal to text of result item that user highlight in quick search results bar using keyboard Up, Down
+  //arrows
+  useEffect(() => {
+    if (selectedFromResultItemIndex !== null) {
+      setInputFieldValue(searchResult[selectedFromResultItemIndex].title);
+    }
+
+  }, [selectedFromResultItemIndex])
+
+
   //maximum items to be output in quick result div
   const maxItemsCountForOutput = 5;
 
   
-  //invoke endpoint sending request to server if search string length is at least 3 symbols, otherwise skip executing the endpoint.
-  //In case error is returned seach bar must be hidden. Therefore currentData property of endpoint returned object is used as currentData
-  //value becomes undefined in case of error which lets assign an empty array to search result variable
-  //To force enpoint execution on every newly typed search string also if same string as was passed as endpoint argument before query cache
-  //is disabled using refetchOnMountOrArgChange enpdoint option
+  //Invoke endpoint sending request to server if search string length is at least 3 symbols, otherwise skip executing the endpoint,
+  //also skip execution when input field value is set by highlighting one of items of quick search results bar using Up/Down keyboad keys
   const trimmedSearchString = inputFieldValue.trim()
-  const skipEndpointExecution = trimmedSearchString.length < 3
+  const skipEndpointExecution = trimmedSearchString.length < 3 ||
+    selectedFromResultItemIndex !== null
 
+  //In case error is returned seach bar must be hidden therefore currentData property of endpoint returned object is used as it
+  //becomes undefined in case of error. 
+  //To force enpoint execution on every typed search string disable cache using refetchOnMountOrArgChange option
   const {
     currentData: foundBooks = [],
     isFetching,
@@ -43,8 +57,7 @@ function SearchBar() {
   /* hook sets endpoint returned result to result state variable, shows or hides result bar depending on endpoint returned object
   'currentData' property containing any books. 'isFetching' being false usually means filter endpoint was fetching and finished fetching,
   the 'currentData' contains fetched data. But not in case of first component render when search bar is just shown for first time, input
-  field did not have any input, therefore filter text length is checked to be empty. In other useEffect run because of isFetching changed
-  value and that happend only if endpoint had executed and that happens when input string length was at least three symbols */
+  field did not have any input, therefore filter text length is checked to be empty */
   useEffect(() => {
 
     if (isFetching === false &&
@@ -73,6 +86,7 @@ function SearchBar() {
     const errFromEndpoint = queryError ? "an error occured" : null
     setErrorMessage(errFromEndpoint)
 
+    //TODO - improve comment, obsolete
     //fixing result in case of error response in case of using previously used argument by setting search result state to empty array and
     //hiding quick search result div. Currently useLazyQuery behaves following way - ff search string "boo" is sent in request and
     //successful response containing items is received, then "book" is sent and successful response containing items is received, then if
@@ -95,6 +109,7 @@ function SearchBar() {
   const [isSearchResultBarVisible, setIsSearchResultBarVisible] = useState(false);
   const [searchResult, setSearchResult] = useState<Book[]>([]);
 
+
   //needed for detecting that user clicked outside of search bar div
   const beginningOfSearchBarRef = useRef(null);
 
@@ -104,6 +119,9 @@ function SearchBar() {
 
   //for focusing text input field after clicking on "clear input field" button
   const searchInputFieldRef = useRef<HTMLInputElement>(null);
+
+  //for submitting form programmatically
+  const formRef = useRef<HTMLFormElement>(null);
 
 
   /**
@@ -167,6 +185,10 @@ function SearchBar() {
    */
 
   function handleInputFieldChange(event: React.ChangeEvent<HTMLInputElement>) {
+
+    //if currently any item from result bar is highligted, remove selection on typing
+    setSelectedFromResultItemIndex(null)
+
     const inputFieldOriginalVal = event.target.value;
     //original text goes to state (controller input in React)
     setInputFieldValue(inputFieldOriginalVal);
@@ -195,7 +217,57 @@ function SearchBar() {
     }
   }
 
+  /**
+   * Increases/decreases dedicated state variable when user clicks ArrowUp/ArrorDown keys which lets highlight a result item in quick
+   * search result bar.
+   * Other part of this functionality is implemented in useEffect hook with dependancy on maintained state variable which sets search bar
+   * input field value to highlighted item
+   * 
+   * @param event - event fired on keyboard key down in search bar input field, used to get pressed key
+   * 
+   */
+  function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    //prevent moving cursor to start of input field on second press on ArrowUp key
+    if (event.code === "ArrowUp") {
+      event.preventDefault()
+    }
 
+    //nothing to select if no any results from backend yet
+    if (searchResult.length === 0) {
+      return
+    }
+
+    //highlight line above currently selected if any line is selected or leave first line selected if currently first line is selected
+    if (event.code === "ArrowUp") {
+      setSelectedFromResultItemIndex(currentlySelectedItem => {
+        if (currentlySelectedItem === null) {
+          return null
+
+        } else if (currentlySelectedItem === 0) {
+          return 0
+
+        } else {
+          return currentlySelectedItem - 1
+        }
+      })
+
+      //highlight first line if none is selected, line below currently selected if any line is selected or leave last line selected if
+      //currently first line is selected
+    } else if (event.code === "ArrowDown") {
+      setSelectedFromResultItemIndex(currentlySelectedItem => {
+        if (currentlySelectedItem === null) {
+          return 0
+
+        } else if (currentlySelectedItem < searchResult.length - 1) {
+          return currentlySelectedItem + 1
+
+        } else {
+          return currentlySelectedItem
+        }
+      })
+
+    }
+  }
 
   /**
    * set all state variables of search bar to initial state, and removes related  event listener
@@ -212,6 +284,7 @@ function SearchBar() {
     setIsSearchResultBarVisible(false);
     setSearchResult([]);
     setErrorMessage(null)
+    setSelectedFromResultItemIndex(null)
     documentRef.current.removeEventListener('click', manageSearchBarOnClickOutsideOfSearchBar);
   }
 
@@ -236,31 +309,23 @@ function SearchBar() {
     }
   }
 
-  /**
-   * Removes entered string from search input field and clears related state variables when user clicks on link in 
-   * search bar result list.
-   * 
-   * When user clicks on a link in search result list, the page does not refresh as links are react-router managed, 
-   * the seach bar does not change anyway visually and technically - result list is visible, input field contains endred string.
-   * To make user feel the same as traditional page is navigated to page according to link, we must hide result list and 
-   * clear input field.
-   * This metod resets all state variables in search bar:
-   * - set search term text input field value to empty string,
-   * - hide result list
-   * - set search results to empty array
-   * - remove event listener to document that manages search bar when user clicks anywhere in doc except on search bar
-   * 
-   * The click bubbles from a clicked react-rounter link, this method must be set as click event handler to a parent element
-   * of react-router created link to immidiatelly capture the click event and be executed. React router manages routing as needed
-   * and displays content in dedicated section, but it this event handler search bar ir cleared
-   */
-  function handleSearchResultLinkClick() {
-    resetSearchBar();
-  }
-
-
 
   const navigate = useNavigate();
+
+  function redirectToFilteredBooksListUrl(searchString: string) {
+    const filteredBooksListUrl = routes.filteredBookListPath + "?" + searchStringUrlQueryParamName + "=" + searchString
+    navigate(filteredBooksListUrl)
+  }
+
+  /**
+   * Redirects to filtered list page URL when user clicks an item in quick search bar result list. The search URL query parameter value is
+   * set to clicked item text. Also resets all search bar state variable to initial state as interaction with search bar is finished
+   */
+  function handleSearchResultLinkClick(searchString: string) {
+    resetSearchBar()
+    redirectToFilteredBooksListUrl(searchString)
+  }
+
 
   /**
    * Redirects to searching URL with entered search string if after trimming search string is a non empty string, otherwise displays error
@@ -271,10 +336,8 @@ function SearchBar() {
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if(trimmedSearchString !== ""){
-      resetSearchBar();
-
-      const bookListWithSearchResultUrl = routes.filteredBookListPath + "?" + searchStringUrlQueryParamName + "=" + inputFieldValue
-      navigate(bookListWithSearchResultUrl);
+      resetSearchBar()
+      redirectToFilteredBooksListUrl(trimmedSearchString)
 
     }else{
       setErrorMessage("please enter a non empty string")
@@ -294,11 +357,13 @@ function SearchBar() {
         <form
           onSubmit={handleSubmit}
           autoComplete="off"
-          className="search-form relative z-[12]">
+          className="search-form relative z-[12]"
+          ref={formRef}>
           <input type='text'
             placeholder='Search book titles...'
             value={inputFieldValue}
             onChange={handleInputFieldChange}
+            onKeyDown={handleKeyDown}
             onFocus={handleSearchInputFocus}
             ref={searchInputFieldRef}
             className='w-full p-2.5 pr-[70px] rounded-[8px] border border-[#e5e7eb] focus:border-solid 
@@ -334,19 +399,21 @@ function SearchBar() {
           ? " block"
           : " hidden")}>
 
-            {searchResult.map((book) => {
+            {searchResult.map((book, index) => {
               //display result list as book titles with link to their edit page.
               //replace bookId segment in book edit route pattern
-              const editUrl = routes.bookEditPath.replace(":bookId", String(book.id));
               return (
                 <div key={book.id}
-                  className="relative before:block before:absolute before:left-1/2 before:translate-x-[-50%] before:top-0 
-                      before:bg-[#f4f4f6] before:h-full before:w-0 last:before:rounded-b-[8px] hover:before:w-full 
-                      before:transition-all before:ease-in before:duration-100"
-                  onClick={handleSearchResultLinkClick}>
-                  <NavLink className={() => "block p-[15px] relative z-[1] hover:text-[#1f2937]"}
-                    to={editUrl}>{book.title}
-                  </NavLink>
+                  onClick={() => handleSearchResultLinkClick(book.title)}
+
+                  className={
+                    index === selectedFromResultItemIndex
+                      ? "bg-[#f4f4f6]"
+                      : ""}>
+
+                  <div className="cursor-pointer p-[15px] relative z-[1] hover:bg-[#f4f4f6] ">
+                    {book.title}
+                  </div>
                 </div>
               )
             })}
