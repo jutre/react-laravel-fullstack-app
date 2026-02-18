@@ -6,7 +6,7 @@ import { SquareButton } from "./ui_elements/SquareButton";
 import { DataFetchingStatusLabel } from "./ui_elements/DataFetchingStatusLabel";
 import { GeneralErrorMessage } from "./ui_elements/GeneralErrorMessage";
 import { useResetDemoDataMutation } from "../features/api/apiSlice";
-import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
+import { useSetPageTitleTagValue } from "../hooks/useSetPageTitleTagValue";
 import { extractMessageFromQueryErrorObj, getQueryParamValue } from "../utils/utils";
 
 
@@ -14,9 +14,7 @@ export function DemoDataReset() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setPageTitleTagValue("Demo data reset");
-  }, []);
+  useSetPageTitleTagValue("Demo data reset")
 
   const [triggerResetDemoDataMutation, {
     error,

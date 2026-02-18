@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   routes,
@@ -19,7 +19,7 @@ import { useAddBookMutation,
   selectLiteraryGenresOptionsList } from "../features/api/apiSlice";
 import { useAppSelector } from '../store/reduxHooks';
 import DisappearingMessage from './DisappearingMessage';
-import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
+import { useSetPageTitleTagValue } from "../hooks/useSetPageTitleTagValue";
 import { extractMessageOrMessagesObjFromQueryError } from "../utils/utils";
 
 
@@ -38,9 +38,7 @@ export function BookCreating() {
   const literaryGenresEntities = useAppSelector(selectLiteraryGenreEntities);
 
 
-  useEffect(() => {
-    setPageTitleTagValue("Create new book");
-  }, []);
+  useSetPageTitleTagValue("Create new book")
 
   const [triggerAddBookMutation, {
     error,

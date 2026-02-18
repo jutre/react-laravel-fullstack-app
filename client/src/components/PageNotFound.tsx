@@ -1,14 +1,11 @@
-import { useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { routes } from "../config";
-import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
+import { useSetPageTitleTagValue } from "../hooks/useSetPageTitleTagValue";
 import { H1Heading } from "./ui_elements/H1Heading";
 
 export function PageNotFound() {
 
-  useEffect(() => {
-    setPageTitleTagValue("Page not found");
-  }, []);
+  useSetPageTitleTagValue("Page not found")
 
   const location = useLocation();
   const pagePath = location.pathname;

@@ -7,7 +7,7 @@ import {
 } from "../features/authSlice";
 import { STATUS_PENDING, STATUS_REJECTED } from'../constants/asyncThunkExecutionStatus'
 import { FormBuilder, FormFieldsDefinition, SubmittedFormData } from '../utils/FormBuilder';
-import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
+import { useSetPageTitleTagValue } from "../hooks/useSetPageTitleTagValue";
 import { H1Heading } from './ui_elements/H1Heading';
 
 /**
@@ -19,13 +19,13 @@ import { H1Heading } from './ui_elements/H1Heading';
 export function LoginForm() {
   const [wasRenderedForFirstTime, setWasRenderedForFirstTime] = useState(false);
 
-  const dispatch = useAppDispatch();
-
   useEffect(() => {
-    setPageTitleTagValue("Books app");
     setWasRenderedForFirstTime(true)
   }, []);
 
+  useSetPageTitleTagValue("Books app")
+
+  const dispatch = useAppDispatch();
 
   const loginFormFieldsDef: FormFieldsDefinition = {
     email: {

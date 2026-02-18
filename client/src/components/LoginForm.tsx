@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/reduxHooks';
 import {
   initiateSessionSendLoginCredentials,
@@ -7,17 +6,13 @@ import {
 } from "../features/authSlice";
 import { STATUS_PENDING, STATUS_REJECTED } from'../constants/asyncThunkExecutionStatus'
 import { FormBuilder, FormFieldsDefinition, SubmittedFormData } from '../utils/FormBuilder';
-import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
+import { useSetPageTitleTagValue } from "../hooks/useSetPageTitleTagValue";
 import { H1Heading } from './ui_elements/H1Heading';
 
 export function LoginForm() {
   const dispatch = useAppDispatch();
 
-
-  useEffect(() => {
-    setPageTitleTagValue("Books app");
-  }, []);
-
+  useSetPageTitleTagValue("Books app")
 
   const loginFormFieldsDef: FormFieldsDefinition = {
     email: {

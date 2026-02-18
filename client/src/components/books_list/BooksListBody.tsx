@@ -1,10 +1,9 @@
-import { useEffect } from 'react';
 import { routes } from "../../config";
 import { BookDeletionProcessor } from "../BookDeletionProcessor";
 import { BooksListItemsSelectionBar } from "./BooksListItemsSelectionBar"
 import { H1Heading } from "../ui_elements/H1Heading";
 import { CreateBookButton } from '../ui_elements/CreateBookButton.tsx';
-import { setPageTitleTagValue } from '../../utils/setPageTitleTagValue';
+import { useSetPageTitleTagValue } from "../../hooks/useSetPageTitleTagValue";
 import { BookListItem } from "./BooksListItem";
 import { BooksListLoadingSketeton } from './BooksListLoadingSketeton';
 import { GeneralErrorMessage } from "../ui_elements/GeneralErrorMessage";
@@ -73,9 +72,7 @@ export function BooksListBody({
   }
 
 
-  useEffect(() => {
-    setPageTitleTagValue(listHeader);
-  }, [])
+  useSetPageTitleTagValue(listHeader)
 
 
   // current component is used by all type of books list component receiving base URL from them, this is central place from where to send

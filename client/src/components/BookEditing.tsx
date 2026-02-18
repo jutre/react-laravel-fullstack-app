@@ -22,7 +22,7 @@ import { FormBuilder,
   SubmittedFormData,
   createTargetObjFromSubmittedData } from '../utils/FormBuilder';
 import DisappearingMessage from './DisappearingMessage';
-import { setPageTitleTagValue } from "../utils/setPageTitleTagValue";
+import { useSetPageTitleTagValue } from "../hooks/useSetPageTitleTagValue";
 import { useTrackEndpointSuccessfulFinishing } from "../hooks/useTrackEndpointSuccessfulFinishing";
 import { SerializedError } from '@reduxjs/toolkit';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
@@ -38,6 +38,8 @@ import { BookDeletionProcessor } from "./BookDeletionProcessor";
  */
 export function BookEditing() {
   const dispatch = useAppDispatch()
+  
+  useSetPageTitleTagValue("Edit book")
 
   const literaryGenresOptionsList = useAppSelector(selectLiteraryGenresOptionsList)
 
@@ -88,20 +90,6 @@ export function BookEditing() {
   const [triggerBookUpdateMutation, {
     error: bookUpdatingError,
     isLoading: isUpdatingBook }] = useUpdateBookMutation()
-
-
-  let deleteParamVal = getQueryParamValue("delete");
-  //validate delete param val, accepting only "true" string if it is not null because it will be used in useEffect hook as dependency
-  if (deleteParamVal !== "true") {
-    deleteParamVal = null;
-  }
-
-
-  useEffect(() => {
-    //setting page title after first render and after deleting query param disappears from URL as deletion processor child component
-    //will not override it as it is not snown in that case
-    setPageTitleTagValue("Edit book");
-  }, [deleteParamVal]);
 
 
   //renaming and assigning default value which makes value always to be string type which correctly fits to be used as argument in
