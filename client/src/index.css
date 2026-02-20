@@ -11,6 +11,7 @@
     --color-gray-300: #c6c9ce;
 }
 
+
 @layer base {
     body {
         line-height: normal;
@@ -19,6 +20,20 @@
 
     a:hover{
         @apply text-[#959595]
+    }
+
+    a:focus-visible,
+    button:focus-visible,
+
+    /* creating similar CSS selector as Tailwindcss does when creating custom checkbox using 'peer' class here to not
+    keep color value copy also in JS file */
+    .peer:focus-visible ~ *,
+
+    /* same outline for form builder submit button */
+    form.form_builder input[type="submit"]:focus-visible{
+        @apply outline-blue-900;
+        @apply outline-solid;
+        @apply outline-2
     }
 
     p a{

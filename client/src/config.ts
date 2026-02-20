@@ -90,6 +90,6 @@ export const customCheckboxSquareBoxClasses =
 //classes for visually custom ckeckbox
 //TODO - add graying out for disabled checkbox
 export const customCheckboxCheckmarkClasses = customCheckboxSquareBoxClasses +
-    "peer-checked:bg-[#ccc] peer-checked:after:block after:hidden after:absolute peer-focus-visible:[outline-style:auto] " +
+    "peer-checked:bg-[#ccc] peer-checked:after:block after:hidden after:absolute peer-focus-visible:[outline-style:solid] " +
     "after:left-[4px] after:top-0 after:w-[6px] after:h-[11px] after:border after:border-solid " +
     "after:border-[#4066a5] after:border-t-0 after:border-r-[2px] after:border-b-[2px] after:border-l-0 after:rotate-45 "
