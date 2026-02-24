@@ -8,7 +8,8 @@ import {
 import { H1Heading } from "./ui_elements/H1Heading";
 import { NavLinkBack } from "./ui_elements/NavLinkBack";
 import { CreateBookButton } from "./ui_elements/CreateBookButton";
-import { DataFetchingStatusLabel, LABEL_TYPE_ERROR } from "./ui_elements/DataFetchingStatusLabel";
+import { DataFetchingStatusLabel } from "./ui_elements/DataFetchingStatusLabel";
+import { GeneralErrorMessage } from "./ui_elements/GeneralErrorMessage";
 import { ButtonWithIconAndBackground } from './ui_elements/ButtonWithIconAndBackground';
 import { FormBuilder,
   SubmittedFormData,
@@ -240,18 +241,18 @@ export function BookCreating() {
 
       <H1Heading headingText={pageHeading} />
 
-      {/*if data sending has failed, display message*/}
-      {errorMsg &&
-        <DataFetchingStatusLabel type={LABEL_TYPE_ERROR}
-          labelText={errorMsg} />
-      }
-
-      {/*while data is being sent, show that data is loading*/}
-      {isLoading &&
+      {/*while data is being sent, show that data is loading*/
+      isLoading &&
         <DataFetchingStatusLabel labelText="adding..." />
       }
 
       <div className="max-w-[700px]">
+
+        {/*if data sending has failed, display message*/
+        errorMsg &&
+          <GeneralErrorMessage msgText={errorMsg} />
+        }
+
         {mainContent}
       </div>
     </div>

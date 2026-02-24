@@ -66,8 +66,24 @@ class BookController extends Controller
      */
     public function store(Request $request)
     {
-        $this->validateSubmBookData($request);
         usleep($this->responseSleepTime);
+
+
+        $this->validateSubmBookData($request);
+
+        //don't allow to add more than 20 books. This app will be on server in demo mode with login form prefilled, anyone can login and
+        //would be able to spam database with unlimited amount of book records
+        $maxAllowedBookCount = 20;
+        $currentlyAddedBooksCount = $this->getBooksTableQueryWithCurrentUserConstraint($request)
+            ->count();
+        if ($currentlyAddedBooksCount >= $maxAllowedBookCount) {
+            $error = [
+                'message' => 'You can not add more than ' . $maxAllowedBookCount . ' books in demo mode. To have ability to save book ' .
+                    'you must delete some books or reset demo data'
+            ];
+            return response()->json($error, 422);
+        }
+
 
         //a book with same title among books belonging to user must not exist. If exists, return error message,
         //don't create book
