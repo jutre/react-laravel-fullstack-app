@@ -91,7 +91,7 @@ export function ModalDialog({ content, confirmFunction, cancelFunction }: ModalD
       <div  className='modal_dialog' 
             onClick={closeModalOnClickOnModal}>
 
-        <div className='container'>
+        <div className='modal_container'>
           <div  className='body'
                 ref={beginningModalBody}>
 

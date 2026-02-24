@@ -62,7 +62,7 @@
         overflow: auto;
     }
 
-    .modal_dialog .container {
+    .modal_dialog .modal_container {
         display: flex;
         width: 100%;
         min-height: 100%;
