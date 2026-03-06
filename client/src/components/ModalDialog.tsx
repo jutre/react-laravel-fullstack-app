@@ -2,31 +2,33 @@ import { useRef, useEffect } from 'react';
 
 
 type ModalDialogProps = {
-  content: string,
+  message: string,
   confirmFunction: () => void,
   cancelFunction: () => void
 }
 
+
 /**
- * creates modal dialog with message and two buttons representing 'confirm' and 'cancel' actions intended to offer ability for user to
- * confirm on cancel action described in message, like deleting of some object. If 'confirm' button is pressed then function passed in
- * 'confirmFunction' component prop is envoked, if 'cancel' button is pressed then function passed in 'cancelFunction' is envoked. In
- * real user case 'confirmFunction' function would contain other function invocation that performs f.e. deleting of some object,
- * 'confirmFunction' would contains function that changes parent component's (that has ModalDialog as child component) state to hide
- * ModalDialog component
+ * Creates modal dialog with confirm message and "Yes", "No" buttons. If "Yes" button is pressed then function passed in 'confirmFunction'
+ * component prop is envoked, if "No" button is pressed then function passed in 'cancelFunction' prop is envoked.
+ * Intended to create confirmation dialog when user presses book deleting button
  * 
- * @param content - string that will be displayed in modal box as a question
+ * @param message - string that will be displayed in modal box as a message above buttons
  * @param confirmFunction - function that will be executed when use pressed "Yes" button
  * @param cancelFunction - - function that will be executed when use pressed "No" button
  * @returns 
  */
 
-export function ModalDialog({ content, confirmFunction, cancelFunction }: ModalDialogProps) {
+export function ModalDialog({ message, confirmFunction, cancelFunction }: ModalDialogProps) {
 
   const beginningModalBody = useRef<HTMLDivElement>(null);
 
-  const initialFocusElement = useRef<HTMLButtonElement>(null);
+  // An invisible button that receives focus when modal is rendered which is created for better useability when user navigates element with
+  // TAB key. After modal appears and user pressed TAB key the "Yes" button receives focus and visual highligting. Without focusing on
+  // invisible button current focus would remain on "Delete" button user clicked before modal appeared and it would be needed several TAB
+  // pressing to get focus to "Yes" button
 
+  const initialFocusElement = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (initialFocusElement.current !== null) {
       initialFocusElement.current.focus()
@@ -66,11 +68,9 @@ export function ModalDialog({ content, confirmFunction, cancelFunction }: ModalD
   const closeModalOnClickOnModal = (event: React.MouseEvent) => {
     let eventPropogationPathElement: HTMLElement | null = event.target as HTMLElement;
     while (eventPropogationPathElement) {
-      //traverse elements starting from clicked element to every next ancestor.
-      //If modal body element is found, don't do anytning as user has clicked inside of central modal div which
-      //contains background, text and buttons, but not clicked on buttons as buttons have their own click handlers
-      //which stop bubbling event to parent elements and won't reach outside those buttons also not to modal beginning
-      //div where current event handler must be attached
+      // Traverse elements starting from clicked element to every next ancestor.
+      // If modal body element is found don't do anytning as user has clicked central modal div (that which has white background, contains
+      // message and buttons) but not on buttons as buttons have their own click handlers which stop bubbling event to parent elements not reaching modal body
       if (eventPropogationPathElement === beginningModalBody.current) {
         return;
       }
@@ -87,7 +87,9 @@ export function ModalDialog({ content, confirmFunction, cancelFunction }: ModalD
 
   return (
     <>
+      {/* overlay has dark backgroung, does not have click handler as next element will be stacked above overlay and will reveive click */}
       <div className='overlay_for_modal_dialog'></div>
+
       <div  className='modal_dialog' 
             onClick={closeModalOnClickOnModal}>
 
@@ -96,14 +98,9 @@ export function ModalDialog({ content, confirmFunction, cancelFunction }: ModalD
                 ref={beginningModalBody}>
 
             <div className='content'>
-              <div>{content}</div>
+              <div>{message}</div>
             </div>
 
-            {/* element that receives initial focus when modal is rendered, must be invisible. It is intended that aftef modal appers and
-            in case user clicks TAB key then "Confirm" action button receives focus. 
-            This solution is better than if "Confirm" option button would be focused when modal is displayed because outline style 
-            is default and would not pay users attention as good as if focus outline appears on "Confirm" button after user presses 
-            TAB key after modal appears */}
             <button style={{ opacity: 0, position: "absolute" }}
               ref={initialFocusElement}
               type='button'></button>
@@ -111,10 +108,13 @@ export function ModalDialog({ content, confirmFunction, cancelFunction }: ModalD
             <div className='options'>
               <button className='button_confirm'
                 onClick={_confirm}
-                type='button'>Yes</button>
+                type='button'
+              >Yes</button>
+
               <button className='button_cancel'
                 onClick={_cancel}
-                type='button'>No</button>
+                type='button'
+              >No</button>
             </div>
           </div>
         </div>

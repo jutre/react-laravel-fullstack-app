@@ -99,7 +99,7 @@ export function BookDeletionProcessor({
 
     const modalDialogMessage = `Are you sure you want to delete ${messageAboutBooks}?`
 
-    return <ModalDialog content={modalDialogMessage}
+    return <ModalDialog message={modalDialogMessage}
       confirmFunction={() => deleteBooks(deletableBooksIds)}
       cancelFunction={onCancelClickInConfirmationDailog} />
 
