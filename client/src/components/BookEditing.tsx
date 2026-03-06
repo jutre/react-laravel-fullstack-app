@@ -23,7 +23,6 @@ import { FormBuilder,
   createTargetObjFromSubmittedData } from '../utils/FormBuilder';
 import DisappearingMessage from './DisappearingMessage';
 import { useSetPageTitleTagValue } from "../hooks/useSetPageTitleTagValue";
-import { useTrackEndpointSuccessfulFinishing } from "../hooks/useTrackEndpointSuccessfulFinishing";
 import { SerializedError } from '@reduxjs/toolkit';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { useAppDispatch, useAppSelector } from "../store/reduxHooks";
@@ -89,7 +88,9 @@ export function BookEditing() {
 
   const [triggerBookUpdateMutation, {
     error: bookUpdatingError,
-    isLoading: isUpdatingBook }] = useUpdateBookMutation()
+    isLoading: isUpdatingBook,
+    isSuccess,
+  }] = useUpdateBookMutation()
 
 
   //renaming and assigning default value which makes value always to be string type which correctly fits to be used as argument in
@@ -126,8 +127,6 @@ export function BookEditing() {
     }
   }, [bookQueryData]);
   
-
-  const [displaySuccessMsg] = useTrackEndpointSuccessfulFinishing(isUpdatingBook, bookUpdatingError);
 
   const formDisabled = isUpdatingBook === true;
 
@@ -190,7 +189,7 @@ export function BookEditing() {
         }
 
         {/* after succesful update display message*/
-          displaySuccessMsg &&
+          isSuccess &&
           <DisappearingMessage messageText="Changes saved"
             initialDisplayDuration={500} />
         }
