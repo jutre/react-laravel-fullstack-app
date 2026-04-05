@@ -11,14 +11,15 @@ import {
   Routes,
   Route
 } from "react-router-dom";
+import { AuthenticatedRoute } from "./AuthenticatedRoute";
 import { useAppDispatch, useAppSelector } from '../store/reduxHooks';
 import { selectUserLoadingStatus, selectIsUserLoggenIn } from '../features/authSlice';
-import { LoginForm } from "./LoginForm";
 import { UserInfoAndLogoutControls } from "./UserInfoAndLogoutControls";
 import { BookCreating } from "./BookCreating";
 import { PageNotFound } from "./PageNotFound";
 import { apiSlice } from "../features/api/apiSlice";
 import { ResourcesPreloader } from './ResourcesPreloader';
+import { BooksListLoadingSketeton } from "./books_list/BooksListLoadingSketeton";
 
 /**
  * returns markup that creates layout structure (three columns beginning with larget tablet devices, one column on smaller tablet devices,
@@ -33,48 +34,51 @@ const Layout = () => {
   const isUserLoggenIn = useAppSelector(selectIsUserLoggenIn);
 
 
-  let content: React.ReactNode;
+  let mainContent: React.ReactNode;
 
-  //waiting response of initial request to REST API on UI app initial display to find out whether a HTTP session of logged in user exists.
-  //Displaying text message about pending status, not displaying login form yet as we don't know yet whether user is or not authenticated
+  // we don't know yet whether user is authenticated or not, display skeleton while waiting response from REST API with information whether
+  // HTTP session of authenticated user exists
   if (userDataInitialLoadStatus === "pending") {
-    content = <div>User session check...</div>
+    mainContent = <BooksListLoadingSketeton />
 
+  // now we know user whether user is authenticated or not
   } else {
+
     if (isUserLoggenIn) {
-      //User is authenticated
-
-      //display component corresponding to current URL
-      content =
-        <Routes>
-          <Route path={routes.bookListPath} element={<AllBooksList />} />
-          <Route path={routes.filteredBookListPath} element={<FilteredBooksListInitializer />} />
-          <Route path={routes.favoriteBooksListPath} element={<FavoriteBookList />} />
-          <Route path={routes.bookEditPath} element={<ResourcesPreloader><BookEditing /></ResourcesPreloader>} />
-          <Route path={routes.createBookPath} element={<ResourcesPreloader><BookCreating /></ResourcesPreloader>} />
-          <Route path={routes.demoDataResetPath} element={<DemoDataReset />} />
-          <Route path="*" element={<PageNotFound />} />
-        </Routes>
-
       //launch fetching literary genres list to be already loaded when user opens book creation or edit form
       dispatch(apiSlice.endpoints.getLiteraryGenres.initiate())
-
-      //NOT authenticated. For each URL that in authenticated state have a corresponding component display login form, for unrecognized
-      //paths display "Page not found" component
-    } else {
-      content =
-        <Routes>
-          {
-            [routes.bookListPath,
-            routes.favoriteBooksListPath,
-            routes.bookEditPath,
-            routes.createBookPath,
-            routes.demoDataResetPath].map((path, index) =>
-              <Route path={path} element={<LoginForm />} key={index} />
-            )}
-          <Route path="*" element={<PageNotFound />} />
-        </Routes>
     }
+
+    //display matching route if user is authenticated or login form component if unauthenticated
+    mainContent = (
+      <Routes>
+        <Route element={<AuthenticatedRoute isAuthenticated={isUserLoggenIn} />}>
+          <Route path={routes.bookListPath} element={<AllBooksList />} />
+
+          <Route path={routes.filteredBookListPath} element={<FilteredBooksListInitializer />} />
+
+          <Route path={routes.favoriteBooksListPath} element={<FavoriteBookList />} />
+
+          <Route path={routes.bookEditPath}
+            element={
+              <ResourcesPreloader>
+                <BookEditing />
+              </ResourcesPreloader>
+            } />
+
+          <Route path={routes.createBookPath}
+            element={
+              <ResourcesPreloader>
+                <BookCreating />
+              </ResourcesPreloader>
+            } />
+
+          <Route path={routes.demoDataResetPath} element={<DemoDataReset />} />
+        </Route>
+
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    )
   }
   
   return (
@@ -106,7 +110,7 @@ const Layout = () => {
 
           {/*content - book lists or login form*/}
           <div className="bg-white relative pt-[30px] px-[15px] pb-[65px] xl:pb-[30px] sm:px-[30px] grow">
-            {content}
+            {mainContent}
           </div>
 
           {/*starting with wider tablet screens the footer is assigned non zero height,
