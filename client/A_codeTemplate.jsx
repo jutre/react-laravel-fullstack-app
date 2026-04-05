@@ -1,3 +1,18 @@
+import { useState, useEffect } from 'react'
+
+type LeanComponentProps = {
+    propOne: boolean,
+}
+
+export function LeanComponent({ propOne }: LeanComponentProps) {
+  return (
+    <div className="className">
+
+    </div>
+  )
+}
+
+
 import { useState, useEffect } from 'react';
 
 
