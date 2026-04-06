@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { useAppSelector, useAppDispatch } from '../store/reduxHooks';
+import { useAppDispatch } from '../store/reduxHooks';
 import { useUserLogoutMutation } from '../features/api/apiSlice'
-import { selectCurrentUser, dispatchLogoutActions } from '../features/authSlice';
+import { userLoggedOut } from '../features/authSlice';
+import { apiSlice } from "../features/api/apiSlice";
 import { useNavigate } from 'react-router-dom';
 import { routes } from '../config';
 import { SquareButton } from './ui_elements/SquareButton';
@@ -50,7 +51,7 @@ export function UserInfoAndLogoutControls(){
     try {
       await triggerUserLogoutMutation().unwrap();
       //endpoint completed successfully, remove user info and reset whole Redux state to initial state, redirect to home page
-      dispatchLogoutActions(dispatch)
+      dispatch(userLoggedOut())
       navigate(routes.bookListPath)
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -60,7 +61,7 @@ export function UserInfoAndLogoutControls(){
       
   }
 
-  const currentUser = useAppSelector(selectCurrentUser);
+  const { data: currentUser } = apiSlice.endpoints.getCurrentLoggedInUser.useQueryState()
 
   //component should not be added to layout when user not logged in; adding check and step out if user not logged in
   if(!currentUser){

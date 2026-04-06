@@ -63,6 +63,19 @@ export const apiSlice = createApi({
       }),
       transformResponse(response: { user: User }) {
         return response.user;
+      },
+
+      //on successful response endpoint reseives user data, set it to getCurrentLoggedInUser endpoint cache
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data: userData} = await queryFulfilled
+          dispatch(
+            apiSlice.util.upsertQueryData('getCurrentLoggedInUser', undefined, userData),
+          )
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (e) {
+
+        }
       }
     }),
 
@@ -79,7 +92,10 @@ export const apiSlice = createApi({
 
 
     /**
-     * response contains user data if HTTP session is active
+     * obtains currently logged in user data on app start if HTTP session is active or receives user data by manual cache update
+     * after successful login from 'sendLoginCredentials' endpoint.
+     * 
+     * Acts as a source of information that user is logged in - if data is not undefined than user is logged in
      */
     getCurrentLoggedInUser: builder.query<User, void>({
       query: () => "current_logged_in_user",
@@ -276,6 +292,9 @@ export const {
   useResetDemoDataMutation } = apiSlice
 
 
+/*
+  selectors for literary genres endpoint
+*/
 export const selectGenresResult = apiSlice.endpoints.getLiteraryGenres.select()
 
 const selectLiteraryGenreData = createSelector(
@@ -294,4 +313,14 @@ export const selectLiteraryGenresOptionsList = createSelector(
   literaryGenresList => literaryGenresList.map((genre) => {
     return { value: genre.id, label: genre.title }
   })
+)
+
+/*
+  selectors for currently logged in user endpoint
+*/
+export const selectCurrentLoggedInUserResult = apiSlice.endpoints.getCurrentLoggedInUser.select()
+
+export const selectIsUserLoggenIn = createSelector(
+  selectCurrentLoggedInUserResult,
+  result => result.data !== undefined
 )

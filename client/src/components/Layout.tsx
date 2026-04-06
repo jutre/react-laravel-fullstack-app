@@ -13,11 +13,10 @@ import {
 } from "react-router-dom";
 import { AuthenticatedRoute } from "./AuthenticatedRoute";
 import { useAppDispatch, useAppSelector } from '../store/reduxHooks';
-import { selectUserLoadingStatus, selectIsUserLoggenIn } from '../features/authSlice';
 import { UserInfoAndLogoutControls } from "./UserInfoAndLogoutControls";
 import { BookCreating } from "./BookCreating";
 import { PageNotFound } from "./PageNotFound";
-import { apiSlice } from "../features/api/apiSlice";
+import { apiSlice, selectIsUserLoggenIn } from "../features/api/apiSlice";
 import { ResourcesPreloader } from './ResourcesPreloader';
 import { BooksListLoadingSketeton } from "./books_list/BooksListLoadingSketeton";
 
@@ -30,15 +29,18 @@ import { BooksListLoadingSketeton } from "./books_list/BooksListLoadingSketeton"
 const Layout = () => {
   const dispatch = useAppDispatch();
 
-  const userDataInitialLoadStatus = useAppSelector(selectUserLoadingStatus)
-  const isUserLoggenIn = useAppSelector(selectIsUserLoggenIn);
+  //getting loading status and final result on whether user is logged in. If any other error besides "HTTP 401 Unauthenticated"
+  //occurs like "HTTP 500 Internal Server Error" the login form will be displayed; if same error will still be present the login form will
+  //display it when submitting it
+  const { isLoading: userDataInitialLoadStatus } = apiSlice.endpoints.getCurrentLoggedInUser.useQueryState()
+  const isUserLoggenIn = useAppSelector(selectIsUserLoggenIn)
 
 
   let mainContent: React.ReactNode;
 
   // we don't know yet whether user is authenticated or not, display skeleton while waiting response from REST API with information whether
   // HTTP session of authenticated user exists
-  if (userDataInitialLoadStatus === "pending") {
+  if (userDataInitialLoadStatus === true) {
     mainContent = <BooksListLoadingSketeton />
 
   // now we know user whether user is authenticated or not

@@ -1,8 +1,8 @@
-import { apiSlice } from "./api/apiSlice";
+import { apiSlice, selectIsUserLoggenIn } from "./api/apiSlice";
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { SerializedError , createAsyncThunk, isRejectedWithValue, Middleware, MiddlewareAPI  } from '@reduxjs/toolkit';
 
-import { User, UserCredentials } from '../types/User';
+import { UserCredentials } from '../types/User';
 import { AppDispatch, RootState } from "../store/store";
 import { createAppSlice } from '../store/createAppSlice'
 import { extractMessageFromQueryErrorObj } from "../utils/utils";
@@ -11,35 +11,32 @@ import { STATUS_IDLE,
   STATUS_REJECTED } from '../constants/asyncThunkExecutionStatus.ts';
 
 interface AuthState { 
-  //when user is logged out, user is undefined
-  user?: User,
-
-  //fetching user on app start is done to find out if actual session exists and get user data if session exists.
-  //While user data is being fetched, it is not known yet whether user's data will be present or user session
-  //expired and login form must be displayed, instead of mentioned a "loading" indicator will be displayed
-  //while request quering current session's data is pending
-  userFetchingStatus: "idle" | "pending",
-
   sendingLoginCredentialsStatus: "idle" | "pending" | "rejected",
   sendingLoginCredentialsError?: string,
 }
 
 const initialState: AuthState = {
-  user: undefined,
-  userFetchingStatus: STATUS_IDLE,
   sendingLoginCredentialsStatus: STATUS_IDLE,
   sendingLoginCredentialsError: undefined
 };
 
-
+/**
+ * Performs login to Laravel backend.
+ * It is required to first make a request to get CSRF cookie and because second request that sends username/password needs that cookie.
+ * Doing that purely in RTK Query api slice was not successfull - when second endpoint was invoked in first endpoint's onQueryStarted
+ * method the obtained cookie was not sent to backend.
+ */
 export const initiateSessionSendLoginCredentials = createAsyncThunk(
   'auth/sendLoginRequest',
   async (loginCredentils: UserCredentials, thunkApi) => {
     try {
-        //disabled cache forcing making request to server in case user tries to login again after possible previous unsuccessful login
+        //disabled cache for possible subsequent logins after unsuccessful ones
         await thunkApi.dispatch(apiSlice.endpoints.getCsrfCookie.initiate(undefined, { forceRefetch: true })).unwrap()
-        //after previous request succeeds, the CSRF cookie is obtained for sending with login credentials
+
+        //in case of correct username/password the 'sendLoginCredentials' endpoint will set received user data to 'getCurrentLoggedInUser'
+        //endpoint's cache
         const loggedInUserData = await thunkApi.dispatch(apiSlice.endpoints.sendLoginCredentials.initiate(loginCredentils)).unwrap()
+
         return loggedInUserData;
 
       } catch (error) {
@@ -59,35 +56,21 @@ export const initiateUserFetchingOnAppStart = () => (dispatch: AppDispatch) => {
     dispatch(apiSlice.endpoints.getCurrentLoggedInUser.initiate())
 }
 
-/**
- * function that dispatches two Redux actions: 'userLoggedOut' action and 'resetApiState'. Action 'userLoggedOut' causes setting
- * authState.user field to 'undefined', resets whole Redux state to initial (@see store.ts for global reducer performing state resetting)
- * and 'resetApiState' resets state in api slice.
- * Resetting state and API slice cache must be performet to prevent possibility to access previously logged in user's data. One way to
- * access the cache would be Redux devtools extension if installed.
- * Logout actions are dispatched when user performs "logout" action in UI and when Redux store middleware function encounters error with
- * HTTP "401 Unauthorized" status  produced by RTKQuery api clice.
- * 
- */
-export const dispatchLogoutActions = (dispatch: AppDispatch) => {
-  dispatch(userLoggedOut());
-  dispatch(apiSlice.util.resetApiState());
-}
 
 const authSlice = createAppSlice({
   name: 'auth',
   initialState,
   reducers: {
-    //on user logout clear logged in user data;
-    //also there is a reducer that resets whole Redux state to initial in store definition file store.ts when 'userLoggetOut' action is
-    //dispatched
+    // action to displatch when user logs out. Here reducer body is empty but in store.ts there is a global reducer that resets whole Redux
+    // state to initial empty state in response to this action
     userLoggedOut(state){
-      state.user = undefined;
     }
   },
 
   extraReducers: (builder) => {
-
+    /**
+     * tracking fetching statuses and returned data from async thunk which sends username and password
+     */
     builder.addCase(initiateSessionSendLoginCredentials.pending, (state) => {
       state.sendingLoginCredentialsStatus = STATUS_PENDING
       //reset error from previous request if any
@@ -96,8 +79,6 @@ const authSlice = createAppSlice({
     //on success action contains User object, set it to state and authentication status becomes 'loggen in'
     .addCase(initiateSessionSendLoginCredentials.fulfilled, (state, action) => {
       state.sendingLoginCredentialsStatus = STATUS_IDLE
-      state.user = action.payload
-      state.userFetchingStatus = STATUS_IDLE
     })
     .addCase(initiateSessionSendLoginCredentials.rejected, (state, action) => {
       state.sendingLoginCredentialsStatus = STATUS_REJECTED
@@ -106,34 +87,6 @@ const authSlice = createAppSlice({
       state.sendingLoginCredentialsError = extractMessageFromQueryErrorObj(<FetchBaseQueryError|SerializedError>action.payload)
     })
 
-    /**
-     * tracking fetching statuses and returned data from api endpoint which fetches currently logged in user 
-     */
-    //in case of "fulfilled" status also set user data that was fetched by query
-    .addMatcher(
-      apiSlice.endpoints.getCurrentLoggedInUser.matchFulfilled,
-      (state, action) => {
-        state.user = action.payload
-        state.userFetchingStatus = "idle"
-      }
-    ) 
-    .addMatcher(
-      apiSlice.endpoints.getCurrentLoggedInUser.matchPending,
-      (state) => {
-        state.userFetchingStatus = STATUS_PENDING
-      }
-    )
-    .addMatcher(
-      apiSlice.endpoints.getCurrentLoggedInUser.matchRejected,
-      (state) => {
-        //fetching user on app start it is done to find out if actual session exists and get user data if session exists.
-        //In case of fetch rejecting not caring about rejection error, typically "401 unauthenticated error" if session ended or other 
-        //reason like HTTP 503 response. If user data is not received in response always login form will be shown, therefore set status 
-        //to "idle"
-        state.userFetchingStatus = STATUS_IDLE
-      }
-    )
-
   }
 });
 
@@ -141,17 +94,6 @@ export const { userLoggedOut } = authSlice.actions
 
 export default authSlice.reducer
 
-/**
- * returns true if user is logget it, that is a field value is set to other value than `undefined`; because of field's type
- * if it is not `undefined`, the value is user object.
- * @param state 
- * @returns boolean - true if user is logged in 
- */
-export const  selectIsUserLoggenIn = (state: RootState) => state.authState.user !== undefined;
-
-export const  selectCurrentUser = (state: RootState) => state.authState.user;
-
-export const selectUserLoadingStatus = (state: RootState) => state.authState.userFetchingStatus;
 
 export const selectSendLoginRequestStatus = (state: RootState) => state.authState.sendingLoginCredentialsStatus;
 
@@ -178,7 +120,7 @@ export const unauthenticatedResponseListener: Middleware = (api: MiddlewareAPI) 
       //Unauthenticated error will also be received when user is trying to log in and enters invalid credentials, but in such case there is
       //no user data yet, no user data to reset
       if(selectIsUserLoggenIn(api.getState())){
-        dispatchLogoutActions(api.dispatch);
+        api.dispatch(userLoggedOut());
       }
     }
   }
