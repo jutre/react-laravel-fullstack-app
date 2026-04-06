@@ -13,12 +13,11 @@ import { SquareButton } from './ui_elements/SquareButton';
  * user state.
  */
 export function UserInfoAndLogoutControls(){
-  //state variable that has same value as {isLoading} variable returned by logout endpoint but with some delay to display a "Please wait.."
-  //loading indicator under button with some delay but not immediatelly after user clicks "Logout" button.
-  //The {isLoading} variable becomes true as soon as user clicks "Logout" and if network is fast the "Please wait.." indicator appears very
-  //shortly and page is redirected to login form. That looks bad, therefore loading indicator appears only if network response is longer
-  //than 500 miliseconds. Meanwhile "Logout" button changes the background immediatelly after user clicks "Logout" button and endpoint 
-  //starts loading serving as loading instant indicator
+
+  //State variable to postpone displaying loading indicator text "please wait..." under "Logout" button by 500 miliseconds after user clicks
+  //it. Variable receives value from { isLoading } variable returned by logout endpoint with delay. Without delay the "Please wait.."
+  //indicator would appears shortly followed by page redirected to login form in case network is fast which looks bad.
+  //Meanwhile "Logout" button grays out immediatelly after user clicks "Logout" button
   const [isUserLoggingOut, setIsUserLoggingOut] = useState(false);
 
   const dispatch = useAppDispatch();
@@ -30,10 +29,9 @@ export function UserInfoAndLogoutControls(){
     isLoading}] = useUserLogoutMutation()
 
   
-  //reflects value of {isLoading} variable returned by logout endpoint - see comments on isUserLoggingOut state variable
+  //set { isLoading } variable `true' value to isUserLoggingOut state variable with delay
   useEffect(() => {
     if(isLoading === true){
-      //as soon a  
       const timer = setTimeout(() => {
         setIsUserLoggingOut(true);
       }, 500);
@@ -63,10 +61,8 @@ export function UserInfoAndLogoutControls(){
 
   const { data: currentUser } = apiSlice.endpoints.getCurrentLoggedInUser.useQueryState()
 
-  //component should not be added to layout when user not logged in; adding check and step out if user not logged in
-  if(!currentUser){
-    return null;
-  }
+  //component should not be added to layout when user not logged in but according to type user may be undefined
+  const userFullName = currentUser?.name ?? 'undefined'
 
   let errorMsg: string | undefined;
   if (userLogoutError) {
@@ -82,7 +78,7 @@ export function UserInfoAndLogoutControls(){
     <div>
       <div className='flex items-center flex-wrap'>
         <div className="mr-[8px]">
-          {currentUser.name}
+          {userFullName}
         </div>
           {/* "Logout" button, has less top/botton padding then button's default padding */}
           <SquareButton buttonContent='Logout'
