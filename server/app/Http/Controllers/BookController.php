@@ -286,6 +286,8 @@ class BookController extends Controller
 
     public function getLiteraryGenresList()
     {
+        usleep($this->responseSleepTime);
+
         return LiteraryGenre::select(['id', 'title'])
             ->orderBy('title', 'asc')
             ->get();
