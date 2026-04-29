@@ -59,8 +59,6 @@ function AboutInfoPopupMenu(){
     }
   }
 
-  //for applying same classes to multiple <li> elements store them in variable this way preventing code dublication
-  const listItemClasses = "relative before:block before:absolute before:left-[-23px] before:top-[9px] before:bg-[#5f9ea0] before:w-[10px] before:h-[10px]";
   return (
     <div ref={beginningOfMenuRef}>
 
