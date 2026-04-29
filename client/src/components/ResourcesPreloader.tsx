@@ -2,7 +2,7 @@ import { PropsWithChildren } from "react"
 import { apiSlice } from "../features/api/apiSlice"
 import { extractMessageFromQueryErrorObj } from "../utils/utils"
 import { GeneralErrorMessage } from "./ui_elements/GeneralErrorMessage"
-import { BookFormSketeton } from "./BookFormSketeton"
+import { BookFormSketeton } from "./ui_elements/BookFormSketeton"
 
 /**
  * Displays fetching indicator and prevents child components rendering while literary genres list fetching is in progress. 

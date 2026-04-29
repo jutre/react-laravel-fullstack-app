@@ -15,7 +15,7 @@ import { routes,
 import { H1Heading } from "./ui_elements/H1Heading";
 import { ButtonWithIconAndBackground } from "./ui_elements/ButtonWithIconAndBackground";
 import { DataFetchingStatusLabel } from "./ui_elements/DataFetchingStatusLabel";
-import { BookFormSketeton } from "./BookFormSketeton";
+import { BookFormSketeton } from "./ui_elements/BookFormSketeton";
 import { GeneralErrorMessage } from "./ui_elements/GeneralErrorMessage";
 import { NavLinkBack } from "./ui_elements/NavLinkBack";
 import { FormBuilder,
