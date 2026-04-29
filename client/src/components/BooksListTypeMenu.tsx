@@ -115,16 +115,17 @@ export function BooksListTypeMenu () {
       <div className={getMenuItemsWrapperClassName(isFullscreenMenuActive)}>
         {(menuEntries).map((entry, index) => {
 
-          const isThirdMenuItemOnPhoneWidthScreen = breakpointIndex === 0 && index === 2;
+          const isThisThirdMenuPositionOnPhoneScreen = index === 2 && breakpointIndex === 0;
 
           return (
-
             <div className="lg:text-left"
-                  key={index}>
+              key={index}>
 
-                {isThirdMenuItemOnPhoneWidthScreen && !isFullscreenMenuActive ?
-                //on phone width screen when fullscreen menu is not displayed instead of third menu item "Demo data reset" link display
-                //"Open fullscreen menu" icon as there is no space to place link text
+              {isThisThirdMenuPositionOnPhoneScreen &&
+                isFullscreenMenuActive === false
+                ?
+                // if this is third menu item on phone width screen and menu is "minimized" then display "Open fullscreen menu" icon
+                // instead of menu entry which is link to page
                 <ButtonWithIcon
                   clickHandler={displayFullscreenMenuClick}
                   beforeElemMaskImgUrlTwCssClass="before:[mask-image:url(assets/menu.svg)]"
@@ -132,23 +133,23 @@ export function BooksListTypeMenu () {
                   beforeElemBackgndColorTwCssClass="before:bg-black"
                   otherClasses="w-[31px] h-[31px] relative z-[20]" />
 
-
-                :(<NavLink to={entry.url}
+                :
+                // in all other cases (wider than phone screen, menu in fullscreen mode on phone screen) display
+                // link to page in all positions
+                <NavLink to={entry.url}
                   className={({ isActive }) => getNavLinkClassName(isActive, isFullscreenMenuActive)}
 
-                  //menu hiding click handler on all menu items when fullscreen menu is displayed (every link click should also hide
-                  //fullscreen menu)
-                  onClick={isFullscreenMenuActive
-                    ? hideFullscreenMenuClick
-                    : () => { }}>
+                  //in fullscreen menu mode every link click should also hide fullscreen menu as page is navigated to target URL
+                  onClick={isFullscreenMenuActive ? hideFullscreenMenuClick : () => { }}>
 
                   {/*span inside link needed to scale only text inside link on hover*/}
                   <span className={"whitespace-nowrap block lg:hover:transition-transform lg:hover:duration-200 " +
                     "lg:hover:ease-linear lg:hover:scale-[1.08] lg:hover:origin-top-left"}>
                     {entry.linkText}
                   </span>
-                </NavLink>)
-                }
+
+                </NavLink>
+              }
             </div>
           )}
         )}
