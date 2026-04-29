@@ -1,6 +1,6 @@
 import { Provider } from 'react-redux';
 import store from './store/store';
-import Layout from "./components/Layout.tsx";
+import { PageRootLayout } from "./components/PageRootLayout.tsx";
 import { initiateUserFetchingOnAppStart } from './features/authSlice.ts'; 
 
 /**
@@ -15,7 +15,7 @@ const App = () => {
 
   return (
     <Provider store={store}>
-      <Layout/>
+      <PageRootLayout/>
     </Provider>
   )
 }
