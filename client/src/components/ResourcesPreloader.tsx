@@ -6,17 +6,14 @@ import { BookFormSketeton } from "./BookFormSketeton"
 
 /**
  * Displays fetching indicator and prevents child components rendering while literary genres list fetching is in progress. 
- * Only when fetching is done the children components are outputs as those components expect the literary genres list already to be loaded.
- * Using current component makes code of child components much simplier as they don't need to maintain loading/error states of literary
- * genres in addition to loading/error states state of primary resource. As an example, in book editing page primary resource to be loaded
- * is editable book but literary genre is used to create options list in 'select' input element.
+ * Only when fetching is done the children components are output as children components expect literary genres list already to be loaded.
+ * Using current component makes code of child components simplier as they don't need to maintain loading/error states of literary
+ * genres in addition to loading/error state of primary resource.
+ * Book creating, editing component must be wrapped in ResourcesPreloader component as literary genres list is used to create options list
+ * in 'select' input element.
  * 
- * Literary genres list fetching is initiated immediatelly when app is opened first time and user is already authenticated or immediatelly
- * after login form submit with correct credentials if user was not authenticated. If page route conforms to component that uses literary
- * genres list (book creating, editing) that component must be wrapped in ResourcesPreloader component which displays fetching indicator
- * while genres list is loading. If first page user opens is index page with books list where genres list is not used then
- * ResourcesPreloader is not needed, the literary genres list is loaded in the background without any indication
- * 
+ * Literary genres list fetching is initiated as soon as it is detected that user is authenticated (first app run with existing session or
+ * after sucessful login.
  */
 export function ResourcesPreloader({ children }: PropsWithChildren) {
 
