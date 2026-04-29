@@ -19,7 +19,7 @@ import { useAddBookMutation,
   selectLiteraryGenreEntities,
   selectLiteraryGenresOptionsList } from "../features/api/apiSlice";
 import { useAppSelector } from '../store/reduxHooks';
-import DisappearingMessage from './DisappearingMessage';
+import DisappearingMessage from './ui_elements/DisappearingMessage';
 import { useSetPageTitleTagValue } from "../hooks/useSetPageTitleTagValue";
 import { extractMessageOrMessagesObjFromQueryError } from "../utils/utils";
 

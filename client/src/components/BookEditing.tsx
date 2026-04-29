@@ -21,7 +21,7 @@ import { NavLinkBack } from "./ui_elements/NavLinkBack";
 import { FormBuilder,
   SubmittedFormData,
   createTargetObjFromSubmittedData } from '../utils/FormBuilder';
-import DisappearingMessage from './DisappearingMessage';
+import DisappearingMessage from './ui_elements/DisappearingMessage';
 import { useSetPageTitleTagValue } from "../hooks/useSetPageTitleTagValue";
 import { SerializedError } from '@reduxjs/toolkit';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
