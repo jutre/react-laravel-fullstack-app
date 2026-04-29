@@ -96,17 +96,13 @@ function AboutInfoPopupMenu(){
         <div className={"w-full p-[15px] bg-[#83e6e6] border border-[grey] leading-[26px] " + ( isMenuOpened 
               ? "mb-0 max-h-[1000000px] visible [transition:margin-bottom_0.3s_cubic-bezier(0,0,0,1)]"
               : "mb-[-2000px] max-h-0 invisible [transition:margin-bottom_0.3s_cubic-bezier(1,0,1,1),visibility_0s_0.3s,max-height_0s_0.3s]")}>
-                
-          This app was created to get experience with Redux. Redux Toolkit is used, data is fetched from REST api using thunks. <br />
-          Other technical features used:
-          <ul className="pl-[30px]">
-            <li className={listItemClasses}>React router</li>
-            <li className={listItemClasses}>CSS used to create typical UI elements: popup menu, modal dialog, autocomplete search box,
-              styled checkboxes, responsive design
-            </li>
-            <li className={listItemClasses}>a function created that lets easily generate HTML form by defining it&apos;s structure using
-              array of objects</li>
-          </ul>
+
+          <p>This app is modification of <a href='https://github.com/jutre/learning-tailwindcss'>previously created UI app</a> where 
+          a real interaction with REST API backend was added instead of using client simulating responses from REST API. 
+          RTK Query is used for data fetching.</p>
+
+          <p>A REST API backend also was created using Laravel framework.</p>
+
         </div>
       </div>
     </div>

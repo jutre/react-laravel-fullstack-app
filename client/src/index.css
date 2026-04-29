@@ -41,7 +41,8 @@
     }
 
     p{
-        @apply leading-[24px]
+        @apply leading-[24px];
+        @apply not-last:pb-[16px]
     }
 
 
