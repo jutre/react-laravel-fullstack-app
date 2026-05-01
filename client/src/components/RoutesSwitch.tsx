@@ -28,9 +28,9 @@ import { BooksListLoadingSketeton } from "./books_list/BooksListLoadingSketeton"
 export function RoutesSwitch() {
     const dispatch = useAppDispatch();
 
-    //getting loading status and final result on whether user is logged in. If any other error besides "HTTP 401 Unauthenticated"
-    //occurs like "HTTP 500 Internal Server Error" the login form will be displayed; if same error will still be present the login form will
-    //display it when submitting it
+    // getting loading status and final result on whether user is logged in. If any other error response besides "HTTP 401 Unauthenticated"
+    // is received also in that case login form will be displayed; if similar error like "HTTP 500" error will still be present after form
+    // is submitted then login form will display that error
     const { isLoading: userDataInitialLoadStatus } = apiSlice.endpoints.getCurrentLoggedInUser.useQueryState()
     const isUserLoggenIn = useAppSelector(selectIsUserLoggenIn)
 
