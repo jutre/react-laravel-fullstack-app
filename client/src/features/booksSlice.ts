@@ -34,7 +34,7 @@ type DeletableBooksInfo = {
 
 interface BooksState {
   searchString: string | null
-  booksSelectedInList: { [index: number]: boolean }
+  booksSelectedInUIList: { [index: number]: boolean }
   booksListBaseUrl: string | null
   bookDeletingEndpointLoadingStatus: "idle" | "pending"
   booksChoosenForDeleting: DeletableBooksInfo | null
@@ -42,7 +42,7 @@ interface BooksState {
 
 const initialState: BooksState = {
   searchString: null,
-  booksSelectedInList: {},
+  booksSelectedInUIList: {},
   booksListBaseUrl: null,
   bookDeletingEndpointLoadingStatus: "idle",
   booksChoosenForDeleting: null,
@@ -66,7 +66,7 @@ const booksSlice = createSlice({
     bookCollectionAddedToSelection(state, action: PayloadAction<Book[]>) {
       const bookArr = action.payload;
       bookArr.forEach((bookId) => {
-        state.booksSelectedInList[bookId.id] = true;
+        state.booksSelectedInUIList[bookId.id] = true;
       })
     },
     //TODO maybe add reducer for adding single book
@@ -75,24 +75,24 @@ const booksSlice = createSlice({
     //selected books. Single book removing use case is when user chooses to remove checkmark in checkbox for a book in book list
     singleBookRemovedFromSelection(state, action: PayloadAction<Book>) {
       const book = action.payload;
-      delete state.booksSelectedInList[book.id];
+      delete state.booksSelectedInUIList[book.id];
     },
 
     //removes all books currently added to selection. All books removing use case is when user has selected at least one book 
     //is selected in books list and clicks on "unselect all" button
     allBooksRemovedFromSelection(state) {
-      state.booksSelectedInList = {};
+      state.booksSelectedInUIList = {};
     },
 
 
     //when book(s) are deleted from books state, remove deleted books from selectem items if books are added to selection. Action for this
-    //reducer is dispatched from RTK Query endpoint, payload is array of books 'id' attribute. Each key in state.booksSelectedInList object
+    //reducer is dispatched from RTK Query endpoint, payload is array of books 'id' attribute. Each key in state.booksSelectedInUIList object
     //conforms to book id
     booksCollectionRemovedFromSelection(state, action: PayloadAction<number[]>) {
       const bookIdsArr = action.payload;
       bookIdsArr.forEach((bookId) => {
-        if (state.booksSelectedInList[bookId] === true) {
-          delete state.booksSelectedInList[bookId];
+        if (state.booksSelectedInUIList[bookId] === true) {
+          delete state.booksSelectedInUIList[bookId];
         }
       })
     },
@@ -104,9 +104,9 @@ const booksSlice = createSlice({
       const newUrl = action.payload
 
       if (newUrl !== state.booksListBaseUrl) {
-        const selectedBooksCount = Object.keys(state.booksSelectedInList).length;
+        const selectedBooksCount = Object.keys(state.booksSelectedInUIList).length;
         if (selectedBooksCount > 0) {
-          state.booksSelectedInList = {}
+          state.booksSelectedInUIList = {}
         }
 
         state.booksListBaseUrl = newUrl
@@ -182,7 +182,7 @@ export const selectSearchString = (state: RootState) => state.booksState.searchS
  * @returns boolean
  */
 export const selectIsAnyBookSelected = (state: RootState) => {
-  const selectedBookObj = state.booksState.booksSelectedInList;
+  const selectedBookObj = state.booksState.booksSelectedInUIList;
   const selectedBooksCount = Object.keys(selectedBookObj).length;
   return selectedBooksCount > 0
 }
@@ -195,7 +195,7 @@ export const selectIsAnyBookSelected = (state: RootState) => {
  */
 export const selectIsBookAddedToSelection = (state: RootState, bookId: number) =>
   //actually ckecking if property with value equel to bookId parameter exists
-  bookId in state.booksState.booksSelectedInList
+  bookId in state.booksState.booksSelectedInUIList
 
 
 export const selectBookDeletingEndpointLoadingStatus = (state: RootState) => state.booksState.bookDeletingEndpointLoadingStatus;
@@ -206,8 +206,8 @@ export const selectBookDeletingEndpointLoadingStatus = (state: RootState) => sta
 // returns array of currently selected books
 export const selectBooksChosenForDeleting = createSelector(
   (state: RootState) => state.booksState.booksChoosenForDeleting,
-  (state: RootState) => state.booksState.booksSelectedInList,
-  (booksChoosenForDeletingInfo, booksSelectedInListObj) => {
+  (state: RootState) => state.booksState.booksSelectedInUIList,
+  (booksChoosenForDeletingInfo, booksSelectedInUIListObj) => {
 
     //when nothing is currently selected for deleting
     if (booksChoosenForDeletingInfo === null) {
@@ -219,7 +219,7 @@ export const selectBooksChosenForDeleting = createSelector(
       return [booksChoosenForDeletingInfo.bookId]
 
     } else {
-      const bookIdsAsStringVals = Object.keys(booksSelectedInListObj)
+      const bookIdsAsStringVals = Object.keys(booksSelectedInUIListObj)
 
       //each object key is number, parse it to integer
       return bookIdsAsStringVals.map(idStringVal => parseInt(idStringVal))
