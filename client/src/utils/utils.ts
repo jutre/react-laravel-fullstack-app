@@ -73,59 +73,45 @@ export function getCookie(key: string) {
 
 
 /**
-   * returns string format error message extracted from REST API response json 'message' field in case of HTTP error response (response
-   * with non 2** HTTP status) when working with RTK Query endpoint.
-   * 
-   * RTK Query endpoint returns a FetchBaseQueryError type error object on response with non 2** HTTP status, it's 'data' property contains
-   * object that represents json returned in API response. The error message is expected to be in 'message' field of json, json is expected
-   * to be in following format -
-   * {
-   *  "message": "Actual error message",
-   *  "otherField":"value",
-   *  ...
-   * }.
-   * Function returns 'message' field if it's present in json, if not, returns a string "An error with status <HTTP status code> occured"
-   * 
-   * FetchBaseQueryError object is also returned on errors not directly connected with HTTP response data like network access, data 
-   * parsing, timeout errors. On such type errors the 'error' field is present and it's value is returned as string message.
-   * 
-   * RTK Query endpoint can also return a SerializedError type error possibly related to other runtime errors, on such error return it's
-   * 'message' field or if field absent, return whole error object converted to string.
-   *  
-   * Use this function when working with endpoints that read data when general errors like 'resource not found' are expected. When
-   * working with endpoints that send data with multiple fields for storing and validation errors separatelly for each fields is expected,
-   * use extractMessageOrMessagesObjFromQueryError function which extracts more detailed error description then just string.
-   * 
-   * @param queryError error object returned by RTK Query @reduxjs/toolkit/query/react/createApi query endpoint
-   * @returns extracted string message from error object
-   */
-export function extractMessageFromQueryErrorObj(queryError: FetchBaseQueryError | SerializedError): string {
-  
-  //FetchBaseQueryError type object.
-  //Detailed description is resides in either FetchBaseQueryError object 'error' field or in response JSON 'message' field
-  if ('status' in queryError) {
+ * Extracts error message in string format from RTK Query endpoint returned error object. The main goal of function is to extract message
+ * from REST API responded JSON taking it from 'message' field to display it in UI.
+ * Also gets describing message if network access, data parsing or timeout error or SerializedError error is received as argument.
+ *
+ * Use this function to get general error about endpoint e.g. when reading data to display error like 'resource not found'. When
+ * working with endpoints that send data with multiple fields and validation errors per each fields are expected then use
+ * extractMessageOrMessagesObjFromQueryError function which extracts error description by field.
+ *
+ * @param error error object returned by RTK Query @reduxjs/toolkit/query/react/createApi query endpoint
+ * @returns extracted string message from error object
+ */
+export function extractMessageFromQueryErrorObj(error: FetchBaseQueryError | SerializedError): string {
 
-    //errors not from response JSON but present in FetchBaseQueryError: network access, data parsing, timeout errors
-    if ('error' in queryError) {
-      return queryError.error;
+  //narrowed to FetchBaseQueryError type
+  if ('status' in error) {
 
-    //error from JSON object. JSON object resides in 'data' property of FetchBaseQueryError, Laravel sends the actual error message
-    //in 'message' JSON field
-    } else if (typeof queryError.data === 'object' &&
-      queryError.data !== null &&
-      'message' in queryError.data &&
-      typeof queryError.data.message === 'string') {
+    //object contains 'error' field - the case of network access, data parsing, timeout or custom error
+    if ('error' in error) {
+      return error.error;
 
-      return queryError.data.message;
-
-      //no data.message string type property found, returns message containing 'status' property which is always present according to type
+    //the only option left from union type is object {'status': <HTTP response status code>, 'data' <response data> }.
+    //Try to extract 'message' field value from response JSON
     } else {
-      return `An error with status ${queryError.status} occured`;
+      if (typeof error.data === 'object'
+        && error.data !== null
+        && 'message' in error.data
+        && typeof error.data.message === 'string') {
+
+        return error.data.message;
+
+      } else {
+        return `An error with HTTP status ${error.status} occured`;
+      }
     }
 
-    //this is SerializedError type object, might have string 'message' property, if absent, return error object as string
+    //this is SerializedError type object, try to return string value from 'message' field
   } else {
-    return queryError.message ?? 'An error occured - ' + JSON.stringify(queryError);
+    const errMessage = error.message ?? `An error occured - ${JSON.stringify(error)} occured`
+    return errMessage
   }
 }
 
