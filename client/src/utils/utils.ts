@@ -115,7 +115,7 @@ export function extractMessageFromQueryErrorObj(error: FetchBaseQueryError | Ser
   }
 }
 
-type StringOrIndexedObject = string | { [index:string]: string };
+type StringOrIndexedObject = string | { [index:string]: string }
 
 /**
  * extracts error message in form of string or plain object from error object returned by RTK Query endpoint as endpoint can respond with
@@ -123,27 +123,13 @@ type StringOrIndexedObject = string | { [index:string]: string };
  * name and value is error description which is the case when server is responding with validation errors per submitted object field.
  * If 'errors' field is not present in JSON function returns string type message trying to find it in 'message' JSON field
  * 
- * @param queryError error object returned by RTK Query @reduxjs/toolkit/query/react/createApi query endpoint 
- * @returns 
+ * @param queryError error object returned by RTK Query endpoint
+ * @returns
  */
 export function extractMessageOrMessagesObjFromQueryError(queryError: FetchBaseQueryError | SerializedError): StringOrIndexedObject {
 
+  // FetchBaseQueryError type object. Look for 'errors' property
   if ('status' in queryError) {
-    /*FetchBaseQueryError type object.
-    Look for 'errors' property as Laravel backend returns validation errors per field in json's field 'errors' property. The example of json
-    send by Laravel - 
-    {
-      "message": "The title field is required. (and 1 more error)",
-      "errors": {
-        "title": [
-          "The title field is required."
-        ],
-        "author": [
-          "The author field is required."
-        ]
-      }
-    }
-    */
 
     //response JSON resides in 'data' property of FetchBaseQueryError type object
     //and array of errors resides in 'errors' field of JSON
@@ -158,16 +144,35 @@ export function extractMessageOrMessagesObjFromQueryError(queryError: FetchBaseQ
       const flatErrorsObject: {[index:string]: string} = {};
       
       const responseErrorsIndexedObj: {[index:string]: unknown} = {...queryError.data.errors};
+
+      /* Laravel backend returns validation errors per field in JSON's field 'errors' property.
+      Example of json send by Laravel -
+        {
+          "message": "The title field is required. (and 1 more error)",
+          "errors": {
+            "title": [
+              "The title field is required."
+            ],
+            "author": [
+              "The author field is required."
+            ]
+          }
+        }
+      */
+
       for(const fieldTitle in responseErrorsIndexedObj) {
         let transformedErrMessage:string;
 
-        //variable instead of indexed access to make type narrowing working
-        const errorDescriptionObj = responseErrorsIndexedObj[fieldTitle]
+        const errorDescriptionObj: unknown = responseErrorsIndexedObj[fieldTitle]
 
+        // Expecting error message for field to be in array format (see JSON example above), convert it to string using
+        // Array.join() function. Actually a single string value is expected like validation error but array is the way Laravel describes
+        // error for field.
+        // If error message for field is not array, serialize value to string
         if(Array.isArray(errorDescriptionObj)){
           transformedErrMessage = errorDescriptionObj.join(',');
+
         }else{
-          //error messages for field should be in array format, but assume there may be returned other format, just convert it to string
           transformedErrMessage = JSON.stringify(errorDescriptionObj);
         }
 
@@ -181,7 +186,6 @@ export function extractMessageOrMessagesObjFromQueryError(queryError: FetchBaseQ
       //FetchBaseQueryError did not contain both 'data' and 'data.errors' properties, extract and return string type error description
       return extractMessageFromQueryErrorObj(queryError)
     }
-
 
   }else{
     //this is SerializedError type object, extract and return string type error description
