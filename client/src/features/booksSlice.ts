@@ -5,10 +5,12 @@ import { RootState } from "../store/store";
 import { STATUS_IDLE, STATUS_PENDING } from '../constants/asyncThunkExecutionStatus.ts';
 
 
-/* user can choose book for deleting two ways:
-   1) using delete button next to book list item which means single book is chosen for deleting, its ID will be stored in dedicated field or
-   2) using delete botton in batch selection bar which means multiple books are chosen for deleting, their IDs are items added to books
-   selection in list state variable*/
+/*
+  user can choose book for deleting two ways:
+  1) using delete button next to book list item which means single book is chosen for deleting, then chosen book ID will be stored
+  in 'bookId' field in state object or
+  2) using delete botton next to bulk selection control in books list header which means multiple books are chosen for deleting,
+  deletable book identifiers are those that are stored in state variable storing books marked as selected in books list UI */
 type DeletableBooksInfo = {
   deleteBooksIdsSource: "singleDeletableId",
   bookId: number
@@ -62,7 +64,7 @@ const booksSlice = createSlice({
     //in book list using checkbox or user clicks "select all" button then multiple books (all listed) are added to selected books state.
     //In case of single book adding to selection, action.payload array must contain one element - the book to be added to selection; 
     //In case of selecting all books from displayed list, action.payload array must contain all displayed books array - it is
-    //available in parent component containing batch selection control bar
+    //available in parent component containing bulk selection control bar
     bookCollectionAddedToSelection(state, action: PayloadAction<Book[]>) {
       const bookArr = action.payload;
       bookArr.forEach((bookId) => {
@@ -121,7 +123,7 @@ const booksSlice = createSlice({
       }
     },
 
-    //action to be dispatched when user clicks delete button in books batch selection bar
+    //action to be dispatched when user clicks delete button in books bulk selection bar
     booksCurrentSelectionChoosenForDeleting(state) {
       state.booksChoosenForDeleting = {
         deleteBooksIdsSource: "currentlySelectedBooks"
@@ -176,7 +178,7 @@ const booksSlice = createSlice({
 export const selectSearchString = (state: RootState) => state.booksState.searchString
 
 /**
- * returns true if any book is selected. Used in book list header in batch selection checkbox to unselect or select multiple books
+ * returns true if any book is selected. Used in book list header in bulk selection checkbox to unselect or select multiple books
  * 
  * @param {*} state 
  * @returns boolean

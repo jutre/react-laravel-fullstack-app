@@ -74,7 +74,7 @@ export function BookDeletionProcessor({
     return null;
   }
 
-  //User has pressed delete or batch delete button - display confirmation modal dialog
+  //User has pressed delete or bulk delete button - display confirmation modal dialog
   if (deletableBooksIds !== null) {
     let messageAboutBooks;
 

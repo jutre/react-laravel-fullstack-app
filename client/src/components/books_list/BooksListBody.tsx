@@ -85,7 +85,7 @@ export function BooksListBody({
   const isDeletingBook = bookDeletingEndpointLoadingStatus === STATUS_PENDING
 
 
-  //while mutation endpoints (deleting, removing from favorites) are pending all action buttons next to each book in list and batch
+  //while mutation endpoints (deleting, removing from favorites) are pending all action buttons next to each book in list and bulk
   //selection control must be inactive while still showing the list
   const areListButtonsDisabled = isRemovingFromFavorites || isDeletingBook
 

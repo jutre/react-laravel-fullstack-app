@@ -15,7 +15,7 @@ type BooksListItemsSelectionBarProps = {
 
 /**
  * This component creaters markup that displays multiple select "checkbox like" control and a delete button. Checkbox control is used
- * to do batch selecting of list items - selects all items when none is selected or deselects all if any item is selected.
+ * to do bulk selecting of list items - selects all items when none is selected or deselects all if any item is selected.
  * When there are any items selected, delete button becomes active - if user clicks on it, browser url is set to deletion url
  * 
  * @param allDisplayedBooks - array of book objects currently displayed in list. In case user clicks "select all items"
@@ -32,9 +32,9 @@ export function BooksListItemsSelectionBar({allDisplayedBooks, baseUrl}: BooksLi
   const isAnyBookSelected = useAppSelector(state => selectIsAnyBookSelected(state));
 
   /**
-   * process logic when user click batch selection checkbox control. 
+   * process logic when user clicks bulk selection checkbox control. 
    */
-  function handleBatchSelectorClick(){
+  function handleBulkSelectorClick(){
     //if at least one item in list is selected than multiple select checkbox removes all selected items from selection state
     //(and checkboxes are removed from all books)
     if(isAnyBookSelected){
@@ -60,12 +60,12 @@ export function BooksListItemsSelectionBar({allDisplayedBooks, baseUrl}: BooksLi
 
 
   let displayDeselectionModeDash = false;
-  let batchSelectorModeTitle = "select all items";
+  let bulkSelectorModeTitle = "select all items";
   let deleteButtonDisabled = true;
 
   if(isAnyBookSelected){
     displayDeselectionModeDash = true;
-    batchSelectorModeTitle = "unselect all items";
+    bulkSelectorModeTitle = "unselect all items";
     deleteButtonDisabled = false;
   }
 
@@ -76,7 +76,7 @@ export function BooksListItemsSelectionBar({allDisplayedBooks, baseUrl}: BooksLi
         square, if at least one item is selected then display dash in square */}
       <div className="flex items-center pr-[15px]">
         <button 
-          onClick={handleBatchSelectorClick}
+          onClick={handleBulkSelectorClick}
           //using same styles for creating square box as for custom ckeckbox but actually this is button as checked/unchecked state is not
           //needed, button has click handler
           className={customCheckboxSquareBoxClasses +
@@ -84,7 +84,7 @@ export function BooksListItemsSelectionBar({allDisplayedBooks, baseUrl}: BooksLi
             ? "after:absolute after:w-[9px] after:h-[2px] after:rounder-[3px] after:bg-[#4066a5] after:top-1/2 after:left-1/2 after:[transform:translateX(-50%)_translateY(-50%)]"
             : "")
           }
-          title={batchSelectorModeTitle}
+          title={bulkSelectorModeTitle}
           type="button">
         </button>
       </div>
